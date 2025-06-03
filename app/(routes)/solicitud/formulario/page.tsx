@@ -14,7 +14,6 @@ export default function FormularioPage() {
       window.location.href = "/solicitud";
     }
 
-    // Llamada a la API de PayloadCMS
     const fetchForm = async () => {
       try {
         const res = await fetch("http://localhost:3000/api/pages/682f5859eb0a0e6b219a68f4?depth=1&draft=false&locale=undefined");
@@ -24,10 +23,6 @@ export default function FormularioPage() {
         }
 
         const data = await res.json();
-
-        console.log(data)
-
-        // Mapear la respuesta a pasos compatibles con FormRenderer
         const mappedSteps = mapPayloadFormToSteps(data);
         setSteps(mappedSteps);
       } catch (error) {

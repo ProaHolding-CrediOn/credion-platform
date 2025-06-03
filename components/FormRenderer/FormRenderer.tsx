@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import FieldRenderer, { ConditionalFormBlock, Field, FormBlock, isRegularField, MessageField } from "./FieldRenderer";
 import {
   Dialog,
   DialogContent,
@@ -10,27 +9,15 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-
-type EnhancedField = Field | MessageField | ConditionalFormBlock | FormBlock;
-
-interface Step {
-  stepNumber: number;
-  title: string;
-  fields: EnhancedField[];
-}
-
-interface FormRendererProps {
-  steps: Step[];
-  onSubmit: (data: Record<string, any>) => void;
-}
+import { FormRendererProps } from "./FormRenderer.type";
+import BlockRenderer, { validateBlock } from "./BlockRenderer/BlockRenderer";
+import ProgressBar from "../ProgressBar/ProgressBar";
 
 export default function FormRenderer({ steps, onSubmit }: FormRendererProps) {
   const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState<Record<string, any>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showDialog, setShowDialog] = useState(false);
 
-  // Cargar datos desde localStorage
   useEffect(() => {
     const savedData = localStorage.getItem("form_progress");
     if (savedData) {
@@ -38,43 +25,53 @@ export default function FormRenderer({ steps, onSubmit }: FormRendererProps) {
     }
   }, []);
 
-  // Guardar cambios en localStorage
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [currentStep]);
+
+  const initialFormData = steps.reduce((acc, step, index) => {
+    const blockId = `block_${index}`;
+    acc[blockId] = {};
+    return acc;
+  }, {} as Record<string, any>);
+  
+  const [formData, setFormData] = useState<Record<string, any>>(initialFormData);
+  
   useEffect(() => {
     localStorage.setItem("form_progress", JSON.stringify(formData));
   }, [formData]);
 
-  const handleInputChange = (field: string, value: any) => {
+  const handleInputChange = (blockKey: string, field: string, value: any) => {
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      [blockKey]: {
+        ...prev[blockKey],
+        [field]: value
+      }
     }));
   };
 
-  const validateCurrentStep = () => {
-    const currentFields = steps[currentStep].fields.filter(
-      (f): f is Field => isRegularField(f)
-    );
-    const newErrors: Record<string, string> = {};
+  const canGoToNextStep = (blockKey: string) => {
+    const currentBlock = steps[currentStep].block;
+    const errors = validateBlock(blockKey, currentBlock, formData);
 
-    currentFields.forEach((field) => {
-      const value = formData[field.name];
-      if (field.required && (!value || (typeof value === "string" && value.trim() === ""))) {
-        newErrors[field.name] = "Este campo es obligatorio";
-      }
-    });
+    if (Object.keys(errors).length > 0) {
+      setErrors(errors);
+      return false;
+    }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors({});
+    return true;
   };
 
   const goToNextStep = () => {
-    if (!validateCurrentStep()) return;
-
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
     } else {
       onSubmit(formData);
       setShowDialog(true);
+      setFormData({});
+      setErrors({});
       localStorage.removeItem("form_progress");
     }
   };
@@ -86,7 +83,7 @@ export default function FormRenderer({ steps, onSubmit }: FormRendererProps) {
   };
 
   const currentStepData = steps[currentStep];
-  const currentFields = currentStepData.fields;
+  const currentBlock = currentStepData.block;
 
   return (
     <>
@@ -94,31 +91,36 @@ export default function FormRenderer({ steps, onSubmit }: FormRendererProps) {
         <h2 className="text-xl font-semibold text-foreground">{currentStepData.title}</h2>
 
         <div className="space-y-4">
-          {currentFields.map((field, index) => (
-            <FieldRenderer
-              key={`${field}-${index}`}
-              field={field}
-              formData={formData}
-              handleInputChange={handleInputChange}
-              errors={errors}
-            />
-          ))}
+          <BlockRenderer
+            key={`${currentStep}`}
+            block={currentBlock}
+            formData={formData}
+            blockKey={`block_${currentStep}`}
+            handleInputChange={handleInputChange}
+            errors={errors}
+          />
 
-          {/* Botones de navegación */}
           <div className="flex justify-between mt-6">
             {currentStep > 0 && (
               <Button variant="outline" onClick={goToPrevStep}>
                 Atrás
               </Button>
             )}
-            <Button className="ml-auto" onClick={goToNextStep}>
+            <Button className="ml-auto" onClick={() => {
+              if (canGoToNextStep(`block_${currentStep}`)) {
+                goToNextStep();
+              }
+            }}>
               {currentStep === steps.length - 1 ? "Enviar" : "Siguiente"}
             </Button>
           </div>
         </div>
       </div>
 
-      {/* Diálogo final */}
+      <div className="mb-6">
+        <ProgressBar currentStep={currentStep} totalSteps={steps.length} />
+      </div>
+
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
         <DialogContent>
           <DialogHeader>
