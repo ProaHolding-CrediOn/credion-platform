@@ -2,13 +2,13 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useOtpVerification } from "@/hooks/useOtpVerification";
+import { CustomPhoneField } from "@/components/CustomPhoneField";
 
 export default function TelefonoPage() {
   const [telefono, setTelefono] = useState("");
+  const [isValid, setIsValid] = useState(false);
   const { loading, error, sendPhone } = useOtpVerification();
 
   const handleSubmit = async () => {
@@ -18,30 +18,35 @@ export default function TelefonoPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen flex">
-      <div className="hidden md:flex w-1/3 bg-muted"></div>
+  const handleOnChange = (name: string, value: any) => {
+    setTelefono(value);
+  }
 
-      <div className="w-full md:w-1/2 flex flex-col items-center justify-start p-8">
-        <div className="w-full max-w-md space-y-6 bg-background p-8 rounded-lg shadow-sm border border-border">
+  const handleFieldValidation = (fieldName: string, isValid: boolean, value: any) => {
+    setIsValid(isValid);
+  };
+
+  return (
+    <div className="min-h-screen flex md:flex-col md:items-center md:justify-center">
+      <div className="w-full md:w-1/2 px-4 flex flex-col items-center">
+        <div className="w-full space-y-6 bg-background p-8 md:max-w-md md:border md:border-border md:shadow-sm md:rounded-lg">
           <h2 className="text-xl font-semibold text-foreground">Ingresa tu número de celular</h2>
 
           <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="telefono" className="text-foreground">Número de Celular</Label>
-              <Input
-                id="telefono"
-                type="tel"
-                placeholder="+57 300 123 4567"
-                value={telefono}
-                onChange={(e) => setTelefono(e.target.value)}
-                required
+              <CustomPhoneField
+                name="telefono"
+                label="Número de Celular"
+                value = ""
+                validations = {[{ name: "required", value: true }]}
+                onChange = {handleOnChange}
+                onValidationChange = {handleFieldValidation}
               />
             </div>
 
             {error && <p className="text-sm text-destructive">{error}</p>}
 
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || !isValid}>
               {loading ? "Enviando..." : "Enviar código"}
             </Button>
           </form>
@@ -53,8 +58,6 @@ export default function TelefonoPage() {
           </div>
         </div>
       </div>
-
-      <div className="hidden md:flex w-1/3 bg-muted"></div>
     </div>
   );
 }

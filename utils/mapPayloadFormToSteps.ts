@@ -1,38 +1,40 @@
 import { mapConditionalFormBlockToStep } from "./mapConditionalFormBlockToStep";
-import { mapRepeaterFormBlockToStep } from "./mapRepeaterFormBlockToStep";
 import { mapFormBlockToStep } from "./mapFormBlockToStep";
-import { PayloadFormStep, Step } from "@/types/FormField";
+import { EnhancedBlock, LayoutStep, PayloadFormStep, Step } from "@/types/FormField";
 
 export function mapPayloadFormToSteps(payloadData: any): Step[] {
   const steps: Step[] = [];
 
-  if (!payloadData.layout || !Array.isArray(payloadData.layout)) {
-    console.warn("Layout no válido o vacío");
+  if (!payloadData.layouts || !Array.isArray(payloadData.layouts)) {
+    console.warn("Layouts no válidos o vacíos");
     return steps;
   }
 
-  payloadData.layout.forEach((block: PayloadFormStep, index: number) => {
+  payloadData.layouts.forEach((layouts: LayoutStep, index: number) => {
     let step: Step | null = null;
 
-    switch (block.blockType) {
-      case "formBlock":
-        step = mapFormBlockToStep(block, index);
-        break;
+    let blocks: EnhancedBlock[] = [];
+    layouts.layout.forEach((block: PayloadFormStep) => {
+      let layoutBlock: EnhancedBlock | null;
+      switch (block.blockType) {
+        case "formBlock":
+          layoutBlock = mapFormBlockToStep(block);
+          layoutBlock && blocks.push(layoutBlock);
+          break;
 
-      case "conditionalFormBlock":
-        step = mapConditionalFormBlockToStep(block, index);
-        break;
+        case "conditionalFormBlock":
+          layoutBlock = mapConditionalFormBlockToStep(block);
+          layoutBlock && blocks.push(layoutBlock);
+          break;
 
-      case "repeatableFormBlock":
-        step = mapRepeaterFormBlockToStep(block, index);
-        break;
+        default:
+          console.warn(`Tipo de bloque desconocido`);
+          break;
+      }
+    });
 
-      default:
-        console.warn(`Tipo de bloque desconocido`);
-        break;
-    }
-
-    if (step) {
+    if (blocks.length > 0) {
+      step = { stepNumber: index + 1, title: `Paso ${index + 1}`, blocks: blocks };
       steps.push(step);
     }
   });

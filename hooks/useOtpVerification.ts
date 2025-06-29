@@ -1,47 +1,54 @@
+import api from "@/lib/axiosInstance";
 import { useState } from "react";
 
 export function useOtpVerification() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const sendPhone = async (telefono: string) => {
-    setLoading(true);
-    setError(null);
+  async function postPhone(phone: string) {
+    const response = await api.post('otp/send', { phone });
+    const data = response.data;
+    return data;
+  }
 
+  async function postOtpVerification(phone: string, code: string) {
+    const response = await api.post('otp/verify', { phone, code });
+    const data = response.data;
+    return data;
+  }
+
+  const sendPhone = async (telefono: string) => {
     try {
+      setLoading(true);
       console.log("Enviando teléfono:", telefono);
-      localStorage.setItem("telefonoEnviado", telefono);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      return { success: true };
+      localStorage.setItem("phoneNumber", telefono);
+      const response = await postPhone(telefono);
+      return response;
     } catch (err) {
-      const errorMessage = "Error al enviar el teléfono";
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
+      setError("Error al enviar el teléfono");
+      return { success: false, error: "Error al enviar el teléfono" };
     } finally {
       setLoading(false);
     }
   };
 
   const verifyOtp = async (otp: string) => {
-    setLoading(true);
-    setError(null);
-
     try {
+      setLoading(true);
       console.log("Verificando OTP:", otp);
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      if (otp === "123456") {
-        const fakeToken = "fake-jwt-token-123";
-        localStorage.setItem("auth_token", fakeToken);
-        localStorage.removeItem("telefonoEnviado");
-        return { success: true, token: fakeToken };
+      const phone = localStorage.getItem("phoneNumber") as string;
+      const response = await postOtpVerification(phone, otp);
+      const token = response.token;
+      if (token) {
+        localStorage.setItem("auth_token", token);
+        localStorage.removeItem("phoneNumber");
+        return { success: true, token };
       } else {
-        throw new Error("Código inválido");
+        throw new Error("Código inválido o incorrect");
       }
     } catch (err: any) {
-      const errorMessage = err.message || "Código incorrecto";
-      setError(errorMessage);
-      return { success: false, error: errorMessage };
+      setError("Código inválido incorrecto");
+      return { success: false, error: "Código inválido o incorrecto" };
     } finally {
       setLoading(false);
     }

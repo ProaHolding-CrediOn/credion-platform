@@ -2,20 +2,37 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useOtpVerification } from "@/hooks/useOtpVerification";
+import { InputOTP, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
 
 export default function OtpPage() {
+  const [telefono, setTelefono] = useState("");
   const [code, setCode] = useState("");
-  const { loading, error, verifyOtp } = useOtpVerification();
+  const [isValid, setIsValid] = useState(false);
+  const [timeLeft, setTimeLeft] = useState(30);
+  const [canResend, setCanResend] = useState(false);
+  const { loading, error, sendPhone, verifyOtp } = useOtpVerification();
 
   useEffect(() => {
-    const telefonoEnviado = localStorage.getItem("telefonoEnviado");
+    if (timeLeft > 0) {
+      const timer = setInterval(() => {
+        setTimeLeft(prev => prev - 1)
+      }, 1000)
 
-    if (!telefonoEnviado) {
+      return () => clearInterval(timer)
+    } else {
+      setCanResend(true)
+    }
+  }, [timeLeft])
+
+  useEffect(() => {
+    const phoneNumber = localStorage.getItem("phoneNumber");
+
+    if (!phoneNumber) {
       window.location.href = "/verificacion/telefono";
+    } else {
+      setTelefono(phoneNumber);
     }
   }, []);
 
@@ -26,41 +43,68 @@ export default function OtpPage() {
     }
   };
 
-  return (
-    <div className="min-h-screen flex">
-      <div className="hidden md:flex w-1/3 bg-muted"></div>
+  const handleChange = (value: string) => {
+    setCode(value);
+    if (value.length < 6) {
+      setIsValid(false);
+    } else {
+      setIsValid(true);
+    }
+  };
 
-      <div className="w-full md:w-1/2 flex flex-col items-center justify-start p-8">
-        <div className="w-full max-w-md space-y-6 bg-background p-8 rounded-lg shadow-sm border border-border">
+  const handleResendCode = async() => {
+    setCanResend(false);
+    setTimeLeft(60);
+    setCode('');
+    await sendPhone(telefono);
+  }
+
+  return (
+    <div className="min-h-screen flex md:flex-col md:items-center md:justify-center">
+      <div className="w-full md:w-1/2 px-4 flex flex-col items-center">
+        <div className="w-full space-y-6 bg-background p-8 md:max-w-md md:border md:border-border md:shadow-sm md:rounded-lg">
           <h2 className="text-xl font-semibold text-foreground">Ingresa el código de verificación</h2>
 
           <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="otp" className="text-foreground">Código de 6 dígitos</Label>
-              <Input
-                id="otp"
-                type="text"
-                inputMode="numeric"
-                pattern="[0-9]*"
+              <InputOTP
                 maxLength={6}
-                placeholder="123456"
                 value={code}
-                onChange={(e) => setCode(e.target.value)}
-                required
-              />
+                onChange={(value) => handleChange(value)}
+              >
+                <div className="flex justify-center w-full">
+                  {[0, 1, 2].map((index) => (
+                    <InputOTPSlot key={index} index={index} />
+                  ))}
+                  <InputOTPSeparator />
+                  {[3, 4, 5].map((index) => (
+                    <InputOTPSlot key={index} index={index} />
+                  ))}
+                </div>
+              </InputOTP>
             </div>
 
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && <p className="text-center text-sm text-destructive">{error}</p>}
 
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={!isValid || loading}>
               {loading ? "Verificando..." : "Verificar"}
             </Button>
 
             <p className="text-sm text-muted-foreground text-center">
-              ¿No recibiste el código?{" "}
-              <button type="button" className="text-primary underline" disabled>
-                Reenviar
-              </button>
+              ¿No recibiste el código?{' '}
+              {canResend ? (
+                <button
+                  type="button"
+                  className="text-primary underline"
+                  onClick={handleResendCode}
+                >
+                  Reenviar
+                </button>
+              ) : (
+                <span className="text-muted-foreground">
+                  Espera {timeLeft} segundo{timeLeft !== 1 ? 's' : ''}...
+                </span>
+              )}
             </p>
           </form>
 
@@ -72,7 +116,6 @@ export default function OtpPage() {
         </div>
       </div>
 
-      <div className="hidden md:flex w-1/3 bg-muted"></div>
     </div>
   );
 }

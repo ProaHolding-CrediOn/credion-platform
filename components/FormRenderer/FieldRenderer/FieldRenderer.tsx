@@ -1,37 +1,35 @@
 "use client"
 
 import { Input } from "../../ui/input";
-import { Label } from "../../ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { FieldRendererProps } from "./FieldRenderer.type";
-import { EnhancedField, Field, MessageField } from "@/types/FormField";
+import { EnhancedField, fieldTypesArray, Field, MessageField } from "@/types/FormField";
 import { Textarea } from "@/components/ui/textarea";
 import React from "react";
+import CustomTextField from "@/components/CustomTextField/CustomTextField";
+import CustomDateField from "@/components/CustomDateField/CustomDateField";
+import CustomSelectField from "@/components/CustomSelectField/CustomSelectField";
+import { CustomPhoneField } from "@/components/CustomPhoneField";
+import { CustomEmailField } from "@/components/CustomEmailField/CustomEmailField";
+import { LocationField } from "@/components/LocationField/LocationField";
+import { CustomRadioField } from "@/components/CustomRadioField";
+import CustomPriceField from "@/components/CustomPriceField/CustomPriceField";
+import { Separator } from "@/components/ui/separator";
 
 export const isMessageField = (field: EnhancedField): field is MessageField => {
   return "lines" in field && field.type === "message";
 };
 
 export const isRegularField = (field: EnhancedField): field is Field => {
-  return "name" in field && ["text", "email", "number", "textarea", "select"].includes(field.type);
+  return "name" in field && fieldTypesArray.includes(field.type);
 };
 
-function validateField(field: Field, value: any): string | null {
-  if (field.required && (!value || (typeof value === "string" && value.trim() === ""))) {
-    return "Este campo es obligatorio";
-  }
-  return null;
-}
-
-export default function FieldRenderer({ field, formData, blockKey, handleInputChange, errors }: FieldRendererProps) {
-    console.log('Form in fieldrenderer', formData)
-    const error = errors[field.name];
+export default function FieldRenderer({
+    field,
+    formData,
+    blockKey,
+    handleInputChange,
+    onFieldValidation
+}: FieldRendererProps) {
 
     if (isMessageField(field)) {
         return (
@@ -46,31 +44,48 @@ export default function FieldRenderer({ field, formData, blockKey, handleInputCh
     }
 
     if (isRegularField(field)) {
-        const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-            const newValue = e.target.value;
-            handleInputChange(blockKey, field.name, newValue);
+        const onDataChange = (name: string, label: string, value: string | number) => {            
+            handleInputChange(blockKey, name, label, value);
         }
+
+        const layoutId = `layout_${blockKey['layout']}`
+        const blockId = `block_${blockKey['block']}` 
 
         return (
             <div key={`field-${field.name}`} className="space-y-2">
-                <Label htmlFor={field.name}>
-                    {field.label}
-                </Label>
+                {(field.type === "customTextField" || field.type === "text")&& (
+                    <CustomTextField
+                        key={`field-${field.name}`}
+                        name={field.name}
+                        label={field.label}
+                        value={formData[layoutId][blockId][field.name].value ?? ""}
+                        validations={field.validation}
+                        onChange={(fieldName, value) => onDataChange(fieldName, field.label, value)}
+                        onValidationChange={(fieldName, isValid, value) => onFieldValidation?.(fieldName, isValid)}
+                    />
+                )}
 
-                {field.type === "text" && (
-                    <Input
-                        id={field.name}
-                        value={formData[blockKey][field.name] ?? ""}
-                        onChange={handleChange}
+                {field.type === "customDateField" && (
+                    <CustomDateField
+                        key={`field-${field.name}`}
+                        name={field.name}
+                        label={field.label}
+                        value={formData[layoutId][blockId][field.name].value ?? ""}
+                        validations={field.validation}
+                        onChange={(fieldName, value) => onDataChange(fieldName, field.label, value)}
+                        onValidationChange={(fieldName, isValid, value) => onFieldValidation?.(fieldName, isValid)}
                     />
                 )}
 
                 {field.type === "email" && (
-                    <Input
-                        id={field.name}
-                        type="email"
-                        value={formData[blockKey][field.name] ?? ""}
-                        onChange={handleChange}
+                    <CustomEmailField
+                        key={`field-${field.name}`}
+                        name={field.name}
+                        label={field.label}
+                        value={formData[layoutId][blockId][field.name].value ?? ""}
+                        validations={field.validation}
+                        onChange={(fieldName, value) => onDataChange(fieldName, field.label, value)}
+                        onValidationChange={(fieldName, isValid, value) => onFieldValidation?.(fieldName, isValid)}
                     />
                 )}
 
@@ -78,38 +93,72 @@ export default function FieldRenderer({ field, formData, blockKey, handleInputCh
                     <Input
                         id={field.name}
                         type="number"
-                        value={formData[blockKey][field.name] ?? ""}
-                        onChange={handleChange}
+                        value={formData[layoutId][blockId][field.name] ?? ""}
                     />
                 )}
 
-                {field.type === "textarea" && (
-                    <Textarea
-                        id={field.name}
-                        value={formData[blockKey][field.name] ?? ""}
-                        onChange={handleChange}
+                {field.type === "phoneField" && (
+                    <CustomPhoneField
+                        key={`field-${field.name}`}
+                        name={field.name}
+                        label={field.label}
+                        value={formData[layoutId][blockId][field.name].value ?? ""}
+                        validations={field.validation}
+                        onChange={(fieldName, value) => onDataChange(fieldName, field.label, value)}
+                        onValidationChange={(fieldName, isValid, value) => onFieldValidation?.(fieldName, isValid)}
+                    />
+                )}
+
+                {field.type === "radioButtonField" && field.options && (
+                    <CustomRadioField
+                        key={`field-${field.name}`}
+                        name={field.name}
+                        label={field.label}
+                        value={formData[layoutId][blockId][field.name].value ?? ""}
+                        options={field.options}
+                        validations={field.validation}
+                        onChange={(fieldName, value) => onDataChange(fieldName, field.label, value)}
+                        onValidationChange={(fieldName, isValid, value) => onFieldValidation?.(fieldName, isValid)}
+                    />
+                )}
+
+                {field.type === "priceField" && (
+                    <CustomPriceField
+                        key={`field-${field.name}`}
+                        name={field.name}
+                        label={field.label}
+                        value={formData[layoutId][blockId][field.name].value ?? ""}
+                        validations={field.validation}
+                        onChange={(fieldName, value) => onDataChange(fieldName, field.label, value)}
+                        onValidationChange={(fieldName, isValid, value) => onFieldValidation?.(fieldName, isValid)}
                     />
                 )}
 
                 {field.type === "select" && field.options && (
-                    <Select
-                        onValueChange={(value) => handleInputChange(blockKey, field.name, value)}
-                        value={formData[blockKey][field.name] /*formData[field.name]*/}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="Selecciona una opción" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {field.options.map((option) => (
-                                <SelectItem key={option.value} value={option.value.toString()}>
-                                    {option.label}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <CustomSelectField
+                        key={`field-${field.name}`}
+                        name={field.name}
+                        label={field.label}
+                        value={formData[layoutId][blockId][field.name].value ?? ""}
+                        options={field.options}
+                        validations={field.validation}
+                        onChange={(fieldName, value) => onDataChange(fieldName, field.label, value)}
+                        onValidationChange={(fieldName, isValid, value) => onFieldValidation?.(fieldName, isValid)}
+                    />
                 )}
 
-                {errors && <p className="text-sm text-destructive">{error}</p>}
+                {field.type === "countryStateCityField" && (
+                    <LocationField
+                        name={field.name}
+                        label={field.label}
+                        validations={field.validation}
+                        onChange={(fieldName, value) => onDataChange(fieldName, field.label, `${value.country}-${value.state}-${value.city}`)}
+                        onValidationChange={(fieldName, isValid, value) => onFieldValidation?.(fieldName, isValid)}
+                    />
+                )}
+
+                <Separator className="my-4"/>
+                
             </div>
         )
     }

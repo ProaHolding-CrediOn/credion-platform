@@ -3,7 +3,7 @@ import { Field } from "@/types/FormField";
 export type FieldRendererProps = {
     field: Field;
     formData: Record<string, any>;
-    blockKey: string;
-    handleInputChange: (blockKey: string, field: string, value: any) => void;
-    errors: Record<string, string>;
+    blockKey: any;
+    handleInputChange: (blockKey: string, field: string, label: string, value: any) => void;
+    onFieldValidation?: (field: string, isValid: boolean) => void;
 };

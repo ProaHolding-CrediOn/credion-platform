@@ -4,6 +4,29 @@ export type EnhancedBlock = FormBlock | ConditionalFormBlock | RepeatableFormBlo
 
 export type EnhancedField = Field | MessageField;
 
+export type FieldType = "text" | "email" | "number" | "textarea" | "select" | "message" |
+  "customTextField" | "customDateField" | "phoneField" | "radioButtonField" | "priceField" | "countryStateCityField";
+
+export const fieldTypesArray = [
+  "text",
+  "email",
+  "number",
+  "textarea",
+  "select",
+  "message",
+  "customTextField",
+  "customDateField",
+  "phoneField",
+  "radioButtonField",
+  "priceField",
+  "countryStateCityField"
+] as const;
+
+export interface FieldValidation {
+  name: string;
+  value: string | number | boolean;
+}
+
 export interface FieldOption {
   label: string;
   value: string | number;
@@ -13,8 +36,8 @@ export interface FieldOption {
 export interface Field {
   name: string;
   label: string;
-  type: "text" | "email" | "number" | "textarea" | "select" | "message";
-  required?: boolean;
+  type: FieldType;
+  validation?: Array<FieldValidation>;
   options?: Array<FieldOption>;
 }
 
@@ -27,7 +50,7 @@ export interface MessageField extends Field {
 export interface Step {
   stepNumber: number;
   title: string;
-  block: EnhancedBlock;
+  blocks: EnhancedBlock[];
 }
 
 export interface RepeatableFormBlock {
@@ -42,6 +65,8 @@ export interface RepeatableFormBlock {
 
 export interface ConditionalFormBlock {
   blockType: "conditionalFormBlock";
+  blockName: string;
+  value: string;
   label: string;
   options: Array<{ label: string; value: string }>;
   expectedAnswers: Array<{ value: string }>;
@@ -53,10 +78,15 @@ export interface ConditionalFormBlock {
 
 export interface FormBlock {
   blockType: "formBlock";
+  blockName: string;
   form: {
     title: string;
     fields: EnhancedField[];
   };
+}
+
+export interface LayoutStep {
+  layout: Array<PayloadFormStep>;
 }
 
 export type PayloadFormStep = FormBlock | ConditionalFormBlock | RepeatableFormBlock;

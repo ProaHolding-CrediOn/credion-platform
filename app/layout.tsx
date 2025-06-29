@@ -3,12 +3,13 @@ import { Noto_Sans_Display } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider"
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
+import LoadingOverlay from "@/components/LoadingOverlay";
 
 const noto = Noto_Sans_Display({ subsets: ["latin"]});
 
 export const metadata: Metadata = {
-  title: "FinTAXI",
-  description: "Plataforma FinTAXI",
+  title: "Credion",
+  description: "Plataforma Credion",
 };
 
 export default function RootLayout({
@@ -26,6 +27,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
+            <LoadingOverlay />
             <main>{children}</main>
             <Toaster />
         </ThemeProvider>

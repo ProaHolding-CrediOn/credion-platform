@@ -1,10 +1,20 @@
-import { EnhancedField } from "@/types/FormField";
+import { isRegularField } from "@/components/FormRenderer/FieldRenderer/FieldRenderer";
+import { EnhancedField, FieldType } from "@/types/FormField";
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
+
+export function hasRequiredFields(fields: EnhancedField[]) {
+  return fields.some((field) => {
+    if (isRegularField(field)) {
+      return field.validation?.find((validation) => validation.name === "required")?.value as boolean === true;
+    }
+    return false;
+  });
+};
 
 export function getStepTitle(block: any, index: number) {
   return block.introContent?.root?.children[0]?.children[0]?.text || `Paso ${index + 1}`;
@@ -25,12 +35,11 @@ export function mapFormField(field: any): EnhancedField {
       name: field.name || "",
       label: field.label || "",
       type: "message",
-      required: field.required || false,
       lines
     };
   }
 
-  let fieldType: "text" | "email" | "number" | "textarea" | "select" = field.blockType || "text";
+  let fieldType: FieldType = field.blockType || "text";
   
   let options = undefined;
   if (field.options && Array.isArray(field.options)) {
@@ -40,11 +49,20 @@ export function mapFormField(field: any): EnhancedField {
     }));
   }
 
+  let validations = [];
+  if (field.required) validations.push({ name: 'required', value: true });
+  if (field.minLength) validations.push({ name: 'minLength', value: field.minLength });
+  if (field.maxLength) validations.push({ name: 'maxLength', value: field.maxLength });
+  if (field.minDate) validations.push({ name: 'minDate', value: field.minDate });
+  if (field.maxDate) validations.push({ name: 'maxDate', value: field.maxDate });
+  if (field.minValue) validations.push({ name: 'minValue', value: field.minValue });
+  if (field.maxValue) validations.push({ name: 'maxValue', value: field.maxValue });
+
   return {
     name: field.name,
     label: field.label,
     type: fieldType,
-    required: field.required || false,
+    validation: validations,
     options
   };
 }

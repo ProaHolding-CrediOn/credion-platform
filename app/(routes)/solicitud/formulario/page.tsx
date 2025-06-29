@@ -3,11 +3,23 @@
 import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { mapPayloadFormToSteps } from "@/utils/mapPayloadFormToSteps";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import FormRenderer from "@/components/FormRenderer/FormRenderer";
+import { Button } from "@/components/ui/button";
+import api from "@/lib/axiosInstance";
 
 export default function FormularioPage() {
   const { isAuthenticated, loading } = useAuth();
   const [steps, setSteps] = useState<any[]>([]);
+  const [showDialog, setShowDialog] = useState(false);
+  const [dialogMessage, setDialogMessage] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -16,13 +28,13 @@ export default function FormularioPage() {
 
     const fetchForm = async () => {
       try {
-        const res = await fetch("http://localhost:3000/api/pages/682f5859eb0a0e6b219a68f4?depth=1&draft=false&locale=undefined");
+        const response = await api.get('requests/6843a81c9c595f644861a92e?depth=1&draft=false&locale=undefined', { headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` } });
 
-        if (!res.ok) {
+        if (!response.data) {
           throw new Error("Error al cargar el formulario");
         }
 
-        const data = await res.json();
+        const data = response.data;
         const mappedSteps = mapPayloadFormToSteps(data);
         setSteps(mappedSteps);
       } catch (error) {
@@ -33,26 +45,62 @@ export default function FormularioPage() {
     fetchForm();
   }, [isAuthenticated, loading]);
 
-  const handleSubmit = (formData: any) => {
-    console.log("Datos finales:", formData);
-    alert("✅ Formulario completado");
+  const handleSubmit = async (formData: any) => {
+    setSubmitting(true);
+
+    try {
+      const response = await api.post('credit/form-solicitud', { formSolicitud: formData }, { headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` } });
+
+      if (!response.data) {
+        throw new Error('Error al enviar el formulario');
+      }
+
+      setDialogMessage('Gracias por su información, prontamente nos estaremos comunicando.')
+      setShowDialog(true);
+      return true;
+    } catch (error) {
+      console.error('Error al enviar el formulario:', error);
+      setDialogMessage('Ha ocurrido un error. Por favor, intenta nuevamente.');
+      setShowDialog(true);
+      throw error;
+    } finally {
+      setSubmitting(false);
+    }
   };
 
+  const handleDialogClose = () => {
+    setShowDialog(false);
+    window.location.href = "/";
+  }
+
   if (loading || !steps.length) {
-    return <div>Cargando formulario...</div>;
+    return (
+      <div className="flex flex-col bg-background text-foreground">
+        <main className="flex-1 w-full">
+          <div className="w-full p-4 sm:p-6 md:p-8">
+            <p className="text-muted-foreground">Cargando formulario...</p>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   return (
-    <div className="min-h-screen flex">
-      <div className="hidden md:flex w-1/3 bg-muted"></div>
-
-      <div className="w-full md:w-1/2 flex flex-col justify-start md:justify-center p-8">
-        <div className="w-full max-w-md space-y-6 bg-background p-8 rounded-lg shadow-sm border border-border mx-auto">
-          <FormRenderer steps={steps} onSubmit={handleSubmit} />
+    <div className="flex flex-col bg-background text-foreground">
+      <main className="flex-1 w-full">
+        <div className="w-full p-4 sm:p-6 md:p-8">
+          <FormRenderer steps={steps} onSubmit={handleSubmit} submitting={submitting} />
         </div>
-      </div>
-
-      <div className="hidden md:flex w-1/3 bg-muted"></div>
+      </main>
+      <Dialog open={showDialog} onOpenChange={handleDialogClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{dialogMessage.includes("error") ? "Error" : "Éxito"}</DialogTitle>
+            <DialogDescription>{dialogMessage}</DialogDescription>
+          </DialogHeader>
+          <Button onClick={handleDialogClose}>Cerrar</Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
