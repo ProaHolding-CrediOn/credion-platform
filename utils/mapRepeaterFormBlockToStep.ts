@@ -25,7 +25,7 @@ export function mapRepeaterFormBlockToStep(
     return {
       stepNumber: index + 1,
       title: stepTitle,
-      block: mappedFields,
+      blocks: [],
     };
   } catch (error) {
     console.error("Error al mapear repeaterFormBlock", error);

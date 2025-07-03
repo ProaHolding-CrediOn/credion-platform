@@ -1,11 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { CustomTextFieldProps } from "./CustomTextField.type";
 
-export default function CustomTextField({
+export default memo(function CustomTextField({
   name,
   label,
   value = "",
@@ -15,11 +15,17 @@ export default function CustomTextField({
 }: CustomTextFieldProps) {
   const [error, setError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
+  const debouncedValidationRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (value) {
       setTouched(true);
-      validate(value);
+    }
+
+    return () => {
+      if (debouncedValidationRef.current) {
+        window.clearTimeout(debouncedValidationRef.current);
+      }
     }
   }, []);
 
@@ -54,35 +60,37 @@ export default function CustomTextField({
     return true;
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputValue = e.target.value;
-    const isValid = validate(inputValue);
-    onChange(name, inputValue);
-    onValidationChange?.(name, isValid, inputValue);
-  }
+  const handleDebouncedValidation = (inputValue: string) => {
+    if (debouncedValidationRef.current) {
+      window.clearTimeout(debouncedValidationRef.current);
+    }
 
-  const handleOnAttention = () => {
-    setTouched(true);
-    const isValid = validate(value);
-    onValidationChange?.(name, isValid, value);
-  };
+    debouncedValidationRef.current = window.setTimeout(() => {
+      const isValid = validate(inputValue);
+      onValidationChange?.(name, isValid, inputValue);
+    }, 500)
+  }
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={name}>
+      <Label htmlFor={name} className="text-sm font-light">
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
       <Input
         id={name}
         type="text"
         value={value}
-        onChange={handleChange}
+        onChange={(e) => {
+          const inputValue = e.target.value;
+          onChange(name, inputValue);
+          handleDebouncedValidation(inputValue)
+        }}
         onFocus={() => setTouched(true)}
         maxLength={maxLength}
         placeholder={`Ingrese ${label.toLowerCase()}`}
-        className={error ? "border-destructive" : ""}
+        className={`${error ? "border-destructive" : ""} placeholder:font-light`}
       />
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
-}
+})

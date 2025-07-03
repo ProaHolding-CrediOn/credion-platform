@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { CustomDateFieldProps } from "./CustomDateField.type";
 import { Label } from "@radix-ui/react-label";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
@@ -11,7 +11,7 @@ import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
 import { es as esLocale } from "date-fns/locale/es";
 
-export default function CustomDateField({
+export default memo(function CustomDateField({
     name,
     label,
     value = "",
@@ -111,14 +111,14 @@ export default function CustomDateField({
     
     return (
       <div className="space-y-2">
-        <Label htmlFor={name}>
+        <Label htmlFor={name} className="text-sm font-light">
           {label} {required && <span className="text-destructive">*</span>}
         </Label>
         <Popover open={open} onOpenChange={() => { setOpen(!open); setTouched(true);}}>
           <PopoverTrigger asChild>
             <Button
               variant={"outline"}
-              className={cn("w-full justify-start text-left font-normal", !selectedDate && "text-muted-foreground", error && "text-destructive")}
+              className={cn("w-full justify-start text-left font-light", !selectedDate && "text-muted-foreground", error && "text-destructive")}
             >
               <CalendarIcon className="mr-2 h-4 w-4" />
               {displayDate}
@@ -142,4 +142,4 @@ export default function CustomDateField({
         {error && <p className="text-sm text-destructive">{error}</p>}
       </div>
     );
-}
+})

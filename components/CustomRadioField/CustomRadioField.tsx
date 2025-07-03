@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { CustomRadioFieldProps } from "./CustomRadioField.type";
 import { Label } from "../ui/label";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
-export function CustomRadioField({
+export default memo(function CustomRadioField({
   name,
   label,
   value = "",
@@ -49,7 +49,7 @@ export function CustomRadioField({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={name}>
+      <Label htmlFor={name} className="text-sm font-light">
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
       <RadioGroup
@@ -62,7 +62,7 @@ export function CustomRadioField({
                 <RadioGroupItem id={option.id} value={String(option.value)}/>
                 <Label
                   htmlFor={option.id}
-                  className="cursor-pointer"
+                  className="cursor-pointer font-light"
                   onClick={() => {
                     value = String(option.value);
                     handleChange(String(option.value));
@@ -76,4 +76,4 @@ export function CustomRadioField({
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
-}
+})

@@ -1,13 +1,13 @@
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { CustomSelectFieldProps } from "./CustomSelectField.type";
 import { Label } from "@radix-ui/react-label";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { Check, ChevronsDown, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "../ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../ui/command";
 import { cn } from "@/lib/utils";
 
-export default function CustomSelectField({
+export default memo(function CustomSelectField({
   name,
   label,
   value = "",
@@ -55,12 +55,6 @@ export default function CustomSelectField({
     setOpen(false);
   };
 
-  const handleOnAttention = () => {
-    setTouched(true);
-    const isValid = validate(value);
-    onValidationChange?.(name, isValid, value);
-  };
-
   const filteredOptions = options.filter((option) =>
     option.label.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -69,7 +63,7 @@ export default function CustomSelectField({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={name}>
+      <Label htmlFor={name} className="text-sm font-light">
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
       <Popover open={open} onOpenChange={setOpen}>
@@ -81,7 +75,7 @@ export default function CustomSelectField({
                 aria-expanded={open}
                 onFocus={() => setTouched(true)}
             >
-                <span className="text-left truncate">
+                <span className="text-left truncate font-light">
                     {selectedOption ? selectedOption.label : "Seleccione una opción"}
                 </span>
                 <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -103,6 +97,7 @@ export default function CustomSelectField({
                                 onSelect={() => {
                                     handleChange(option.value);
                                 }}
+                                className="cursor-pointer"
                             >
                                 <Check
                                     className={cn("mr-2 h-4 w-4", value === option.value ? "opacity-100" : "opacity-0")}
@@ -118,4 +113,4 @@ export default function CustomSelectField({
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
-}
+})

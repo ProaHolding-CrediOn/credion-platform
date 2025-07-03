@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import { cn } from "@/lib/utils";
 import { Label } from "@radix-ui/react-label";
 import { Country, CustomPhoneFieldProps } from "./CustomPhoneField.type";
@@ -10,16 +10,18 @@ import { Check } from "lucide-react";
 import { Input } from "../ui/input";
 import { CountryFlagEmoji } from "../CountryFlagEmoji";
 import api from "@/lib/axiosInstance";
+import { Button } from "../ui/button";
 
-export function CustomPhoneField({
+export default memo(function CustomPhoneField({
   name,
   label,
-  value = "",
+  value = { countryCode: "", phoneCode: "", phone: "" },
   validations = [],
   onChange,
   onValidationChange,
 }: CustomPhoneFieldProps) {
-  const [countryCode, setCountryCode] = useState<string>("CO");
+  const [countryCode, setCountryCode] = useState<string>("");
+  const [phoneCode, setPhoneCode] = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [countries, setCountries] = useState<Country[]>([]);
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -32,15 +34,9 @@ export function CustomPhoneField({
   useEffect(() => {
     if (value) {
       setTouched(true);
-      for (let len = 3; len >= 1; len--) {
-        const prefix = value.substring(0, len);
-        const country = countries.find((c) => c.phoneCode === prefix)
-        if (country) {
-          setCountryCode(country?.code);
-          setPhoneNumber(value.substring(len));
-          break;
-        }
-      }
+      setCountryCode(value.countryCode || "CO")
+      setPhoneCode(value.phoneCode || "57")
+      setPhoneNumber(value.phone || "")
     }
   }, [countries]);
 
@@ -58,13 +54,7 @@ export function CustomPhoneField({
     fetchCountries();
   }, []);
 
-  useEffect(() => {
-    if (countries.length > 0 && !countryCode) {
-      setCountryCode("CO");
-    }
-  }, [countries]);  
-
-  const validate = (code: string, number: string): boolean => {
+  const validate = (code: string, phoneCode: string, number: string): boolean => {
     if (!touched) return true;
 
     if (!required) {
@@ -77,30 +67,31 @@ export function CustomPhoneField({
       return false;
     }
 
+    if (!phoneCode || !(phoneCode.length > 0)) {
+      setError("El código debe tener al menos 1 dígito");
+      return false;
+    }
+
     setError(null);
     return true;
   };
 
   const handleChange = (number: string) => {
-    const country = countries.find((c) => c.code === countryCode);
-    const dialCode = country?.phoneCode || "";
-    const fullValue = dialCode + number;
-
-    const isValid = validate(countryCode, number);
-    onChange(name, fullValue);
-    onValidationChange?.(name, isValid, fullValue);
+    const isValid = validate(countryCode, phoneCode, number);
+    const value = { countryCode, phoneCode, phone: number };
+    onChange(name, value);
+    onValidationChange?.(name, isValid, value);
   }
 
-  const handleCountryChange = (newCode: string) => {
-    setCountryCode(newCode);
-    const country = countries.find((c) => c.code === newCode);
-    const dialCode = country?.phoneCode || "";
-    const fullValue = dialCode + phoneNumber;
-    const isValid = validate(newCode, phoneNumber);
+  const handleCountryChange = (newCountryCode: string, newPhoneCode: string) => {
+    setCountryCode(newCountryCode);
+    setPhoneCode(newPhoneCode);
+    const isValid = validate(newCountryCode, newPhoneCode, phoneNumber);
     setTouched(true);
     setOpen(!open);
-    onChange(name, fullValue);
-    onValidationChange?.(name, isValid, fullValue);
+    const value = { countryCode: newCountryCode, phoneCode: newPhoneCode, phone: phoneNumber };
+    onChange(name, value);
+    onValidationChange?.(name, isValid, value);
   };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -112,34 +103,22 @@ export function CustomPhoneField({
     handleChange(onlyNumbers);
   };
 
-  const handleOnAttention = () => {
-    setTouched(true);
-    const isValid = validate(countryCode, phoneNumber);
-    onValidationChange?.(name, isValid, value);
-  };
-
-  const selectedCountry = countries.find((c) => c.code === countryCode);
-  const dialCode = selectedCountry?.phoneCode || "+57";
   const filteredCountries = countries.filter((country) => country.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={name}>
+      <Label htmlFor={name} className="text-sm font-light">
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
       <div className="flex space-x-2 items-center">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
-            <button
-              type="button"
-              className="h-10 border rounded-md px-3 flex items-center justify-between w-[90px] bg-background text-sm cursor-pointer"
-              onClick={() => setOpen(!open)}
+            <Button
+              variant="outline"
             >
-              <div className="flex items-center gap-1">
-                <CountryFlagEmoji countryCode={countryCode} />
-                <span>+{dialCode}</span>
-              </div>
-            </button>
+              <CountryFlagEmoji countryCode={countryCode} />
+              <span className="font-light">+{phoneCode}</span>
+            </Button>
           </PopoverTrigger>
           <PopoverContent className="w[100px] p-0" align="start">
             <Command>
@@ -150,7 +129,7 @@ export function CustomPhoneField({
                   {filteredCountries.map((country) => (
                     <CommandItem
                       key={country.id}
-                      onSelect={() => handleCountryChange(country.code)}
+                      onSelect={() => handleCountryChange(country.code, country.phoneCode)}
                       className="cursor-pointer"
                       onClick={() => setTouched(true)}
                     >
@@ -174,9 +153,10 @@ export function CustomPhoneField({
           onFocus={() => setTouched(true)}
           placeholder="3101234567"
           maxLength={10}
-          />
+          className="placeholder:font-light"
+        />
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
-}
+})

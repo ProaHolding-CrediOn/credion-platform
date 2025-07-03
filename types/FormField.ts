@@ -55,6 +55,7 @@ export interface Step {
 
 export interface RepeatableFormBlock {
   blockType: "repeatableFormBlock";
+  blockName: string;
   header: string;
   add: string;
   form: {

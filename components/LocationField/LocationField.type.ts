@@ -17,10 +17,19 @@ export interface City {
   name: string;
 }
 
-export interface LocationValue {
-  country?: string;
-  state?: string;
-  city?: string;
+export type LocationValue = {
+  country?: {
+    id: string;
+    name: string;
+  },
+  state?: {
+    id: string;
+    name: string;
+  },
+  city?: {
+    id: string;
+    name: string;
+  }
 }
 
 export interface LocationFieldProps {

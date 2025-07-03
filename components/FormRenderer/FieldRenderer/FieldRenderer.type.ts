@@ -1,9 +1,10 @@
+import { FormStore } from "@/stores/formStore";
 import { Field } from "@/types/FormField";
+import { StoreApi, UseBoundStore } from "zustand";
 
 export type FieldRendererProps = {
     field: Field;
-    formData: Record<string, any>;
     blockKey: any;
-    handleInputChange: (blockKey: string, field: string, label: string, value: any) => void;
-    onFieldValidation?: (field: string, isValid: boolean) => void;
+
+    store: UseBoundStore<StoreApi<FormStore>>;
 };

@@ -1,12 +1,12 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo, useRef } from "react";
 import { Label } from "@radix-ui/react-label";
 import { CustomEmailFieldProps } from "./CustomEmailField.type";
 import { Input } from "../ui/input";
 
 
-export function CustomEmailField({
+export default memo(function CustomEmailField({
   name,
   label,
   value = "",
@@ -17,6 +17,7 @@ export function CustomEmailField({
   const [internalValue, setInternalValue] = useState<string>(value);
   const [touched, setTouched] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const debouncedValidationRef = useRef<number | null>(null);
 
   useEffect(() => {
     setInternalValue(value);
@@ -25,7 +26,12 @@ export function CustomEmailField({
   useEffect(() => {
     if (value) {
       setTouched(true);
-      validate(value);
+    }
+
+    return () => {
+      if (debouncedValidationRef.current) {
+        window.clearTimeout(debouncedValidationRef.current);
+      }
     }
   }, []);
 
@@ -54,35 +60,40 @@ export function CustomEmailField({
     return true;
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-    setInternalValue(newValue);
+  const handleChange = (inputValue: string) => {
+    setInternalValue(inputValue);
     setTouched(true);
-    const isValid = validate(newValue);
-    onChange(name, newValue);
-    onValidationChange?.(name, isValid, newValue);
+    onChange(name, inputValue);
   };
 
-  const handleOnAttention = () => {
-    setTouched(true);
-    const isValid = validate(value);
-    onValidationChange?.(name, isValid, value);
-  };
+  const handleDebouncedValidation = (inputValue: string) => {
+    if (debouncedValidationRef.current) {
+      window.clearTimeout(debouncedValidationRef.current);
+    }
 
+    debouncedValidationRef.current = window.setTimeout(() => {
+      const isValid = validate(inputValue);
+      onValidationChange?.(name, isValid, inputValue);
+    }, 500)
+  }
   return (
     <div className="space-y-2">
-      <Label htmlFor={name}>
+      <Label htmlFor={name} className="text-sm font-light">
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
       <Input
         id={name}
         type="email"
         value={internalValue}
-        onChange={handleChange}
+        onChange={(e) => {
+          handleChange(e.target.value)
+          handleDebouncedValidation(e.target.value)
+        }}
         onBlur={() => setTouched(true)}
         placeholder="correo@example.com"
+        className="placeholder:font-light"
       />
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
-}
+})

@@ -1,14 +1,13 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, memo } from "react";
 import { Label } from "@radix-ui/react-label";
 import { City, Country, LocationFieldProps, LocationValue, State } from "./LocationField.type";
 import CustomSelectField from "../CustomSelectField/CustomSelectField";
 import { FieldOption } from "@/types/FormField";
 import api from "@/lib/axiosInstance";
 
-
-export function LocationField({
+export default memo(function LocationField({
   name,
   label,
   value = {},
@@ -20,17 +19,15 @@ export function LocationField({
   const [countries, setCountries] = useState<Country[]>([]);
   const [stateId, setStateId] = useState<string | undefined>(undefined);
   const [states, setStates] = useState<State[]>([]);
-  const [cityId, setCityId] = useState<string | undefined>(undefined);
   const [cities, setCities] = useState<City[]>([]);
 
-  const [countryCode, setCountryCode] = useState<string | undefined>(value.country);
-  const [stateCode, setStateCode] = useState<string | undefined>(value.state);
-  const [cityCode, setCityCode] = useState<string | undefined>(value.city);
+  const [locationValue, setLocationValue] = useState<LocationValue>(value);
 
   const [touched, setTouched] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const required = validations?.find(value => value.name === "required")?.value as boolean;
+  const fieldNameResidencia = 'residencia'
 
   useEffect(() => {
     async function fetchCountries() {
@@ -49,10 +46,6 @@ export function LocationField({
       const response = await api.get(`states?where[country][equals]=${countryId}&limit=0&sort=name`);
       const data = response.data;
       setStates(data.docs);
-      if (!data.docs.some((s: State) => s.code === stateCode)) {
-        setStateCode(undefined);
-        setCityCode(undefined);
-      }
     }
 
     fetchStates();
@@ -65,9 +58,6 @@ export function LocationField({
       const response = await api.get(`cities?where[state][equals]=${stateId}&limit=0&sort=name`);
       const data = response.data;
       setCities(data.docs);
-      if (!data.docs.some((c: City) => c.name === cityCode)) {
-        setCityCode(undefined);
-      }
     }
 
     fetchCities();
@@ -81,7 +71,7 @@ export function LocationField({
       return true;
     }
 
-    const isValid = !!(location.country && location.state && location.city);
+    const isValid = !!(location.country?.name && location.state?.name && location.city?.name);
     if (!isValid) {
       setError("Debe seleccionar país, estado y ciudad");
     } else {
@@ -90,60 +80,71 @@ export function LocationField({
     return isValid;
   };
 
-  const handleCountryChange = (fieldName: string,code: string) => {
-    const selectedCountry = countries.find((c) => c.code === code);
+  const handleCountryChange = (fieldName: string, name: string) => {
+    const selectedCountry = countries.find((c) => c.name === name);
     if (!selectedCountry) return;
 
-    setCountryCode(code);
-    setCountryId(selectedCountry.id)
-    setStateCode(undefined);
-    setStateId(undefined);
-    setCityCode(undefined);
-    setCityId(undefined);
+    const data = { country: { id: selectedCountry.id, name: selectedCountry.name }, state: { id: "", name: "" }, city: { id: "", name: "" } }
+    setLocationValue(data);
+    setCountryId(selectedCountry.id);
 
-    const newLocation = { country: code };
-    onChange(name, newLocation);
-    onValidationChange?.(name, validate(newLocation), newLocation);
+    onChange(fieldNameResidencia, data);
+    onValidationChange?.(fieldNameResidencia, validate(data), data);
   };
 
-  const handleStateChange = (fieldName: string, code: string) => {
-    const selectedState = states.find((s) => s.code === code);
+  const handleStateChange = (fieldName: string, name: string) => {
+    const selectedState = states.find((s) => s.name === name);
     if (!selectedState) return;
 
-    setStateCode(code);
+    const data = { ...locationValue, state: { id: selectedState.id, name: selectedState.name }, city: { id: "", name: "" } };
+    setLocationValue(data)
     setStateId(selectedState.id);
-    setCityCode(undefined);
-    setCityId(undefined);
 
-    const newLocation = { country: countryCode, state: code };
-    onChange(name, newLocation);
-    onValidationChange?.(name, validate(newLocation), newLocation);
+    onChange(fieldNameResidencia, data);
+    onValidationChange?.(fieldNameResidencia, validate(data), data);
   };
 
-  const handleCityChange = (fieldName: string, code: string) => {
-    const selectedCity = cities.find((c) => c.name === code);
+  const handleCityChange = (fieldName: string, name: string) => {
+    const selectedCity = cities.find((c) => c.name === name);
     if (!selectedCity) return;
 
-    setCityCode(code);
-    setCityId(selectedCity.id);
+    const data = { ...locationValue, city: { id: selectedCity.id, name: selectedCity.name } };
+    setLocationValue(data)
 
-    const newLocation = { country: countryCode, state: stateCode, city: code };
-    onChange(name, newLocation);
-    onValidationChange?.(name, validate(newLocation), newLocation);
+    onChange(fieldNameResidencia, data);
+    onValidationChange?.(fieldNameResidencia, validate(data), data);
   };
 
   // Opciones para los comboboxes
   const countryOptions: Array<FieldOption> = countries.map((country) => ({
     id: country.id,
     label: country.name,
-    value: country.code,
+    value: country.name,
   }));
+
+  if (countryOptions.length === 0 && locationValue.country?.id) {
+    countryOptions.push({
+      id: locationValue.country.id,
+      label: locationValue.country.name,
+      value: locationValue.country.name,
+    });
+    if (!countryId) setCountryId(locationValue.country.id);
+  }
 
   const stateOptions: Array<FieldOption> = states.map((state) => ({
     id: state.id,
     label: state.name,
-    value: state.code,
+    value: state.name,
   }));
+
+  if (stateOptions.length === 0 && locationValue.state?.id) {
+    stateOptions.push({
+      id: locationValue.state.id,
+      label: locationValue.state.name,
+      value: locationValue.state.name,
+    });
+    if (!stateId) setStateId(locationValue.state.id);
+  }
 
   const cityOptions: Array<FieldOption> = cities.map((city) => ({
     id: city.id,
@@ -151,9 +152,17 @@ export function LocationField({
     value: city.name,
   }));
 
+  if (cityOptions.length === 0 && locationValue.city?.id) {
+    cityOptions.push({
+      id: locationValue.city.id,
+      label: locationValue.city.name,
+      value: locationValue.city.name,
+    });
+  }
+
   return (
     <div className="space-y-2">
-      <Label htmlFor={name}>
+      <Label htmlFor={name} className="text-sm font-light">
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
 
@@ -162,13 +171,12 @@ export function LocationField({
           <CustomSelectField
             name={`${name}-country`}
             label="País"
-            value={countryCode}
+            value={locationValue.country?.name}
             options={countryOptions}
             validations={
               required ? [{ name: "required", value: true }] : []
             }
             onChange={handleCountryChange}
-            onValidationChange={() => {}}
           />
         </div>
 
@@ -176,13 +184,12 @@ export function LocationField({
           <CustomSelectField
             name={`${name}-state`}
             label="Estado"
-            value={stateCode}
+            value={locationValue.state?.name}
             options={stateOptions}
             validations={
               required ? [{ name: "required", value: true }] : []
             }
             onChange={handleStateChange}
-            onValidationChange={() => {}}
           />
         </div>
 
@@ -190,13 +197,12 @@ export function LocationField({
           <CustomSelectField
             name={`${name}-city`}
             label="Ciudad"
-            value={cityCode}
+            value={locationValue.city?.name}
             options={cityOptions}
             validations={
               required ? [{ name: "required", value: true }] : []
             }
             onChange={handleCityChange}
-            onValidationChange={() => {}}
           />
         </div>
       </div>
@@ -204,4 +210,4 @@ export function LocationField({
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
-}
+})

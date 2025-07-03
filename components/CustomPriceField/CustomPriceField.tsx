@@ -1,12 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { CustomPriceFieldProps } from "./CustomPriceField.type";
-import { Coins } from "lucide-react";
 
-export default function CustomPriceField({
+export default memo(function CustomPriceField({
   name,
   label,
   value = 0,
@@ -17,11 +16,18 @@ export default function CustomPriceField({
   const [error, setError] = useState<string | null>(null);
   const [touched, setTouched] = useState(false);
   const [internalValue, setInternalValue] = useState<string>();
+  const debouncedValidationRef = useRef<number | null>(null);
+
   useEffect(() => {
     if (value) {
       setTouched(true);
       setInternalValue(formatPrice(value));
-      validate(value);
+    }
+
+    return () => {
+      if (debouncedValidationRef.current) {
+        window.clearTimeout(debouncedValidationRef.current);
+      }
     }
   }, []);
 
@@ -66,9 +72,8 @@ export default function CustomPriceField({
     return cleaned ? parseInt(cleaned, 10) : 0;
   }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const raw = e.target.value;
-    const onlyNumbers = raw.replace(/\D/g, "");
+  const handleChange = (inputValue: string) => {
+    const onlyNumbers = inputValue.replace(/\D/g, "");
 
     if (!onlyNumbers) {
         setInternalValue("");
@@ -82,14 +87,23 @@ export default function CustomPriceField({
 
     setInternalValue(formattedValue);
     onChange(name, numericValue);
-    const valid = validate(numericValue);
-    console.log('valid', valid, 'numericValue', numericValue);
-    onValidationChange?.(name, valid, numericValue);
   }
+
+  const handleDebouncedValidation = (inputValue: number) => {
+    if (debouncedValidationRef.current) {
+      window.clearTimeout(debouncedValidationRef.current);
+    }
+
+    debouncedValidationRef.current = window.setTimeout(() => {
+      const isValid = validate(inputValue);
+      onValidationChange?.(name, isValid, inputValue);
+    }, 500)
+  }
+
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={name}>
+      <Label htmlFor={name} className="text-sm font-light">
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
       <div className="relative">
@@ -97,10 +111,14 @@ export default function CustomPriceField({
             id={name}
             type="text"
             value={internalValue}
-            onChange={handleChange}
+            onChange={(e) => {
+              const inputValue = e.target.value;
+              handleChange(inputValue)
+              handleDebouncedValidation(parseNumber(inputValue))
+            }}
             onFocus={() => setTouched(true)}
             placeholder={`0`}
-            className={`pr-16 ${error ? "border-destructive" : ""}`}
+            className={`pr-16 placeholder:font-light ${error ? "border-destructive" : ""}`}
         />
 
         <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
@@ -110,4 +128,4 @@ export default function CustomPriceField({
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   );
-}
+})

@@ -1,12 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "../../ui/button";
 import { ConditionalFormBlock, EnhancedBlock, EnhancedField, FormBlock, RepeatableFormBlock } from "@/types/FormField";
 import { BlockRendererProps } from "./BlockRenderer.type";
-import FieldRenderer, { isRegularField } from "../FieldRenderer/FieldRenderer";
+import FieldRenderer from "../FieldRenderer/FieldRenderer";
 import ResponsiveFieldGrid from "@/components/ResponsiveFieldGrid/ResponsiveFieldGrid";
-import { hasRequiredFields } from "@/lib/utils";
 
 export const isRepeatableFormBlock = (field: EnhancedBlock): field is RepeatableFormBlock => {
   return "blockType" in field && field.blockType === "repeatableFormBlock";
@@ -22,65 +20,42 @@ export const isRegularFormBlock = (field: EnhancedBlock): field is FormBlock => 
 
 export default function BlockRenderer({
   block,
-  formData,
   blockKey,
-  handleInputChange,
-  onBlockValidation
+  store
 }: BlockRendererProps) {
-  const [fieldStates, setFieldStates] = useState<Record<string, boolean>>({});
-  const debounceRef = useRef<number | null>(null);
-  const fieldNamesRef = useRef<string[]>(block.form.fields.map(field => field.name));
-
-  const handleFieldValidation = useCallback((fieldName: string, isValid: boolean) => {
-    setFieldStates(prev => {
-      const newState = { ...prev, [fieldName]: isValid };
-
-      if (debounceRef.current) clearTimeout(debounceRef.current);
-
-      debounceRef.current = window.setTimeout(() => {
-        const allValid = fieldNamesRef.current.every(fieldName => {
-          if (fieldName === undefined) return true;
-          return newState[fieldName] === true;
-        });
-
-        onBlockValidation?.(allValid);
-      }, 300);
-
-      return newState;
-    });
-  }, [onBlockValidation]);
-
-  const handleFieldValidationConditional = useCallback((expectedAnswers: Array<{ value: string }>, selectedOption: string) => {
-    if (!expectedAnswers.some(answer => answer.value === selectedOption)) {
-      onBlockValidation?.(true);
-    } else {
-      onBlockValidation?.(false);
-    }
-  }, [onBlockValidation]);
 
   if (isRegularFormBlock(block)) {
     return (
       <div key={`formblock`} className="space-y-4">
-        <ResponsiveFieldGrid>
+        {/*<ResponsiveFieldGrid>*/}
           {block.form && Array.isArray(block.form.fields) && block.form.fields.map((field: EnhancedField, index: number) => (
             <FieldRenderer
               key={`${block.form.title}-${field.name}-${index}`}
               field={field}
-              formData={formData}
               blockKey={blockKey}
-              handleInputChange={handleInputChange}
-              onFieldValidation={handleFieldValidation}
+              store={store}
             />
           ))}
-        </ResponsiveFieldGrid>
+        {/*</ResponsiveFieldGrid>*/}
       </div>
     );
   }
 
   if (isConditionalFormBlock(block)) {
-    const layoutId = `layout_${blockKey['layout']}`
-    const blockId = `block_${blockKey['block']}` 
-    const selectedOption = formData[layoutId][blockId][block.blockName].value ?? "";
+    const formData = store(state => state.formData)
+    const selectedOption = formData?.[`Paso ${blockKey.layout + 1}`]?.[block.blockName]?.['Condicion'].value ?? "";
+
+    const isExpected = block.expectedAnswers.some(ans => ans.value === selectedOption)
+
+    const handleSelect = (value: string) => {
+      store.getState().updateField(blockKey.layout + 1, block.blockName, 'Condicion', value)
+
+      if (!block.expectedAnswers.some(ans => ans.value === value)) {
+        store.getState().setBlockValid(blockKey.layout, block.blockName, true)
+      } else {
+        store.getState().setBlockValid(blockKey.layout, block.blockName, false)
+      }
+    }
 
     return (
       <div key={`conditional`} className="space-y-4">
@@ -94,10 +69,7 @@ export default function BlockRenderer({
                   name={`conditional-${opt.value}`}
                   value={opt.value}
                   checked={selectedOption === opt.value}
-                  onChange={() =>{
-                    handleInputChange(blockKey, block.blockName, block.label, opt.value);
-                    handleFieldValidationConditional(block.expectedAnswers, opt.value);
-                  }}
+                  onChange={() =>handleSelect(opt.value)}
                   className="accent-black"
                 />
                 {opt.label}
@@ -106,22 +78,18 @@ export default function BlockRenderer({
           </div>
         </div>
 
-        {block.expectedAnswers.some(
-          (ans) => ans.value === selectedOption
-        ) && block.form && Array.isArray(block.form.fields) && (
+        {isExpected && block.form && Array.isArray(block.form.fields) && (
             <div className="border border-border rounded-md p-4 bg-muted/30 space-y-4 mt-2">
-              <ResponsiveFieldGrid>
+              {/*<ResponsiveFieldGrid>*/}
                 {block.form.fields.map((field: EnhancedField, index: number) => (
                   <FieldRenderer
                     key={`${block.form.title}-${field.name}-${index}`}
                     field={field}
-                    formData={formData}
                     blockKey={blockKey}
-                    handleInputChange={handleInputChange}
-                    onFieldValidation={handleFieldValidation}
+                    store={store}
                   />
                 ))}
-              </ResponsiveFieldGrid>
+              {/*</ResponsiveFieldGrid>*/}
             </div>
           )}
       </div>

@@ -1,4 +1,5 @@
 import { isRegularField } from "@/components/FormRenderer/FieldRenderer/FieldRenderer";
+import { FormFieldValue } from "@/stores/formStore";
 import { EnhancedField, FieldType } from "@/types/FormField";
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
@@ -65,4 +66,17 @@ export function mapFormField(field: any): EnhancedField {
     validation: validations,
     options
   };
+}
+
+export function getInitialValueForType(type: string): FormFieldValue {
+  switch (type) {
+    case "countryStateCityField":
+      return { country: { id: "", name: "" }, state: { id: "", name: "" }, city: { id: "", name: "" } };
+    
+    case "phoneField":
+      return { countryCode: "", phoneCode: "", phone: "" };
+
+    default:
+      return "";
+  }
 }

@@ -1,9 +1,10 @@
+import { FormStore } from "@/stores/formStore";
 import { EnhancedBlock } from "@/types/FormField";
+import { StoreApi, UseBoundStore } from "zustand";
 
 export interface BlockRendererProps {
   block: EnhancedBlock;
-  formData: Record<string, any>;
   blockKey: any;
-  handleInputChange: (blockKey: string, field: string, label: string, value: any) => void;
-  onBlockValidation?: (isValid: boolean) => void;
+
+  store: UseBoundStore<StoreApi<FormStore>>;
 }

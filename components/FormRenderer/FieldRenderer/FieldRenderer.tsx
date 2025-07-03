@@ -1,19 +1,18 @@
 "use client"
 
-import { Input } from "../../ui/input";
 import { FieldRendererProps } from "./FieldRenderer.type";
 import { EnhancedField, fieldTypesArray, Field, MessageField } from "@/types/FormField";
-import { Textarea } from "@/components/ui/textarea";
-import React from "react";
+import { useCallback, useMemo } from "react";
 import CustomTextField from "@/components/CustomTextField/CustomTextField";
 import CustomDateField from "@/components/CustomDateField/CustomDateField";
 import CustomSelectField from "@/components/CustomSelectField/CustomSelectField";
-import { CustomPhoneField } from "@/components/CustomPhoneField";
-import { CustomEmailField } from "@/components/CustomEmailField/CustomEmailField";
-import { LocationField } from "@/components/LocationField/LocationField";
-import { CustomRadioField } from "@/components/CustomRadioField";
 import CustomPriceField from "@/components/CustomPriceField/CustomPriceField";
 import { Separator } from "@/components/ui/separator";
+import { LocationValue } from "@/components/LocationField/LocationField.type";
+import CustomEmailField from "@/components/CustomEmailField/CustomEmailField";
+import CustomPhoneField from "@/components/CustomPhoneField/CustomPhoneField";
+import CustomRadioField from "@/components/CustomRadioField/CustomRadioField";
+import LocationField from "@/components/LocationField/LocationField";
 
 export const isMessageField = (field: EnhancedField): field is MessageField => {
   return "lines" in field && field.type === "message";
@@ -25,11 +24,20 @@ export const isRegularField = (field: EnhancedField): field is Field => {
 
 export default function FieldRenderer({
     field,
-    formData,
     blockKey,
-    handleInputChange,
-    onFieldValidation
+    store
 }: FieldRendererProps) {
+    const { updateField, setFieldValid } = store();
+    //const currentValue = store((state) => state.formData?.[`Paso ${blockKey.layout + 1}`]?.[blockKey.blockName]?.[field.name]?.value);
+    const currentValue = store.getState().formData?.[`Paso ${blockKey.layout + 1}`]?.[blockKey.blockName]?.[field.name]?.value;
+
+    const onDataChange = useCallback((name: string, value: string | number | object | null | undefined) => {        
+        updateField(blockKey.layout + 1, blockKey.blockName, name, value)
+    }, [blockKey, updateField])
+
+    const onValidationChange = useCallback((name: string, isValid: boolean) => {
+        setFieldValid(blockKey.layout, blockKey.blockName, name, isValid)
+    }, [blockKey, setFieldValid])
 
     if (isMessageField(field)) {
         return (
@@ -43,25 +51,20 @@ export default function FieldRenderer({
         );
     }
 
-    if (isRegularField(field)) {
-        const onDataChange = (name: string, label: string, value: string | number) => {            
-            handleInputChange(blockKey, name, label, value);
-        }
+    const memoizedField = useMemo(() => field, [field.name, field.type, field.label, field.validation, field.options])
 
-        const layoutId = `layout_${blockKey['layout']}`
-        const blockId = `block_${blockKey['block']}` 
-
+    if (isRegularField(memoizedField)) {
         return (
-            <div key={`field-${field.name}`} className="space-y-2">
+            <>
                 {(field.type === "customTextField" || field.type === "text")&& (
                     <CustomTextField
                         key={`field-${field.name}`}
                         name={field.name}
                         label={field.label}
-                        value={formData[layoutId][blockId][field.name].value ?? ""}
+                        value={currentValue as string}
                         validations={field.validation}
-                        onChange={(fieldName, value) => onDataChange(fieldName, field.label, value)}
-                        onValidationChange={(fieldName, isValid, value) => onFieldValidation?.(fieldName, isValid)}
+                        onChange={onDataChange}
+                        onValidationChange={onValidationChange}
                     />
                 )}
 
@@ -70,10 +73,10 @@ export default function FieldRenderer({
                         key={`field-${field.name}`}
                         name={field.name}
                         label={field.label}
-                        value={formData[layoutId][blockId][field.name].value ?? ""}
+                        value={currentValue as string}
                         validations={field.validation}
-                        onChange={(fieldName, value) => onDataChange(fieldName, field.label, value)}
-                        onValidationChange={(fieldName, isValid, value) => onFieldValidation?.(fieldName, isValid)}
+                        onChange={onDataChange}
+                        onValidationChange={onValidationChange}
                     />
                 )}
 
@@ -82,18 +85,10 @@ export default function FieldRenderer({
                         key={`field-${field.name}`}
                         name={field.name}
                         label={field.label}
-                        value={formData[layoutId][blockId][field.name].value ?? ""}
+                        value={currentValue as string}
                         validations={field.validation}
-                        onChange={(fieldName, value) => onDataChange(fieldName, field.label, value)}
-                        onValidationChange={(fieldName, isValid, value) => onFieldValidation?.(fieldName, isValid)}
-                    />
-                )}
-
-                {field.type === "number" && (
-                    <Input
-                        id={field.name}
-                        type="number"
-                        value={formData[layoutId][blockId][field.name] ?? ""}
+                        onChange={onDataChange}
+                        onValidationChange={onValidationChange}
                     />
                 )}
 
@@ -102,10 +97,10 @@ export default function FieldRenderer({
                         key={`field-${field.name}`}
                         name={field.name}
                         label={field.label}
-                        value={formData[layoutId][blockId][field.name].value ?? ""}
+                        value={currentValue as { countryCode: string, phoneCode: string, phone: string }}
                         validations={field.validation}
-                        onChange={(fieldName, value) => onDataChange(fieldName, field.label, value)}
-                        onValidationChange={(fieldName, isValid, value) => onFieldValidation?.(fieldName, isValid)}
+                        onChange={onDataChange}
+                        onValidationChange={onValidationChange}
                     />
                 )}
 
@@ -114,11 +109,11 @@ export default function FieldRenderer({
                         key={`field-${field.name}`}
                         name={field.name}
                         label={field.label}
-                        value={formData[layoutId][blockId][field.name].value ?? ""}
+                        value={currentValue as string}
                         options={field.options}
                         validations={field.validation}
-                        onChange={(fieldName, value) => onDataChange(fieldName, field.label, value)}
-                        onValidationChange={(fieldName, isValid, value) => onFieldValidation?.(fieldName, isValid)}
+                        onChange={onDataChange}
+                        onValidationChange={onValidationChange}
                     />
                 )}
 
@@ -127,10 +122,10 @@ export default function FieldRenderer({
                         key={`field-${field.name}`}
                         name={field.name}
                         label={field.label}
-                        value={formData[layoutId][blockId][field.name].value ?? ""}
+                        value={currentValue as number}
                         validations={field.validation}
-                        onChange={(fieldName, value) => onDataChange(fieldName, field.label, value)}
-                        onValidationChange={(fieldName, isValid, value) => onFieldValidation?.(fieldName, isValid)}
+                        onChange={onDataChange}
+                        onValidationChange={onValidationChange}
                     />
                 )}
 
@@ -139,11 +134,11 @@ export default function FieldRenderer({
                         key={`field-${field.name}`}
                         name={field.name}
                         label={field.label}
-                        value={formData[layoutId][blockId][field.name].value ?? ""}
+                        value={currentValue as string}
                         options={field.options}
                         validations={field.validation}
-                        onChange={(fieldName, value) => onDataChange(fieldName, field.label, value)}
-                        onValidationChange={(fieldName, isValid, value) => onFieldValidation?.(fieldName, isValid)}
+                        onChange={onDataChange}
+                        onValidationChange={onValidationChange}
                     />
                 )}
 
@@ -152,14 +147,14 @@ export default function FieldRenderer({
                         name={field.name}
                         label={field.label}
                         validations={field.validation}
-                        onChange={(fieldName, value) => onDataChange(fieldName, field.label, `${value.country}-${value.state}-${value.city}`)}
-                        onValidationChange={(fieldName, isValid, value) => onFieldValidation?.(fieldName, isValid)}
+                        value={currentValue as LocationValue}
+                        onChange={onDataChange}
+                        onValidationChange={onValidationChange}
                     />
                 )}
 
-                <Separator className="my-4"/>
-                
-            </div>
+                <Separator className="my-4"/> 
+            </>
         )
     }
 
