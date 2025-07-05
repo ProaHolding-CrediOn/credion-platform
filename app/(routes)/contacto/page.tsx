@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { MessageCircleMore } from "lucide-react";
 import Link from "next/link";
 
 export default function ContactPage() {
@@ -31,14 +32,15 @@ export default function ContactPage() {
           <div>
             <h3 className="font-medium text-sm text-muted-foreground">✉️ Correos</h3>
             <ul className="text-muted-foreground list-disc list-inside ml-2">
-              <li>contacto@fintaxi.com</li>
-              <li>soporte@fintaxi.com</li>
+              <li>contacto@credion.com.co</li>
+              <li>soporte@credion.com.co</li>
             </ul>
           </div>
 
           <Link href="https://wa.me/573001234567 " target="_blank" rel="noopener noreferrer">
             <Button className="w-full bg-green-600 hover:bg-green-700 text-white cursor-pointer">
-              ✅ Escríbenos por WhatsApp
+              <MessageCircleMore className="w-4 h-4 mr-2" />
+              Escríbenos por WhatsApp
             </Button>
           </Link>
         </div>
