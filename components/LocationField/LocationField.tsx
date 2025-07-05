@@ -71,7 +71,7 @@ export default memo(function LocationField({
       return true;
     }
 
-    const isValid = !!(location.country?.name && location.state?.name && location.city?.name);
+    const isValid = !!(location.pais?.name && location.estado?.name && location.ciudad?.name);
     if (!isValid) {
       setError("Debe seleccionar país, estado y ciudad");
     } else {
@@ -84,7 +84,7 @@ export default memo(function LocationField({
     const selectedCountry = countries.find((c) => c.name === name);
     if (!selectedCountry) return;
 
-    const data = { country: { id: selectedCountry.id, name: selectedCountry.name }, state: { id: "", name: "" }, city: { id: "", name: "" } }
+    const data = { pais: { id: selectedCountry.id, name: selectedCountry.name }, estado: { id: "", name: "" }, ciudad: { id: "", name: "" } }
     setLocationValue(data);
     setCountryId(selectedCountry.id);
 
@@ -96,7 +96,7 @@ export default memo(function LocationField({
     const selectedState = states.find((s) => s.name === name);
     if (!selectedState) return;
 
-    const data = { ...locationValue, state: { id: selectedState.id, name: selectedState.name }, city: { id: "", name: "" } };
+    const data = { ...locationValue, estado: { id: selectedState.id, name: selectedState.name }, ciudad: { id: "", name: "" } };
     setLocationValue(data)
     setStateId(selectedState.id);
 
@@ -108,7 +108,7 @@ export default memo(function LocationField({
     const selectedCity = cities.find((c) => c.name === name);
     if (!selectedCity) return;
 
-    const data = { ...locationValue, city: { id: selectedCity.id, name: selectedCity.name } };
+    const data = { ...locationValue, ciudad: { id: selectedCity.id, name: selectedCity.name } };
     setLocationValue(data)
 
     onChange(fieldNameResidencia, data);
@@ -122,13 +122,13 @@ export default memo(function LocationField({
     value: country.name,
   }));
 
-  if (countryOptions.length === 0 && locationValue.country?.id) {
+  if (countryOptions.length === 0 && locationValue.pais?.id) {
     countryOptions.push({
-      id: locationValue.country.id,
-      label: locationValue.country.name,
-      value: locationValue.country.name,
+      id: locationValue.pais.id,
+      label: locationValue.pais.name,
+      value: locationValue.pais.name,
     });
-    if (!countryId) setCountryId(locationValue.country.id);
+    if (!countryId) setCountryId(locationValue.pais.id);
   }
 
   const stateOptions: Array<FieldOption> = states.map((state) => ({
@@ -137,13 +137,13 @@ export default memo(function LocationField({
     value: state.name,
   }));
 
-  if (stateOptions.length === 0 && locationValue.state?.id) {
+  if (stateOptions.length === 0 && locationValue.estado?.id) {
     stateOptions.push({
-      id: locationValue.state.id,
-      label: locationValue.state.name,
-      value: locationValue.state.name,
+      id: locationValue.estado.id,
+      label: locationValue.estado.name,
+      value: locationValue.estado.name,
     });
-    if (!stateId) setStateId(locationValue.state.id);
+    if (!stateId) setStateId(locationValue.estado.id);
   }
 
   const cityOptions: Array<FieldOption> = cities.map((city) => ({
@@ -152,11 +152,11 @@ export default memo(function LocationField({
     value: city.name,
   }));
 
-  if (cityOptions.length === 0 && locationValue.city?.id) {
+  if (cityOptions.length === 0 && locationValue.ciudad?.id) {
     cityOptions.push({
-      id: locationValue.city.id,
-      label: locationValue.city.name,
-      value: locationValue.city.name,
+      id: locationValue.ciudad.id,
+      label: locationValue.ciudad.name,
+      value: locationValue.ciudad.name,
     });
   }
 
@@ -171,7 +171,7 @@ export default memo(function LocationField({
           <CustomSelectField
             name={`${name}-country`}
             label="País"
-            value={locationValue.country?.name}
+            value={locationValue.pais?.name}
             options={countryOptions}
             validations={
               required ? [{ name: "required", value: true }] : []
@@ -184,7 +184,7 @@ export default memo(function LocationField({
           <CustomSelectField
             name={`${name}-state`}
             label="Estado"
-            value={locationValue.state?.name}
+            value={locationValue.estado?.name}
             options={stateOptions}
             validations={
               required ? [{ name: "required", value: true }] : []
@@ -197,7 +197,7 @@ export default memo(function LocationField({
           <CustomSelectField
             name={`${name}-city`}
             label="Ciudad"
-            value={locationValue.city?.name}
+            value={locationValue.ciudad?.name}
             options={cityOptions}
             validations={
               required ? [{ name: "required", value: true }] : []

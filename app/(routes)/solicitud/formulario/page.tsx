@@ -144,6 +144,7 @@ export default function FormularioPage() {
   const handleNewRequest = () => {
     useFormSolicitud.getState().resetForm();
     useFormSolicitud.getState().setSubmitted(false);
+    window.location.reload();
   }
 
   if (submitted) {

@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useOtpVerification } from "@/hooks/useOtpVerification";
-import { CustomPhoneField } from "@/components/CustomPhoneField";
+import CustomPhoneField from "@/components/CustomPhoneField/CustomPhoneField";
 
 export default function TelefonoPage() {
   const [telefono, setTelefono] = useState("");
@@ -37,7 +37,7 @@ export default function TelefonoPage() {
               <CustomPhoneField
                 name="telefono"
                 label="Número de Celular"
-                value = ""
+                value={{ codigoPais: "", codigoTelefono: "", telefono: "" }}
                 validations = {[{ name: "required", value: true }]}
                 onChange = {handleOnChange}
                 onValidationChange = {handleFieldValidation}

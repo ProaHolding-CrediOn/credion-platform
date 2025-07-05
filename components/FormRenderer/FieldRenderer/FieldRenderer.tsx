@@ -97,7 +97,7 @@ export default function FieldRenderer({
                         key={`field-${field.name}`}
                         name={field.name}
                         label={field.label}
-                        value={currentValue as { countryCode: string, phoneCode: string, phone: string }}
+                        value={currentValue as { codigoPais: string, codigoTelefono: string, telefono: string }}
                         validations={field.validation}
                         onChange={onDataChange}
                         onValidationChange={onValidationChange}

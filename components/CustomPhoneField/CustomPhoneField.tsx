@@ -15,7 +15,7 @@ import { Button } from "../ui/button";
 export default memo(function CustomPhoneField({
   name,
   label,
-  value = { countryCode: "", phoneCode: "", phone: "" },
+  value = { codigoPais: "", codigoTelefono: "", telefono: "" },
   validations = [],
   onChange,
   onValidationChange,
@@ -34,9 +34,9 @@ export default memo(function CustomPhoneField({
   useEffect(() => {
     if (value) {
       setTouched(true);
-      setCountryCode(value.countryCode || "CO")
-      setPhoneCode(value.phoneCode || "57")
-      setPhoneNumber(value.phone || "")
+      setCountryCode(value.codigoPais || "CO")
+      setPhoneCode(value.codigoTelefono || "57")
+      setPhoneNumber(value.telefono || "")
     }
   }, [countries]);
 
@@ -78,7 +78,7 @@ export default memo(function CustomPhoneField({
 
   const handleChange = (number: string) => {
     const isValid = validate(countryCode, phoneCode, number);
-    const value = { countryCode, phoneCode, phone: number };
+    const value = { codigoPais: countryCode, codigoTelefono: phoneCode, telefono: number };
     onChange(name, value);
     onValidationChange?.(name, isValid, value);
   }
@@ -89,7 +89,7 @@ export default memo(function CustomPhoneField({
     const isValid = validate(newCountryCode, newPhoneCode, phoneNumber);
     setTouched(true);
     setOpen(!open);
-    const value = { countryCode: newCountryCode, phoneCode: newPhoneCode, phone: phoneNumber };
+    const value = { codigoPais: newCountryCode, codigoTelefono: newPhoneCode, telefono: phoneNumber };
     onChange(name, value);
     onValidationChange?.(name, isValid, value);
   };
@@ -151,7 +151,7 @@ export default memo(function CustomPhoneField({
           value={phoneNumber}
           onChange={handlePhoneChange}
           onFocus={() => setTouched(true)}
-          placeholder="3101234567"
+          placeholder="Ingrese su numero"
           maxLength={10}
           className="placeholder:font-light"
         />

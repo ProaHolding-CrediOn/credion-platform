@@ -71,10 +71,10 @@ export function mapFormField(field: any): EnhancedField {
 export function getInitialValueForType(type: string): FormFieldValue {
   switch (type) {
     case "countryStateCityField":
-      return { country: { id: "", name: "" }, state: { id: "", name: "" }, city: { id: "", name: "" } };
+      return { pais: { id: "", name: "" }, estado: { id: "", name: "" }, ciudad: { id: "", name: "" } };
     
     case "phoneField":
-      return { countryCode: "", phoneCode: "", phone: "" };
+      return { codigoPais: "", codigoTelefono: "", telefono: "" };
 
     default:
       return "";
