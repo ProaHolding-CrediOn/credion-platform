@@ -9,7 +9,6 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, Command
 import { Check } from "lucide-react";
 import { Input } from "../ui/input";
 import { CountryFlagEmoji } from "../CountryFlagEmoji";
-import api from "@/lib/axiosInstance";
 import { Button } from "../ui/button";
 
 export default memo(function CustomPhoneField({
