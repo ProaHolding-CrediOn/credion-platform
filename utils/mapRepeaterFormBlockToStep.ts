@@ -14,6 +14,7 @@ export function mapRepeaterFormBlockToStep(
 
     const mappedFields: RepeatableFormBlock = {
       blockType: "repeatableFormBlock",
+      blockName: block.blockName,
       header: block.header,
       add: block.add,
       form: {
@@ -25,7 +26,7 @@ export function mapRepeaterFormBlockToStep(
     return {
       stepNumber: index + 1,
       title: stepTitle,
-      blocks: [],
+      blocks: [mappedFields],
     };
   } catch (error) {
     console.error("Error al mapear repeaterFormBlock", error);

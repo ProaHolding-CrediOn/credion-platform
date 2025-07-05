@@ -13,10 +13,10 @@ import {
 import FormRenderer from "@/components/FormRenderer/FormRenderer";
 import { Button } from "@/components/ui/button";
 import api from "@/lib/axiosInstance";
-import { BlockState, createFormStore, FieldState, FormData } from "@/stores/formStore";
+import { BlockState, FieldState, FormData } from "@/stores/formStore";
 import { getInitialValueForType } from "@/lib/utils";
+import { useFormSolicitud } from "./useFormSolicitud";
 
-export const useFormSolicitud = createFormStore('solicitud')
 
 export default function FormularioPage() {
   const { isAuthenticated, loading } = useAuth();
