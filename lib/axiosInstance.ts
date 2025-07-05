@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useLoadingStore } from './stores/loading';
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api',
+  baseURL: process.env.CORE_SERVICE_API_URL || 'http://localhost:3000/api',
 });
 
 /*let activeRequests = 0;

@@ -1,0 +1,19 @@
+services:
+  platform:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3001"
+    networks:
+      - credion-network
+    environment:
+      - NODE_ENV=production
+      - HOST=0.0.0.0
+      - PORT=3001
+      - CORE_SERVICE_API_URL=http://core-service:3000/api
+    restart: unless-stopped
+
+networks:
+  credion-network:
+    external: true
