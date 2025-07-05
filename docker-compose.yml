@@ -1,6 +1,6 @@
 services:
   forms:
-    image: ghcr.io/rankey1496/plataform:latest
+    image: ghcr.io/rankey1496/platform:latest
     ports:
       - "3001"
     networks:

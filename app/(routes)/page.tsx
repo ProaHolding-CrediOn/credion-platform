@@ -11,7 +11,7 @@ export default function Home() {
     useEffect(() => {
         const timeout = setTimeout(() => {
             router.push('/solicitud')
-        }, 50000)
+        }, 3000)
 
         return () => clearTimeout(timeout)
     }, [])
