@@ -2,17 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
-import { useOtpVerification } from "@/hooks/useOtpVerification";
 import { InputOTP, InputOTPSeparator, InputOTPSlot } from "@/components/ui/input-otp";
+import Link from "next/link";
 
 export default function OtpPage() {
-  const [telefono, setTelefono] = useState("");
+  const [phone, setPhone] = useState({ codigoTelefono: '57', telefono: '' });
   const [code, setCode] = useState("");
   const [isValid, setIsValid] = useState(false);
   const [timeLeft, setTimeLeft] = useState(30);
   const [canResend, setCanResend] = useState(false);
-  const { loading, error, sendPhone, verifyOtp } = useOtpVerification();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (timeLeft > 0) {
@@ -27,17 +27,67 @@ export default function OtpPage() {
   }, [timeLeft])
 
   useEffect(() => {
-    const phoneNumber = localStorage.getItem("phoneNumber");
+    const phoneNumber = JSON.parse(localStorage.getItem("phoneNumber") as string);
 
     if (!phoneNumber) {
       window.location.href = "/verificacion/telefono";
     } else {
-      setTelefono(phoneNumber);
+      setPhone(phoneNumber);
     }
   }, []);
 
+  const verifyOtp = async (phone: { codigoTelefono: string, telefono: string }, code: string) => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/otp/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone, code }),
+      });
+      
+      if (!response.ok) throw new Error()
+      const data = await response.json()
+      if (data.token) {
+        localStorage.setItem('auth_token', data.token)
+        localStorage.removeItem('phoneNumber')
+        return { success: true, token: data.token }
+      }
+      return { success: false }
+    } catch (error) {
+      console.log('Error al verificar el teléfono:', error);
+      setError("Error al verificar el teléfono");
+      return { success: false }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const sendPhone = async (phone: { codigoTelefono: string, telefono: string }) => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      
+      if (!response.ok) throw new Error()
+      const data = await response.json()
+      if (data.success) {
+        return { success: true }
+      }
+      return { success: false }
+    } catch (error) {
+      console.log('Error al enviar el teléfono:', error);
+      setError("Error al enviar el teléfono");
+      return { success: false }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
-    const result = await verifyOtp(code);
+    const result = await verifyOtp(phone, code);
     if (result.success) {
       window.location.href = "/solicitud/formulario";
     }
@@ -56,7 +106,7 @@ export default function OtpPage() {
     setCanResend(false);
     setTimeLeft(60);
     setCode('');
-    await sendPhone(telefono);
+    await sendPhone(phone);
   }
 
   return (

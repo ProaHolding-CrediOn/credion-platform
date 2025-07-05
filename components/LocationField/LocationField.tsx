@@ -5,7 +5,6 @@ import { Label } from "@radix-ui/react-label";
 import { City, Country, LocationFieldProps, LocationValue, State } from "./LocationField.type";
 import CustomSelectField from "../CustomSelectField/CustomSelectField";
 import { FieldOption } from "@/types/FormField";
-import api from "@/lib/axiosInstance";
 
 export default memo(function LocationField({
   name,
@@ -31,9 +30,14 @@ export default memo(function LocationField({
 
   useEffect(() => {
     async function fetchCountries() {
-      const response = await api.get('countries?limit=0&sort=name');
-      const data = response.data;
-      setCountries(data.docs);
+      try {
+        const response = await fetch('/api/countries')
+        if (!response.ok) throw new Error()
+        const data = await response.json()
+        setCountries(data.docs);
+      } catch (error) {
+        console.log('Error al cargar países:', error);
+      }
     }
 
     fetchCountries();
@@ -43,9 +47,14 @@ export default memo(function LocationField({
     if (!countryId) return;
 
     async function fetchStates() {
-      const response = await api.get(`states?where[country][equals]=${countryId}&limit=0&sort=name`);
-      const data = response.data;
-      setStates(data.docs);
+      try {
+        const response = await fetch(`/api/countries/${countryId}/states`)
+        if (!response.ok) throw new Error()
+        const data = await response.json()
+        setStates(data.docs);
+      } catch (error) {
+        console.log('Error al cargar los estados:', error);
+      }
     }
 
     fetchStates();
@@ -55,9 +64,14 @@ export default memo(function LocationField({
     if (!stateId) return;
 
     async function fetchCities() {
-      const response = await api.get(`cities?where[state][equals]=${stateId}&limit=0&sort=name`);
-      const data = response.data;
-      setCities(data.docs);
+      try {
+        const response = await fetch(`/api/countries/${countryId}/states/${stateId}/cities`)
+        if (!response.ok) throw new Error()
+        const data = await response.json()
+        setCities(data.docs);
+      } catch (error) {
+        console.log('Error al cargar las ciudades:', error);
+      }
     }
 
     fetchCities();

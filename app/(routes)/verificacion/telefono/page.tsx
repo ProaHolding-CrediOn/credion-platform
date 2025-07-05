@@ -3,23 +3,49 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { useOtpVerification } from "@/hooks/useOtpVerification";
 import CustomPhoneField from "@/components/CustomPhoneField/CustomPhoneField";
-
+import { useRouter } from "next/navigation";
 export default function TelefonoPage() {
-  const [telefono, setTelefono] = useState("");
+  const router = useRouter();
+  const [phone, setPhone] = useState({ codigoTelefono: '57', telefono: '' });
   const [isValid, setIsValid] = useState(false);
-  const { loading, error, sendPhone } = useOtpVerification();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const sendPhone = async (phone: { codigoTelefono: string, telefono: string }) => {
+    setLoading(true);
+    try {
+      const response = await fetch('/api/otp/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone }),
+      });
+      
+      if (!response.ok) throw new Error()
+      const data = await response.json()
+      if (data.success) {
+        localStorage.setItem('phoneNumber', JSON.stringify(phone))
+        return { success: true }
+      }
+      return { success: false }
+    } catch (error) {
+      console.log('Error al enviar el teléfono:', error);
+      setError("Error al enviar el teléfono");
+      return { success: false }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleSubmit = async () => {
-    const result = await sendPhone(telefono);
+    const result = await sendPhone(phone);
     if (result.success) {
-      window.location.href = "/verificacion/otp";
+      router.push('/verificacion/otp')
     }
   };
 
   const handleOnChange = (name: string, value: any) => {
-    setTelefono(value);
+    setPhone(value);
   }
 
   const handleFieldValidation = (fieldName: string, isValid: boolean, value: any) => {

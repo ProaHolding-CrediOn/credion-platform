@@ -12,11 +12,9 @@ import {
 } from "@/components/ui/dialog";
 import FormRenderer from "@/components/FormRenderer/FormRenderer";
 import { Button } from "@/components/ui/button";
-import api from "@/lib/axiosInstance";
 import { BlockState, FieldState, FormData } from "@/stores/formStore";
 import { getInitialValueForType } from "@/lib/utils";
 import { useFormSolicitud } from "./useFormSolicitud";
-
 
 export default function FormularioPage() {
   const { isAuthenticated, loading } = useAuth();
@@ -35,13 +33,18 @@ export default function FormularioPage() {
 
     const fetchForm = async () => {
       try {
-        const response = await api.get('requests/6843a81c9c595f644861a92e?depth=1&draft=false&locale=undefined', { headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` } });
+        const response = await fetch('/api/forms/solicitud', {
+          method: "GET",
+          headers: {
+            'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+          }
+        });
 
-        if (!response.data) {
+        if (!response.ok) {
           throw new Error("Error al cargar el formulario");
         }
 
-        const data = response.data;
+        const data = await response.json();
         const mappedSteps = mapPayloadFormToSteps(data);
         setSteps(mappedSteps);
       } catch (error) {
@@ -113,11 +116,16 @@ export default function FormularioPage() {
 
   const handleSubmit = async (formData: any) => {
     setSubmitting(true);
-
     try {
-      const response = await api.post('credit/form-solicitud', { formSolicitud: formData }, { headers: { 'Authorization': `Bearer ${localStorage.getItem('auth_token')}` } });
+      const response = await fetch('/api/forms/solicitud', {
+        method: "POST",
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
+        },
+        body: JSON.stringify(formData)
+      })
 
-      if (!response.data) {
+      if (!response.ok) {
         throw new Error('Error al enviar el formulario');
       }
 

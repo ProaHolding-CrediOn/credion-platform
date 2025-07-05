@@ -43,8 +43,9 @@ export default memo(function CustomPhoneField({
   useEffect(() => {
     async function fetchCountries() {
         try {
-          const response = await api.get('countries?limit=0&sort=name');
-          const data = response.data;
+          const response = await fetch('/api/countries')
+          if (!response.ok) throw new Error()
+          const data = await response.json()
           setCountries(data.docs);
         } catch (error) {
             console.log('Error al cargar países:', error);
