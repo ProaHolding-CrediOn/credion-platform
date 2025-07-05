@@ -3,7 +3,7 @@ import Link from "next/link";
 export function Footer() {
     return (
         <footer className="bg-background border-t border-gray-200 py-6">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 font-light">
                 <p className="text-center text-sm text-muted-foreground mb-4">
                     &copy; {new Date().getFullYear()} Credion. Todos los derechos reservados.
                 </p>

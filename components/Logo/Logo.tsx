@@ -8,7 +8,7 @@ export function Logo() {
         <div className='min-h-20 h-20 flex items-center px-6 cursor-pointer gap-2'
             onClick={() => router.push('/')}>
                 <Image src='/logo.svg' alt='Logo' width={30} height={30} priority />
-                <h1 className='font-bold text-2xl text-foreground'>Credion</h1>
+                {/*<h1 className='font-bold text-2xl text-foreground'>Credion</h1>*/}
         </div>
     )
 }

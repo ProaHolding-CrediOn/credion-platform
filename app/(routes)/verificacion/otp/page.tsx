@@ -113,7 +113,7 @@ export default function OtpPage() {
     <div className="min-h-screen flex md:flex-col md:items-center md:justify-center">
       <div className="w-full md:w-1/2 px-4 flex flex-col items-center">
         <div className="w-full space-y-6 bg-background p-8 md:max-w-md md:border md:border-border md:shadow-sm md:rounded-lg">
-          <h2 className="text-xl font-semibold text-foreground">Ingresa el código de verificación</h2>
+          <h2 className="text-xl font-light text-foreground">Ingresa el código de verificación</h2>
 
           <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4">
             <div className="space-y-2">
