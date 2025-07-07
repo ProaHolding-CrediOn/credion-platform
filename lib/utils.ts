@@ -52,12 +52,15 @@ export function mapFormField(field: any): EnhancedField {
 
   let validations = [];
   if (field.required) validations.push({ name: 'required', value: true });
+  if (field.pattern) validations.push({ name: 'pattern', value: field.pattern });
   if (field.minLength) validations.push({ name: 'minLength', value: field.minLength });
   if (field.maxLength) validations.push({ name: 'maxLength', value: field.maxLength });
   if (field.minDate) validations.push({ name: 'minDate', value: field.minDate });
   if (field.maxDate) validations.push({ name: 'maxDate', value: field.maxDate });
   if (field.minValue) validations.push({ name: 'minValue', value: field.minValue });
   if (field.maxValue) validations.push({ name: 'maxValue', value: field.maxValue });
+  if (field.daysLeft) validations.push({ name: 'daysLeft', value: field.daysLeft });
+  if (field.maxFiles) validations.push({ name: 'maxFiles', value: field.maxFiles });
 
   return {
     name: field.name,
@@ -71,12 +74,24 @@ export function mapFormField(field: any): EnhancedField {
 export function getInitialValueForType(type: string): FormFieldValue {
   switch (type) {
     case "countryStateCityField":
-      return { pais: { id: "", name: "" }, estado: { id: "", name: "" }, ciudad: { id: "", name: "" } };
+      return { pais: { id: "", nombre: "" }, estado: { id: "", nombre: "" }, ciudad: { id: "", nombre: "" } };
     
     case "phoneField":
       return { codigoPais: "", codigoTelefono: "", telefono: "" };
+
+    case "secretariaTransitoField":
+      return { estado: { id: "", nombre: "" }, ciudad: { id: "", nombre: "" }, secretaria: { id: "", nombre: "" } };
+
+    case "fileUploadField":
+      return [];
 
     default:
       return "";
   }
 }
+
+export const normalizeText = (text: string): string => {
+  return String(text).normalize('NFD').replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9\s]/gi, "");
+}
+
+export const formatPrice = (price: number) => new Intl.NumberFormat("es-CO").format(price);

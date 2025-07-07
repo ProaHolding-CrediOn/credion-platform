@@ -8,4 +8,5 @@ export interface CustomSelectFieldProps {
   validations?: Array<FieldValidation>;
   onChange: (name: string, value: string) => void;
   onValidationChange?: (name: string, isValid: boolean, value: string) => void;
+  disabled?: boolean
 }

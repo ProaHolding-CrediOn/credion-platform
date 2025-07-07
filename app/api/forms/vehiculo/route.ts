@@ -1,0 +1,19 @@
+import { NextRequest, NextResponse } from "next/server"
+
+export async function GET(req: NextRequest) {
+    const token = req.headers.get('Authorization') as string
+    const response = await fetch(`${process.env.CORE_SERVICE_API_URL}/requests/6869af914342ba574d144ac5?depth=1&draft=false&locale=undefined`, {
+        headers: {
+            Authorization: token,
+            'Content-Type': 'application/json'
+        }
+    })
+
+    if (!response.ok) {
+        return NextResponse.json({ error: "No se pudo cargar el formulario" }, { status: 500 })
+    }
+
+    const data = await response.json()
+
+    return NextResponse.json(data)
+}

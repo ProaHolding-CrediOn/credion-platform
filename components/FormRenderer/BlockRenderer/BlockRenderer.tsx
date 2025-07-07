@@ -3,6 +3,7 @@
 import { ConditionalFormBlock, EnhancedBlock, EnhancedField, FormBlock, RepeatableFormBlock } from "@/types/FormField";
 import { BlockRendererProps } from "./BlockRenderer.type";
 import FieldRenderer from "../FieldRenderer/FieldRenderer";
+import { Separator } from "@/components/ui/separator";
 
 export const isRepeatableFormBlock = (field: EnhancedBlock): field is RepeatableFormBlock => {
   return "blockType" in field && field.blockType === "repeatableFormBlock";
@@ -76,8 +77,10 @@ export default function BlockRenderer({
           </div>
         </div>
 
+        <Separator className="my-4"/> 
+
         {isExpected && block.form && Array.isArray(block.form.fields) && (
-            <div className="border border-border rounded-md p-4 bg-muted/30 space-y-4 mt-2">
+            <div className="border border-border rounded-md p-4 bg-muted/10 space-y-4 mt-2">
               {/*<ResponsiveFieldGrid>*/}
                 {block.form.fields.map((field: EnhancedField, index: number) => (
                   <FieldRenderer
@@ -93,138 +96,6 @@ export default function BlockRenderer({
       </div>
     );
   }
-
-  /*if (isRepeatableFormBlock(block)) {
-    const storageKey = `repeatable_${block.form.title}`;
-    const savedItems = formData[blockKey][storageKey] || [];
-    
-    const [isOpen, setIsOpen] = useState(false);
-    const [currentItem, setCurrentItem] = useState<Record<string, any>>({
-      [blockKey]: {}
-    });
-    const [errors, setErrors] = useState<Record<string, string>>({});
-
-    const handleFieldChange = (field: string, value: any) => {
-      console.log('Field change', field, value);
-      setCurrentItem((prev) => ({
-        ...prev,
-        [blockKey]: {
-          ...prev[blockKey],
-          [field]: value
-        },
-      }));
-    };
-
-    const canSaveItem = () => {
-      const errors = validateBlock(blockKey, block, formData);
-      console.log('Repeatable errors', errors);
-
-      if (Object.keys(errors).length > 0) {
-        setErrors(errors);
-        return false;
-      }
-
-      setErrors({});
-      return true;
-    }
-
-    const handleSave = () => {
-      const updatedItems = [...savedItems, currentItem];
-
-      handleInputChange(blockKey, storageKey, updatedItems);
-      setCurrentItem({});
-      setIsOpen(false);
-    };
-
-    const handleDelete = (index: number) => {
-      const updatedItems = savedItems.filter((_: any, i: number) => i !== index);
-      handleInputChange(blockKey, storageKey, updatedItems);
-    };
-
-    return (
-      <div className="space-y-4">
-        {!isOpen && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setIsOpen(true)}
-            disabled={
-              savedItems.length > 0 &&
-              Object.keys(savedItems[savedItems.length - 1]).length === 0
-            }
-          >
-            + {block.add}
-          </Button>
-        )}
-
-        {isOpen && (
-          <div className="border border-border rounded-md p-4 bg-muted/30 space-y-4 mt-2">
-            <h3 className="font-semibold text-sm text-foreground">{block.header}</h3>
-
-            {block.form.fields.map((field: EnhancedField, index: number) => (
-              <FieldRenderer
-                  key={`${block.form.title}-${field.name}-${index}`}
-                  field={field}
-                  formData={currentItem}
-                  blockKey={blockKey}
-                  handleInputChange={handleFieldChange}
-                  errors={errors}
-                />
-            ))}
-
-            <div className="flex gap-2 justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setIsOpen(false);
-                }}
-              >
-                Cancelar
-              </Button>
-              <Button size="sm" onClick={() => {
-                if (canSaveItem()) {
-                  handleSave();
-                }
-              }}>
-                Guardar
-              </Button>
-            </div>
-          </div>
-        )}
-
-        {savedItems.length > 0 && (
-          <div className="mt-4 space-y-2">
-            <p className="text-sm font-medium">Elementos agregados:</p>
-            <ul className="space-y-2">
-              {savedItems.map((item: any, index: number) => (
-                <li
-                  key={`item-${index}`}
-                  className="flex justify-between items-center p-2 border border-border rounded-md bg-background"
-                >
-                  <span>
-                    {Object.entries(item)
-                      .filter(([_, value]) => value)
-                      .map(([key, value]) => `${key}: ${value}`)
-                      .join(" | ")}
-                  </span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-destructive"
-                    onClick={() => handleDelete(index)}
-                  >
-                    Eliminar
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </div>
-    );
-  }*/
 
   return null;
 }

@@ -85,7 +85,9 @@ export default memo(function LocationField({
       return true;
     }
 
-    const isValid = !!(location.pais?.name && location.estado?.name && location.ciudad?.name);
+    const isValid = !!(location.pais && location.pais?.name !== '' &&
+      location.estado && location.estado?.name !== '' &&
+      location.ciudad && location.ciudad?.name !== '');
     if (!isValid) {
       setError("Debe seleccionar país, estado y ciudad");
     } else {
@@ -180,7 +182,7 @@ export default memo(function LocationField({
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
 
-      <div className="flex flex-nowrap justify-between gap-2">
+      <div className="flex flex-nowrap justify-between gap-2" onClick={() => setTouched(true)}>
         <div className="w-[32%]">
           <CustomSelectField
             name={`${name}-country`}

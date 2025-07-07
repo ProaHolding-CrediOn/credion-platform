@@ -13,6 +13,12 @@ import CustomEmailField from "@/components/CustomEmailField/CustomEmailField";
 import CustomPhoneField from "@/components/CustomPhoneField/CustomPhoneField";
 import CustomRadioField from "@/components/CustomRadioField/CustomRadioField";
 import LocationField from "@/components/LocationField/LocationField";
+import SecretariaTransitoField from "@/components/SecretariaTransitoField/SecretariaTransitoField";
+import { SecretariaLocationValue } from "@/components/SecretariaTransitoField/SecretariaTransitoField.type";
+import CustomTextareaField from "@/components/CustomTextareaField/CustomTextareaField";
+import FileUploadField from "@/components/FileUploadField/FileUploadField";
+import CustomNumberField from "@/components/CustomNumberField/CustomNumberField";
+import { UploadedFile } from "@/components/FileUploadField/FileUploadField.type";
 
 export const isMessageField = (field: EnhancedField): field is MessageField => {
   return "lines" in field && field.type === "message";
@@ -28,7 +34,6 @@ export default function FieldRenderer({
     store
 }: FieldRendererProps) {
     const { updateField, setFieldValid } = store();
-    //const currentValue = store((state) => state.formData?.[`Paso ${blockKey.layout + 1}`]?.[blockKey.blockName]?.[field.name]?.value);
     const currentValue = store.getState().formData?.[`Paso ${blockKey.layout + 1}`]?.[blockKey.blockName]?.[field.name]?.value;
 
     const onDataChange = useCallback((name: string, value: string | number | object | null | undefined) => {        
@@ -56,8 +61,32 @@ export default function FieldRenderer({
     if (isRegularField(memoizedField)) {
         return (
             <>
-                {(field.type === "customTextField" || field.type === "text")&& (
+                {(field.type === "customTextField" || field.type === "text") && (
                     <CustomTextField
+                        key={`field-${field.name}`}
+                        name={field.name}
+                        label={field.label}
+                        value={currentValue as string}
+                        validations={field.validation}
+                        onChange={onDataChange}
+                        onValidationChange={onValidationChange}
+                    />
+                )}
+
+                {(field.type === "customNumberField" || field.type === "number") && (
+                    <CustomNumberField
+                        key={`field-${field.name}`}
+                        name={field.name}
+                        label={field.label}
+                        value={currentValue as string}
+                        validations={field.validation}
+                        onChange={onDataChange}
+                        onValidationChange={onValidationChange}
+                    />
+                )}
+
+                {(field.type === "customTextareaField" || field.type === "textarea") && (
+                    <CustomTextareaField
                         key={`field-${field.name}`}
                         name={field.name}
                         label={field.label}
@@ -148,6 +177,28 @@ export default function FieldRenderer({
                         label={field.label}
                         validations={field.validation}
                         value={currentValue as LocationValue}
+                        onChange={onDataChange}
+                        onValidationChange={onValidationChange}
+                    />
+                )}
+
+                {field.type === "secretariaTransitoField" && (
+                    <SecretariaTransitoField
+                        name={field.name}
+                        label={field.label}
+                        validations={field.validation}
+                        value={currentValue as SecretariaLocationValue}
+                        onChange={onDataChange}
+                        onValidationChange={onValidationChange}
+                    />
+                )}
+
+                {field.type === "fileUploadField" && (
+                    <FileUploadField
+                        name={field.name}
+                        label={field.label}
+                        validations={field.validation}
+                        value={currentValue as UploadedFile[]}
                         onChange={onDataChange}
                         onValidationChange={onValidationChange}
                     />

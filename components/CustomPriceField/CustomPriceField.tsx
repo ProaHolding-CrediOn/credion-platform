@@ -49,12 +49,12 @@ export default memo(function CustomPriceField({
     }
 
     if (minValue && value < minValue) {
-        setError(`El valor mínimo es ${minValue}`);
+        setError(`El valor mínimo es $${formatPrice(minValue)} COP`);
         return false;
     }
 
     if (maxValue && value > maxValue) {
-        setError(`El valor máximo es ${maxValue}`);
+        setError(`El valor máximo es $${formatPrice(maxValue)} COP`);
         return false;
     }
 
@@ -107,6 +107,12 @@ export default memo(function CustomPriceField({
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
       <div className="relative">
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+          $
+        </span>
+        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+          COP
+        </span>
         <Input
             id={name}
             type="text"
@@ -118,12 +124,8 @@ export default memo(function CustomPriceField({
             }}
             onFocus={() => setTouched(true)}
             placeholder={`0`}
-            className={`pr-16 placeholder:font-light ${error ? "border-destructive" : ""}`}
+            className={`pl-8 pr-16 placeholder:font-light ${error ? "border-destructive" : ""}`}
         />
-
-        <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
-            COP
-        </span>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>

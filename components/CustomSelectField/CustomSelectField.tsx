@@ -5,7 +5,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "../ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../ui/command";
-import { cn } from "@/lib/utils";
+import { cn, normalizeText } from "@/lib/utils";
 
 export default memo(function CustomSelectField({
   name,
@@ -15,6 +15,7 @@ export default memo(function CustomSelectField({
   validations,
   onChange,
   onValidationChange,
+  disabled
 }: CustomSelectFieldProps) {
   const [open, setOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -55,8 +56,11 @@ export default memo(function CustomSelectField({
     setOpen(false);
   };
 
-  const filteredOptions = options.filter((option) =>
-    option.label.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredOptions = options.filter((option) => {
+    const optionSearch = normalizeText(option.label)
+    const searchTermSearch = normalizeText(searchTerm).toLowerCase()
+    return optionSearch.includes(searchTermSearch)
+  }
   );
 
   const selectedOption = options.find((option) => option.value === value);
@@ -74,6 +78,7 @@ export default memo(function CustomSelectField({
                 className={cn("w-full flex justify-between items-center", !selectedOption && "text-muted-foreground", error && "text-destructive")}
                 aria-expanded={open}
                 onFocus={() => setTouched(true)}
+                disabled={disabled}
             >
                 <span className="text-left truncate font-light">
                     {selectedOption ? selectedOption.label : "Seleccione una opción"}
@@ -82,7 +87,7 @@ export default memo(function CustomSelectField({
             </Button>
         </PopoverTrigger>
         <PopoverContent className="w-full p-0">
-            <Command>
+            <Command shouldFilter={false}>
                 <CommandInput
                     placeholder="Buscar..."
                     onValueChange={setSearchTerm}

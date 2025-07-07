@@ -5,7 +5,9 @@ export type EnhancedBlock = FormBlock | ConditionalFormBlock | RepeatableFormBlo
 export type EnhancedField = Field | MessageField;
 
 export type FieldType = "text" | "email" | "number" | "textarea" | "select" | "message" |
-  "customTextField" | "customDateField" | "phoneField" | "radioButtonField" | "priceField" | "countryStateCityField";
+  "customTextField" | "customDateField" | "phoneField" | "radioButtonField" | "priceField" |
+  "countryStateCityField" | "secretariaTransitoField" | "customTextareaField" | "fileUploadField" |
+  "customNumberField";
 
 export const fieldTypesArray = [
   "text",
@@ -19,7 +21,11 @@ export const fieldTypesArray = [
   "phoneField",
   "radioButtonField",
   "priceField",
-  "countryStateCityField"
+  "countryStateCityField",
+  "secretariaTransitoField",
+  "customTextareaField",
+  "fileUploadField",
+  "customNumberField"
 ] as const;
 
 export interface FieldValidation {
