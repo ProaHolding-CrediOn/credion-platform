@@ -10,17 +10,27 @@ import FormRenderer from "@/components/FormRenderer/FormRenderer";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useRouter } from "next/navigation";
 import { Step } from "@/types/FormField";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowRightIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Link from "next/link";
 
 export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: string }) {
     const router = useRouter()
+    const { setFormData, setBlockStates, setFieldStates } = useFormVehiculo()
     const [loading, setLoading] = useState(true);
     const [isValid, setIsValid] = useState(true);
     const [validating, setValidating] = useState(true);
-    const { setFormData, setBlockStates, setFieldStates } = useFormVehiculo()
     const [steps, setSteps] = useState<any[]>([]);
     const [showDialog, setShowDialog] = useState(false);
     const [dialogMessage, setDialogMessage] = useState("");
     const [submitting, setSubmitting] = useState(false);
+    const [showForm, setShowForm] = useState(false);
+    const [isChecked, setIsChecked] = useState(false);
+    const [creditId, setCreditId] = useState<string>('')
+    const [user, setUser] = useState<{ name: string } | null>(null)
+    const [error, setError] = useState<boolean>(false)
     const rehydrated = useFormVehiculo.getState().rehydrated
     const submitted = useFormVehiculo.getState().submitted
 
@@ -120,7 +130,8 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
                 const data = await response.json()
                 localStorage.setItem('token', data.token)
                 setIsValid(true)
-                console.log('Formulario validado con exito')
+                setCreditId(data.creditId)
+                setUser(data.user)
                 await fetchForm()
             } catch (error) {
                 setIsValid(false)
@@ -141,9 +152,9 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
         return (
             <div className="flex flex-col bg-background text-foreground">
                 <main className="flex-1 w-full">
-                <div className="w-full p-4 sm:p-6 md:p-8">
-                    <p className="text-muted-foreground">Verificando URL...</p>
-                </div>
+                    <div className="w-full p-4 sm:p-6 md:p-8">
+                        <p className="text-muted-foreground">Verificando URL...</p>
+                    </div>
                 </main>
             </div>
         )
@@ -153,9 +164,9 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
         return (
             <div className="flex flex-col bg-background text-foreground">
                 <main className="flex-1 w-full">
-                <div className="w-full p-4 sm:p-6 md:p-8">
-                    <p className="text-muted-foreground">URL no válida, en un momento será redirigido</p>
-                </div>
+                    <div className="w-full p-4 sm:p-6 md:p-8">
+                        <p className="text-muted-foreground">URL no válida, en un momento será redirigido</p>
+                    </div>
                 </main>
             </div>
         )
@@ -169,7 +180,7 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify(formData)
+                body: JSON.stringify({ creditId: creditId, formVehiculo: formData }),
             })
 
             if (!response.ok) {
@@ -178,12 +189,14 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
 
             setDialogMessage('Gracias por su información, prontamente nos estaremos comunicando.')
             setShowDialog(true);
+            setError(false)
             await useFormVehiculo.getState().setSubmitted(true)
             return true
         } catch (error) {
             console.error('Error al enviar el formulario:', error)
             setDialogMessage('Ha ocurrido un error. Por favor, intenta nuevamente.')
             setShowDialog(true);
+            setError(true)
             await useFormVehiculo.getState().setSubmitted(false)
             throw error
         } finally {
@@ -193,7 +206,7 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
 
     const handleDialogClose = () => {
         setShowDialog(false);
-        window.location.href = "/";
+        if (!error) window.location.href = "/";
     }
 
     const handleGoHome = () => {
@@ -243,7 +256,57 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
         <div className="flex flex-col bg-background text-foreground min-h-screen">
             <main className="flex w-full flex-1 items-start justify-center px-4 py-8 sm:px-6 md:px-8">
                 <div className="w-full max-w-2xl space-y-6">
-                <FormRenderer steps={steps} onSubmit={handleSubmit} submitting={submitting} store={useFormVehiculo} />
+
+                {!showForm ? (
+                    <div className="bg-card sm:bg-card sm:rounded-lg sm:shadow-md p-4 md:p-6 w-full space-y-4">
+                        <h1 className="text-xl md:text-3xl text-center font-light text-foreground">
+                            Hola <span className="font-semibold italic">{user?.name || 'Usuario'}</span>, continuemos con tu solicitud
+                        </h1>
+                        <span className="text-muted-foreground max-w-md mx-auto font-light">
+                            Para continuar con la siguiente fase de tu solicitud de crédito, necesitamos que diligencies información adicional.
+                            {' '}
+                            Esta información nos permitirá avanzar con el análisis de tu solicitud.
+                        </span>
+                        <div className="flex items-center justify-center space-x-2">
+                            <Input
+                            id="aceptar-politicas"
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => setIsChecked(e.target.checked)}
+                            className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                            />
+                            <Label htmlFor="aceptar-politicas" className="text-sm font-light">
+                            Acepto los{' '}
+                            <Link href="/terminos-de-uso" className="text-primary hover:underline">
+                                Términos de Uso
+                            </Link>{' '}
+                            y las{' '}
+                            <Link href="/politica-de-privacidad" className="text-primary hover:underline">
+                                Políticas de Privacidad
+                            </Link>
+                            </Label>
+                        </div>
+                        <div className="flex items-center justify-center">
+                            <Button
+                                variant='outline'
+                                onClick={() => setShowForm(true)}
+                                className="group w-full sm:w-auto justify-center"
+                                disabled={!isChecked}
+                            >
+                                Haz click para comenzar
+                                <ArrowRightIcon className="ml-2 h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                ) : (
+                    <FormRenderer
+                        steps={steps}
+                        onSubmit={handleSubmit}
+                        submitting={submitting}
+                        store={useFormVehiculo}
+                    />
+                )}
+
                 </div>
             </main>
             <Dialog open={showDialog} onOpenChange={handleDialogClose}>
