@@ -1,6 +1,6 @@
-export type BlockType = "formBlock" | "conditionalFormBlock" | "repeatableFormBlock";
+export type BlockType = "formBlock" | "conditionalFormBlock" | "repeatableFormBlock" | "payoutDistributionBlock";
 
-export type EnhancedBlock = FormBlock | ConditionalFormBlock | RepeatableFormBlock;
+export type EnhancedBlock = FormBlock | ConditionalFormBlock | RepeatableFormBlock | PayoutDistributionBlock;
 
 export type EnhancedField = Field | MessageField;
 
@@ -43,6 +43,7 @@ export interface Field {
   name: string;
   label: string;
   type: FieldType;
+  explain?: string;
   validation?: Array<FieldValidation>;
   options?: Array<FieldOption>;
 }
@@ -62,8 +63,23 @@ export interface Step {
 export interface RepeatableFormBlock {
   blockType: "repeatableFormBlock";
   blockName: string;
+  introContent?: string;
   header: string;
   add: string;
+  form: {
+    title: string;
+    fields: EnhancedField[];
+  };
+}
+
+export interface PayoutDistributionBlock {
+  blockType: "payoutDistributionBlock";
+  blockName: string;
+  introContent?: string;
+  value: string;
+  label: string;
+  amount: number;
+  maxEntries: number;
   form: {
     title: string;
     fields: EnhancedField[];
@@ -73,6 +89,7 @@ export interface RepeatableFormBlock {
 export interface ConditionalFormBlock {
   blockType: "conditionalFormBlock";
   blockName: string;
+  introContent?: string;
   value: string;
   label: string;
   options: Array<{ label: string; value: string }>;
@@ -86,6 +103,7 @@ export interface ConditionalFormBlock {
 export interface FormBlock {
   blockType: "formBlock";
   blockName: string;
+  introContent?: string;
   form: {
     title: string;
     fields: EnhancedField[];
@@ -96,4 +114,4 @@ export interface LayoutStep {
   layout: Array<PayloadFormStep>;
 }
 
-export type PayloadFormStep = FormBlock | ConditionalFormBlock | RepeatableFormBlock;
+export type PayloadFormStep = FormBlock | ConditionalFormBlock | RepeatableFormBlock | PayoutDistributionBlock;

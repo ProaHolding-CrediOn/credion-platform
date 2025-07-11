@@ -4,10 +4,12 @@ import { memo, useEffect, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { CustomPriceFieldProps } from "./CustomPriceField.type";
+import TextViewer from "../TextViewer/TextViewer";
 
 export default memo(function CustomPriceField({
   name,
   label,
+  explain,
   value = 0,
   validations,
   onChange,
@@ -106,6 +108,9 @@ export default memo(function CustomPriceField({
       <Label htmlFor={name} className="text-sm font-light">
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
+      {explain && <Label className="text-xs text-muted-foreground font-light">
+        <TextViewer text={explain} />
+      </Label>}
       <div className="relative">
         <span className="absolute left-4 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
           $

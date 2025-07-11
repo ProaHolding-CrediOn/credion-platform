@@ -1,10 +1,9 @@
 'use client'
 
 import { useEffect, useState } from "react";
-import { useFormVehiculo } from "./useFormVehiculo";
 import { mapPayloadFormToSteps } from "@/utils/mapPayloadFormToSteps";
 import { BlockState, FieldState, FormData } from "@/stores/formStore";
-import { getInitialValueForType } from "@/lib/utils";
+import { formatPrice, getInitialValueForType } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import FormRenderer from "@/components/FormRenderer/FormRenderer";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -14,10 +13,11 @@ import { ArrowRightIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useFormDesembolso } from "./useFormDesembolso";
 
-export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: string }) {
+export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: string }) {
     const router = useRouter()
-    const { setFormData, setBlockStates, setFieldStates } = useFormVehiculo()
+    const { setFormData, setBlockStates, setFieldStates } = useFormDesembolso()
     const [loading, setLoading] = useState(true);
     const [isValid, setIsValid] = useState(true);
     const [validating, setValidating] = useState(true);
@@ -29,21 +29,22 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
     const [isChecked, setIsChecked] = useState(false);
     const [creditId, setCreditId] = useState<string>('')
     const [user, setUser] = useState<{ name: string } | null>(null)
+    const [amount, setAmount] = useState<number>(0)
     const [error, setError] = useState<boolean>(false)
-    const rehydrated = useFormVehiculo.getState().rehydrated
-    const submitted = useFormVehiculo.getState().submitted
+    const rehydrated = useFormDesembolso.getState().rehydrated
+    const submitted = useFormDesembolso.getState().submitted
 
-    const fetchForm = async () => {
+    const fetchForm = async (amount: number) => {
         setLoading(true)
         try {
-            const response = await fetch('/api/forms/vehiculo')
+            const response = await fetch('/api/forms/desembolso')
 
             if (!response.ok) {
                 throw new Error("Error al cargar el formulario");
             }
 
             const data = await response.json();
-            const mappedSteps = mapPayloadFormToSteps(data);
+            const mappedSteps = mapPayloadFormToSteps(data, amount);
             console.log('mappedSteps', mappedSteps)
             setSteps(mappedSteps)
             initialData(mappedSteps)
@@ -55,7 +56,7 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
     }
 
     const initialData = (steps: Step[]) => {
-        const state = useFormVehiculo.getState()
+        const state = useFormDesembolso.getState()
 
         const isAlreadyLoaded = Object.keys(state.fieldStates).length > 0
         if (isAlreadyLoaded) {
@@ -74,36 +75,40 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
                 initialFieldStates[stepIndex] = {};
 
                 step.blocks.forEach((block: any) => {
-                const blockName = block.blockName
+                    const blockName = block.blockName
 
-                initialFormData[layoutId][blockName] = {}
-                initialBlockStates[stepIndex][blockName] = false
-                initialFieldStates[stepIndex][blockName] = {}
+                    initialFormData[layoutId][blockName] = {}
+                    initialBlockStates[stepIndex][blockName] = false
+                    initialFieldStates[stepIndex][blockName] = {}
 
-                block.form.fields.forEach((field: any) => {
-                    initialFormData[layoutId][blockName][field.name] = {
-                    label: field.label,
-                    value: getInitialValueForType(field.type),
-                    type: field.type,
-                    validation: field.validation
+                    if (block.blockType === 'payoutDistributionBlock') {
+                        return
                     }
 
-                    const hasValidation = field?.validation
-                    const isRequired = field?.validation?.some((v: any) => v.name === 'required' && v.value === true)
+                    block.form.fields.forEach((field: any) => {
+                        initialFormData[layoutId][blockName][field.name] = {
+                            label: field.label,
+                            value: getInitialValueForType(field.type),
+                            type: field.type,
+                            validation: field.validation
+                        }
 
-                    if (hasValidation) {
-                    initialFieldStates[stepIndex][blockName][field.name] = !isRequired
-                    }
-                })
+                        const hasValidation = field?.validation
+                        const isRequired = field?.validation?.some((v: any) => v.name === 'required' && v.value === true)
 
-                if (block.blockType === 'conditionalFormBlock') {
-                    initialFormData[layoutId][blockName]['Condicion'] = {
-                        label: block.label,
-                        value: "",
-                        type: 'Conditional',
-                        validation: []
+                        if (hasValidation) {
+                            initialFieldStates[stepIndex][blockName][field.name] = !isRequired
+                        }
+                    })
+
+                    if (block.blockType === 'conditionalFormBlock') {
+                        initialFormData[layoutId][blockName]['Condicion'] = {
+                            label: block.label,
+                            value: "",
+                            type: 'Conditional',
+                            validation: []
+                        }
                     }
-                }
                 })
             })
 
@@ -117,7 +122,7 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
         const validateForm = async () => {
             setValidating(true);
             try {
-                const response = await fetch(`/api/forms/vehiculo/validate`, {
+                const response = await fetch(`/api/forms/desembolso/validate`, {
                     method: "POST",
                     body: JSON.stringify({ signedUrlId }),
                 });
@@ -131,7 +136,8 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
                 setIsValid(true)
                 setCreditId(data.creditId)
                 setUser(data.user)
-                await fetchForm()
+                setAmount(data.info?.amount)
+                await fetchForm(data.info?.amount)
             } catch (error) {
                 setIsValid(false)
                 console.error("Error al validar el formulario:", error)
@@ -174,7 +180,7 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
     const handleSubmit = async (formData: any) => {
         setSubmitting(true);
         try {
-            const response = await fetch('/api/forms/vehiculo', {
+            const response = await fetch('/api/forms/desembolso', {
                 method: "POST",
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -189,14 +195,14 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
             setDialogMessage('Gracias por su información, prontamente nos estaremos comunicando.')
             setShowDialog(true);
             setError(false)
-            await useFormVehiculo.getState().setSubmitted(true)
+            await useFormDesembolso.getState().setSubmitted(true)
             return true
         } catch (error) {
             console.error('Error al enviar el formulario:', error)
             setDialogMessage('Ha ocurrido un error. Por favor, intenta nuevamente.')
             setShowDialog(true);
             setError(true)
-            await useFormVehiculo.getState().setSubmitted(false)
+            await useFormDesembolso.getState().setSubmitted(false)
             throw error
         } finally {
             setSubmitting(false);
@@ -209,8 +215,8 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
     }
 
     const handleGoHome = () => {
-        useFormVehiculo.getState().resetForm()
-        useFormVehiculo.getState().setSubmitted(false)
+        useFormDesembolso.getState().resetForm()
+        useFormDesembolso.getState().setSubmitted(false)
         window.location.href = "/"
     }
 
@@ -259,12 +265,14 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
                 {!showForm ? (
                     <div className="bg-card sm:bg-card sm:rounded-lg sm:shadow-md p-4 md:p-6 w-full space-y-4">
                         <h1 className="text-xl md:text-3xl text-center font-light text-foreground">
-                            Hola <span className="font-semibold italic">{user?.name || 'Usuario'}</span>, continuemos con tu solicitud
+                            Hola <span className="font-semibold italic">{user?.name || 'Usuario'}</span>, hemos culminado el proceso de verificación de datos
                         </h1>
                         <span className="text-muted-foreground max-w-md mx-auto font-light">
-                            Para continuar con la siguiente fase de tu solicitud de crédito, necesitamos que diligencies información adicional.
+                            Para continuar ahora necesitamos que nos envies la información de tus cuentas bancarias para realizar el desembolso del dinero.
                             {' '}
-                            Esta información nos permitirá avanzar con el análisis de tu solicitud.
+                            Esta información nos permitirá avanzar con la ultima fase de la solicitud.
+                            {' '}
+                            Recuerda que tienes un aprobado de ${formatPrice(amount || 0)} pesos, si deseas puedes agregar varias cuentas donde depositar el dinero para realizar el desembolso total.
                         </span>
                         <div className="flex items-center justify-center space-x-2">
                             <Input
@@ -302,7 +310,7 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
                         steps={steps}
                         onSubmit={handleSubmit}
                         submitting={submitting}
-                        store={useFormVehiculo}
+                        store={useFormDesembolso}
                     />
                 )}
 

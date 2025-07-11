@@ -67,6 +67,7 @@ export default function FieldRenderer({
                         name={field.name}
                         label={field.label}
                         value={currentValue as string}
+                        explain={field.explain}
                         validations={field.validation}
                         onChange={onDataChange}
                         onValidationChange={onValidationChange}

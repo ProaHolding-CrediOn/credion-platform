@@ -1,8 +1,9 @@
 import { mapConditionalFormBlockToStep } from "./mapConditionalFormBlockToStep";
 import { mapFormBlockToStep } from "./mapFormBlockToStep";
 import { EnhancedBlock, LayoutStep, PayloadFormStep, Step } from "@/types/FormField";
+import { mapPayoutDistributionBlockToStep } from "./mapPayoutDistributionBlockToStep";
 
-export function mapPayloadFormToSteps(payloadData: any): Step[] {
+export function mapPayloadFormToSteps(payloadData: any, amount?: number): Step[] {
   const steps: Step[] = [];
 
   if (!payloadData.layouts || !Array.isArray(payloadData.layouts)) {
@@ -24,6 +25,11 @@ export function mapPayloadFormToSteps(payloadData: any): Step[] {
 
         case "conditionalFormBlock":
           layoutBlock = mapConditionalFormBlockToStep(block);
+          layoutBlock && blocks.push(layoutBlock);
+          break;
+
+        case "payoutDistributionBlock":
+          layoutBlock = mapPayoutDistributionBlockToStep(block, amount as number);
           layoutBlock && blocks.push(layoutBlock);
           break;
 

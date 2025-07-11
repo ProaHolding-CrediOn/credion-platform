@@ -1,4 +1,4 @@
-import { getStepTitle, mapFormField } from "@/lib/utils";
+import { mapFormField } from "@/lib/utils";
 import { EnhancedBlock, PayloadFormStep } from "@/types/FormField";
 
 export function mapFormBlockToStep(block: PayloadFormStep): EnhancedBlock | null {
@@ -8,11 +8,10 @@ export function mapFormBlockToStep(block: PayloadFormStep): EnhancedBlock | null
       return null;
     }
 
-    //const stepTitle = getStepTitle(block, index);
-
     const mappedFields: EnhancedBlock = {
       blockType: "formBlock",
       blockName: block.blockName,
+      introContent: block.introContent || '',
       form: {
         title: block.form.title,
         fields: block.form.fields.map(mapFormField),

@@ -3,6 +3,7 @@ import { FieldValidation } from "@/types/FormField";
 export interface CustomPriceFieldProps {
   name: string;
   label: string;
+  explain?: string;
   value?: number;
   validations?: Array<FieldValidation>;
   onChange: (name: string, value: string | number) => void;

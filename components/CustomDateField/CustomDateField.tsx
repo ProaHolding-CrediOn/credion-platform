@@ -10,10 +10,12 @@ import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
 import { format } from "date-fns";
 import { es as esLocale } from "date-fns/locale/es";
+import TextViewer from "../TextViewer/TextViewer";
 
 export default memo(function CustomDateField({
     name,
     label,
+    explain,
     value = "",
     validations,
     onChange,
@@ -130,6 +132,9 @@ export default memo(function CustomDateField({
         <Label htmlFor={name} className="text-sm font-light">
           {label} {required && <span className="text-destructive">*</span>}
         </Label>
+        {explain && <Label className="text-xs text-muted-foreground font-light">
+          <TextViewer text={explain} />
+        </Label>}
         <Popover open={open} onOpenChange={() => { setOpen(!open); setTouched(true);}}>
           <PopoverTrigger asChild>
             <Button
@@ -149,7 +154,7 @@ export default memo(function CustomDateField({
               locale={esLocale}
               captionLayout="dropdown"
               className="rounded-md border shadow-sm p-3"
-              defaultMonth={selectedDate ?? parsedMinDate?.value}
+              defaultMonth={selectedDate}
               disabled={(date) => {
                 if (parsedMinDate && date < parsedMinDate.value) return true;
                 if (parsedMaxDate && date > parsedMaxDate.value) return true;

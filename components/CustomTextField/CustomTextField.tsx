@@ -4,10 +4,12 @@ import { memo, useEffect, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { CustomTextFieldProps } from "./CustomTextField.type";
+import TextViewer from "../TextViewer/TextViewer";
 
 export default memo(function CustomTextField({
   name,
   label,
+  explain,
   value = "",
   validations,
   onChange,
@@ -73,15 +75,23 @@ export default memo(function CustomTextField({
 
   return (
     <div className="space-y-2">
-      <Label htmlFor={name} className="text-sm font-light">
-        {label} {required && <span className="text-destructive">*</span>}
-      </Label>
+      <div className="flex-1">
+        <Label htmlFor={name} className="text-sm font-light">
+          {label} {required && <span className="text-destructive">*</span>}
+        </Label>
+        {explain && <Label className="text-xs text-muted-foreground font-light">
+          <TextViewer text={explain} />
+        </Label>}
+      </div>
       <Input
         id={name}
         type="text"
         value={value}
         onChange={(e) => {
-          const inputValue = e.target.value;
+          let inputValue = e.target.value;
+          if (inputValue.length > 0) {
+            inputValue = inputValue.charAt(0).toUpperCase() + inputValue.slice(1)
+          }
           onChange(name, inputValue);
           handleDebouncedValidation(inputValue)
         }}

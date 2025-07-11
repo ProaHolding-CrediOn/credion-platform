@@ -31,6 +31,7 @@ export type SecretariaLocationValue = {
 export interface SecretariaTransitoFieldProps {
   name: string;
   label: string;
+  explain?: string;
   value?: SecretariaLocationValue;
   validations?: Array<FieldValidation>;
   onChange: (name: string, value: SecretariaLocationValue) => void;

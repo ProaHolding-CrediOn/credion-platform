@@ -10,10 +10,12 @@ import { Check } from "lucide-react";
 import { Input } from "../ui/input";
 import { CountryFlagEmoji } from "../CountryFlagEmoji";
 import { Button } from "../ui/button";
+import TextViewer from "../TextViewer/TextViewer";
 
 export default memo(function CustomPhoneField({
   name,
   label,
+  explain,
   value = { codigoPais: "", codigoTelefono: "", telefono: "" },
   validations = [],
   onChange,
@@ -110,6 +112,9 @@ export default memo(function CustomPhoneField({
       <Label htmlFor={name} className="text-sm font-light">
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
+      {explain && <Label className="text-xs text-muted-foreground font-light">
+        <TextViewer text={explain} />
+      </Label>}
       <div className="flex space-x-2 items-center">
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>

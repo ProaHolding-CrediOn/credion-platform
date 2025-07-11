@@ -3,6 +3,7 @@ import { FieldValidation } from "@/types/FormField";
 export interface CustomPhoneFieldProps {
   name: string;
   label: string;
+  explain?: string;
   value?: { codigoPais: string, codigoTelefono: string, telefono: string };
   validations?: Array<FieldValidation>;
   onChange: (name: string, value: { codigoPais: string, codigoTelefono: string, telefono: string }) => void;

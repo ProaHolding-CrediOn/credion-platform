@@ -6,10 +6,12 @@ import { Check, ChevronsUpDown } from "lucide-react";
 import { Button } from "../ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "../ui/command";
 import { cn, normalizeText } from "@/lib/utils";
+import TextViewer from "../TextViewer/TextViewer";
 
 export default memo(function CustomSelectField({
   name,
   label,
+  explain,
   value = "",
   options,
   validations,
@@ -70,6 +72,9 @@ export default memo(function CustomSelectField({
       <Label htmlFor={name} className="text-sm font-light">
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
+      {explain && <Label className="text-xs text-muted-foreground font-light">
+        <TextViewer text={explain} />
+      </Label>}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
             <Button

@@ -5,10 +5,12 @@ import { Label } from "@radix-ui/react-label";
 import { City, Country, LocationFieldProps, LocationValue, State } from "./LocationField.type";
 import CustomSelectField from "../CustomSelectField/CustomSelectField";
 import { FieldOption } from "@/types/FormField";
+import TextViewer from "../TextViewer/TextViewer";
 
 export default memo(function LocationField({
   name,
   label,
+  explain,
   value = {},
   validations = [],
   onChange,
@@ -181,7 +183,9 @@ export default memo(function LocationField({
       <Label htmlFor={name} className="text-sm font-light">
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
-
+      {explain && <Label className="text-xs text-muted-foreground font-light">
+        <TextViewer text={explain} />
+      </Label>}
       <div className="flex flex-nowrap justify-between gap-2" onClick={() => setTouched(true)}>
         <div className="w-[32%]">
           <CustomSelectField

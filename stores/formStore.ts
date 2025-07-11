@@ -26,6 +26,7 @@ export interface FormStore {
   setFieldStates: (states: FieldState) => void;
 
   updateField: (layout: number, blockName: string, name: string, value: FormFieldValue) => void;
+  updateBlock: (layout: number, blockName: string, value: Record<string, any>) => void;
   setFieldValid: (layout: number, blockName: string, fieldName: string, isValid: boolean) => void;
   setBlockValid: (layout: number, blockName: string, isValid: boolean) => void;
 
@@ -33,6 +34,7 @@ export interface FormStore {
   setSubmitted: (submitted: boolean) => void;
 
   resetForm: () => void;
+  clearPersistedStore: () => void;
   rehydrated: boolean;
 }
 
@@ -61,6 +63,19 @@ export const createFormStore = (storeKey: string) => {
                       value,
                     },
                   },
+                },
+              },
+            };
+          }),
+        updateBlock: (layout, blockName, value) =>
+          set((state) => {
+            const layoutId = `Paso ${layout}`;
+            return {
+              formData: {
+                ...state.formData,
+                [layoutId]: {
+                  ...state.formData[layoutId],
+                  [blockName]: value
                 },
               },
             };
@@ -118,6 +133,15 @@ export const createFormStore = (storeKey: string) => {
             fieldStates: {},
             currentStep: 0,
           }),
+        clearPersistedStore: () => {
+          const storageKey = `form-${storeKey}`
+          try {
+            localStorage.removeItem(storageKey)
+            console.log(`[Zustand] Persistencia eliminada para ${storageKey}`)
+          } catch {
+            console.warn(`[Zustand] Persistencia no encontrada para ${storageKey}`)
+          }
+        },
         rehydrated: false
       }),
       {

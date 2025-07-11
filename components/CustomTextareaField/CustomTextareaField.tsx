@@ -4,10 +4,12 @@ import { memo, useEffect, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { CustomTextareaFieldProps } from "./CustomTextareaField.type";
+import TextViewer from "../TextViewer/TextViewer";
 
 export default memo(function CustomTextareaField({
   name,
   label,
+  explain,
   value = "",
   validations,
   onChange,
@@ -76,6 +78,9 @@ export default memo(function CustomTextareaField({
       <Label htmlFor={name} className="text-sm font-light">
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
+      {explain && <Label className="text-xs text-muted-foreground font-light">
+        <TextViewer text={explain} />
+      </Label>}
       <Textarea
         id={name}
         value={value}

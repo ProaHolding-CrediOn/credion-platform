@@ -35,6 +35,7 @@ export type LocationValue = {
 export interface LocationFieldProps {
   name: string;
   label: string;
+  explain?: string;
   value?: LocationValue;
   validations?: Array<FieldValidation>;
   onChange: (name: string, value: LocationValue) => void;

@@ -6,10 +6,12 @@ import CustomSelectField from "../CustomSelectField/CustomSelectField";
 import { FieldOption } from "@/types/FormField";
 import { SecretariaLocationValue, SecretariaTransitoFieldProps, TrafficSecretary } from "./SecretariaTransitoField.type";
 import { MapPin, MapPinIcon } from "lucide-react";
+import TextViewer from "../TextViewer/TextViewer";
 
 export default memo(function SecretariaTransitoField({
   name,
   label,
+  explain,
   value = {},
   validations = [],
   onChange,
@@ -118,6 +120,9 @@ export default memo(function SecretariaTransitoField({
       <Label htmlFor={name} className="text-sm font-light">
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
+      {explain && <Label className="text-xs text-muted-foreground font-light">
+        <TextViewer text={explain} />
+      </Label>}
 
       <div className="flex flex-nowrap justify-between gap-2" onClick={() => setTouched(true)}>
         <div className="w-[50%]">

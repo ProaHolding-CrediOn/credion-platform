@@ -3,6 +3,7 @@ import { FieldOption, FieldValidation } from "@/types/FormField";
 export interface CustomRadioFieldProps {
   name: string;
   label: string;
+  explain?: string;
   value?: string;
   options: Array<FieldOption>;
   validations?: Array<FieldValidation>;

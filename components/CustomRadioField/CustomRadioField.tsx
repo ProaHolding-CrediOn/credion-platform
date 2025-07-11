@@ -2,10 +2,12 @@ import { memo, useEffect, useState } from "react";
 import { CustomRadioFieldProps } from "./CustomRadioField.type";
 import { Label } from "../ui/label";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
+import TextViewer from "../TextViewer/TextViewer";
 
 export default memo(function CustomRadioField({
   name,
   label,
+  explain,
   value = "",
   options,
   validations,
@@ -52,6 +54,9 @@ export default memo(function CustomRadioField({
       <Label htmlFor={name} className="text-sm font-light">
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
+      {explain && <Label className="text-xs text-muted-foreground font-light">
+        <TextViewer text={explain} />
+      </Label>}
       <RadioGroup
         className="flex flex-col"
         value={value}

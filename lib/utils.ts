@@ -17,8 +17,8 @@ export function hasRequiredFields(fields: EnhancedField[]) {
   });
 };
 
-export function getStepTitle(block: any, index: number) {
-  return block.introContent?.root?.children[0]?.children[0]?.text || `Paso ${index + 1}`;
+export function formatTitle(block: any) {
+  
 }
 
 export function extractMessageLines(field: any): string[] {
@@ -66,6 +66,7 @@ export function mapFormField(field: any): EnhancedField {
     name: field.name,
     label: field.label,
     type: fieldType,
+    explain: field.explain || '',
     validation: validations,
     options
   };

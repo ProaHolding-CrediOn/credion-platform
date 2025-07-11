@@ -4,6 +4,7 @@ import { memo, useEffect, useRef, useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { CustomNumberFieldProps } from "./CustomNumberField.type";
+import TextViewer from "../TextViewer/TextViewer";
 
 function formatNumber(value: string): string {
   const cleaned = value.replace(/\D/g, "");
@@ -14,6 +15,7 @@ function formatNumber(value: string): string {
 export default memo(function CustomNumberField({
   name,
   label,
+  explain,
   value = "",
   validations,
   onChange,
@@ -90,6 +92,9 @@ export default memo(function CustomNumberField({
       <Label htmlFor={name} className="text-sm font-light">
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
+      {explain && <Label className="text-xs text-muted-foreground font-light">
+        <TextViewer text={explain} />
+      </Label>}
       <Input
         id={name}
         type="text"

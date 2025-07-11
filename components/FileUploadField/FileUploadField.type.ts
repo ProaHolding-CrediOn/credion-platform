@@ -15,6 +15,7 @@ export type UploadedFile = {
 export interface FileUploadFieldProps {
   name: string;
   label: string;
+  explain?: string;
   value?: UploadedFile[];
   validations?: Array<FieldValidation>;
   onChange: (name: string, value: UploadedFile[]) => void;

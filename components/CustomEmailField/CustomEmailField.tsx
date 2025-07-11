@@ -4,11 +4,13 @@ import React, { useState, useEffect, memo, useRef } from "react";
 import { Label } from "@radix-ui/react-label";
 import { CustomEmailFieldProps } from "./CustomEmailField.type";
 import { Input } from "../ui/input";
+import TextViewer from "../TextViewer/TextViewer";
 
 
 export default memo(function CustomEmailField({
   name,
   label,
+  explain,
   value = "",
   validations = [],
   onChange,
@@ -81,6 +83,9 @@ export default memo(function CustomEmailField({
       <Label htmlFor={name} className="text-sm font-light">
         {label} {required && <span className="text-destructive">*</span>}
       </Label>
+      {explain && <Label className="text-xs text-muted-foreground font-light">
+        <TextViewer text={explain} />
+      </Label>}
       <Input
         id={name}
         type="email"

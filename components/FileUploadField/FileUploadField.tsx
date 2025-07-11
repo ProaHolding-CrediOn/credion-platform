@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import TextViewer from "../TextViewer/TextViewer";
 
 export default memo(function FileUploadField({
   name,
   label,
+  explain,
   value = [],
   validations,
   onChange,
@@ -163,6 +165,9 @@ export default memo(function FileUploadField({
       <Label htmlFor={name} className="text-sm font-light">
         {label} {required && <span className="text-destructive">*</span>} {maxFiles > 1 && value.length === 0 ? `Máximo ${maxFiles} archivos` :`(${value.length}/${maxFiles})`}
       </Label>
+      {explain && <Label className="text-xs text-muted-foreground font-light">
+        <TextViewer text={explain} />
+      </Label>}
 
       <Input
         id={name}
