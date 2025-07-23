@@ -1,6 +1,6 @@
-export type BlockType = "formBlock" | "conditionalFormBlock" | "repeatableFormBlock" | "payoutDistributionBlock";
+export type BlockType = "formBlock" | "conditionalFormBlock" | "repeatableFormBlock" | "payoutDistributionBlock" | "multiFormSelectorBlock";
 
-export type EnhancedBlock = FormBlock | ConditionalFormBlock | RepeatableFormBlock | PayoutDistributionBlock;
+export type EnhancedBlock = FormBlock | ConditionalFormBlock | RepeatableFormBlock | PayoutDistributionFormBlock | MultiFormSelectorFormBlock;
 
 export type EnhancedField = Field | MessageField;
 
@@ -72,7 +72,30 @@ export interface RepeatableFormBlock {
   };
 }
 
-export interface PayoutDistributionBlock {
+export interface MultiFormSelectorFormBlock {
+  blockType: "multiFormSelectorBlock";
+  blockName: string;
+  introContent?: string;
+  value: string;
+  label: string;
+  options: {
+    label: string;
+    maxEntries: number;
+    forms: {
+      type: string;
+      value?: string;
+      question?: string;
+      questionAnswers?: { label: string, value: string }[];
+      expectedAnswer?: string;
+      form: {
+        title: string;
+        fields: EnhancedField[];
+      }
+    }[];
+  }[];
+}
+
+export interface PayoutDistributionFormBlock {
   blockType: "payoutDistributionBlock";
   blockName: string;
   introContent?: string;
@@ -114,4 +137,4 @@ export interface LayoutStep {
   layout: Array<PayloadFormStep>;
 }
 
-export type PayloadFormStep = FormBlock | ConditionalFormBlock | RepeatableFormBlock | PayoutDistributionBlock;
+export type PayloadFormStep = FormBlock | ConditionalFormBlock | RepeatableFormBlock | PayoutDistributionFormBlock | MultiFormSelectorFormBlock;

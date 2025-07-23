@@ -96,3 +96,17 @@ export const normalizeText = (text: string): string => {
 }
 
 export const formatPrice = (price: number) => new Intl.NumberFormat("es-CO").format(price);
+
+export const numeroEnPalabras = (index: number): string => {
+  const numero = index + 1;
+
+  const unidades = [
+    "primer", "segundo", "tercer", "cuarto", "quinto", "sexto", "séptimo", "octavo", "noveno", "decimo"
+  ];
+
+  if (numero >= 1 && numero <= 10) {
+    return unidades[numero - 1];
+  }
+
+  return `${numero}º`;
+}

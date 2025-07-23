@@ -5,6 +5,5 @@ import { StoreApi, UseBoundStore } from "zustand";
 export interface BlockRendererProps {
   block: EnhancedBlock;
   blockKey: any;
-
   store: UseBoundStore<StoreApi<FormStore>>;
 }

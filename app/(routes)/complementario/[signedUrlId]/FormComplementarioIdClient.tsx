@@ -13,11 +13,11 @@ import { ArrowRightIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useFormDesembolso } from "./useFormDesembolso";
+import { useFormComplementario } from "./useFormComplementario";
 
-export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: string }) {
+export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlId: string }) {
     const router = useRouter()
-    const { setFormData, setBlockStates, setFieldStates } = useFormDesembolso()
+    const { setFormData, setBlockStates, setFieldStates } = useFormComplementario()
     const [loading, setLoading] = useState(true);
     const [isValid, setIsValid] = useState(true);
     const [validating, setValidating] = useState(true);
@@ -31,13 +31,13 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
     const [user, setUser] = useState<{ name: string } | null>(null)
     const [amount, setAmount] = useState<number>(0)
     const [error, setError] = useState<boolean>(false)
-    const rehydrated = useFormDesembolso.getState().rehydrated
-    const submitted = useFormDesembolso.getState().submitted
+    const rehydrated = useFormComplementario.getState().rehydrated
+    const submitted = useFormComplementario.getState().submitted
 
     const fetchForm = async (amount: number) => {
         setLoading(true)
         try {
-            const response = await fetch('/api/forms/desembolso')
+            const response = await fetch('/api/forms/complementario')
 
             if (!response.ok) {
                 throw new Error("Error al cargar el formulario");
@@ -56,7 +56,7 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
     }
 
     const initialData = (steps: Step[]) => {
-        const state = useFormDesembolso.getState()
+        const state = useFormComplementario.getState()
 
         const isAlreadyLoaded = Object.keys(state.fieldStates).length > 0
         if (isAlreadyLoaded) {
@@ -81,7 +81,7 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
                     initialBlockStates[stepIndex][blockName] = false
                     initialFieldStates[stepIndex][blockName] = {}
 
-                    if (block.blockType === 'payoutDistributionBlock') {
+                    if (block.blockType === 'payoutDistributionBlock' || block.blockType === 'multiFormSelectorBlock') {
                         return
                     }
 
@@ -122,7 +122,7 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
         const validateForm = async () => {
             setValidating(true);
             try {
-                const response = await fetch(`/api/forms/desembolso/validate`, {
+                const response = await fetch(`/api/forms/complementario/validate`, {
                     method: "POST",
                     body: JSON.stringify({ signedUrlId }),
                 });
@@ -180,12 +180,12 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
     const handleSubmit = async (formData: any) => {
         setSubmitting(true);
         try {
-            const response = await fetch('/api/forms/desembolso', {
+            const response = await fetch('/api/forms/complementario', {
                 method: "POST",
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify({ creditId: creditId, formDesembolso: formData }),
+                body: JSON.stringify({ creditId: creditId, formComplementario: formData }),
             })
 
             if (!response.ok) {
@@ -195,14 +195,14 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
             setDialogMessage('Gracias por su información, prontamente nos estaremos comunicando.')
             setShowDialog(true);
             setError(false)
-            await useFormDesembolso.getState().setSubmitted(true)
+            await useFormComplementario.getState().setSubmitted(true)
             return true
         } catch (error) {
             console.error('Error al enviar el formulario:', error)
             setDialogMessage('Ha ocurrido un error. Por favor, intenta nuevamente.')
             setShowDialog(true);
             setError(true)
-            await useFormDesembolso.getState().setSubmitted(false)
+            await useFormComplementario.getState().setSubmitted(false)
             throw error
         } finally {
             setSubmitting(false);
@@ -215,8 +215,8 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
     }
 
     const handleGoHome = () => {
-        useFormDesembolso.getState().resetForm()
-        useFormDesembolso.getState().setSubmitted(false)
+        useFormComplementario.getState().resetForm()
+        useFormComplementario.getState().setSubmitted(false)
         window.location.href = "/"
     }
 
@@ -310,7 +310,7 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
                         steps={steps}
                         onSubmit={handleSubmit}
                         submitting={submitting}
-                        store={useFormDesembolso}
+                        store={useFormComplementario}
                     />
                 )}
 
