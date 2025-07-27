@@ -73,6 +73,8 @@ export default memo(function CustomTextField({
     }, 500)
   }
 
+  console.log('explain', explain);
+
   return (
     <div className="space-y-2">
       <div className="flex-1">

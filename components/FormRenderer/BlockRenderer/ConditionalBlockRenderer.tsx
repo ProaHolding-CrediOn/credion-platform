@@ -1,4 +1,4 @@
-import { ConditionalFormBlock, EnhancedField,  } from "@/types/FormField";
+import { ConditionalFormBlock, EnhancedField } from "@/types/FormField";
 import FieldRenderer from "../FieldRenderer/FieldRenderer";
 import { BlockRendererProps } from "./BlockRenderer.type";
 import { Separator } from "@/components/ui/separator";
@@ -33,7 +33,7 @@ export default function ConditionalFormBlockRenderer({ block, blockKey, store }:
                   name={`conditional-${opt.value}`}
                   value={opt.value}
                   checked={selectedOption === opt.value}
-                  onChange={() =>handleSelect(opt.value)}
+                  onChange={() => handleSelect(opt.value)}
                   className="accent-black"
                 />
                 {opt.label}

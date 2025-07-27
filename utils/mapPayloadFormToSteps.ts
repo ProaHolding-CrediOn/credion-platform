@@ -17,7 +17,6 @@ export function mapPayloadFormToSteps(payloadData: any, amount?: number): Step[]
 
     let blocks: EnhancedBlock[] = [];
     layouts.layout.forEach((block: PayloadFormStep) => {
-      console.log('block', block);
       let layoutBlock: EnhancedBlock | null;
       switch (block.blockType) {
         case "formBlock":

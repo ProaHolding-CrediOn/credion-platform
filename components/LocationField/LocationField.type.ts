@@ -20,15 +20,15 @@ export interface City {
 export type LocationValue = {
   pais?: {
     id: string;
-    name: string;
+    value: string;
   },
   estado?: {
     id: string;
-    name: string;
+    value: string;
   },
   ciudad?: {
     id: string;
-    name: string;
+    value: string;
   }
 }
 

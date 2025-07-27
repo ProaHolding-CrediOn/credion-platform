@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { BlockState, FieldState, FormData } from "@/stores/formStore";
 import { getInitialValueForType } from "@/lib/utils";
 import { useFormSolicitud } from "./useFormSolicitud";
+import Image from "next/image";
 
 export default function FormularioPage() {
   const { isAuthenticated, loading } = useAuth();
@@ -122,7 +123,7 @@ export default function FormularioPage() {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({ formSolicitud: formData })
       })
 
       if (!response.ok) {
@@ -196,6 +197,8 @@ export default function FormularioPage() {
     <div className="flex flex-col bg-background text-foreground min-h-screen">
       <main className="flex w-full flex-1 items-start justify-center px-4 py-8 sm:px-6 md:px-8">
         <div className="w-full max-w-2xl space-y-6">
+          <Image src="/logo_text.svg" alt="Logo" width={200} height={100} className="mx-auto" />
+          F-AC-02
           <FormRenderer steps={steps} onSubmit={handleSubmit} submitting={submitting} store={useFormSolicitud} />
         </div>
       </main>

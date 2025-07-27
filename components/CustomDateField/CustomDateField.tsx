@@ -82,6 +82,18 @@ export default memo(function CustomDateField({
     const parsedMinDate = minDate ? parseRelativeDate(minDate) : undefined;
     const parsedMaxDate = maxDate ? parseRelativeDate(maxDate) : undefined;
 
+    const [initialMonth, setInitialMonth] = useState<Date>(() => {
+      let dateToShow = selectedDate || new Date();
+      
+      if (parsedMaxDate && dateToShow > parsedMaxDate.value) {
+        dateToShow = parsedMaxDate.value;
+      } else if (parsedMinDate && dateToShow < parsedMinDate.value) {
+        dateToShow = parsedMinDate.value;
+      }
+      
+      return dateToShow;
+    });
+
     const validate = (date: Date | undefined): boolean => {
       if (!touched) return true;
 
@@ -95,13 +107,12 @@ export default memo(function CustomDateField({
           return false;
       }
 
-      console.log('parsedMinDate', parsedMinDate, 'parsedMaxDate', parsedMaxDate, 'date', date)
-      if (parsedMinDate && date && date < parsedMinDate.value) {
+      if (parsedMinDate && date && date > parsedMinDate.value) {
           setError(`La fecha debe ser mayor a hoy menos ${parsedMinDate.quantity} ${parsedMinDate.unit}`);
           return false;
       }
 
-      if (parsedMaxDate && date && date > parsedMaxDate.value) {
+      if (parsedMaxDate && date && date < parsedMaxDate.value) {
           setError(`La fecha debe ser menor a hoy menos ${parsedMaxDate.quantity} ${parsedMaxDate.unit}`);
           return false;
       }
@@ -154,14 +165,22 @@ export default memo(function CustomDateField({
               locale={esLocale}
               captionLayout="dropdown"
               className="rounded-md border shadow-sm p-3"
-              defaultMonth={selectedDate}
+              defaultMonth={initialMonth}
               disabled={(date) => {
-                if (parsedMinDate && date < parsedMinDate.value) return true;
-                if (parsedMaxDate && date > parsedMaxDate.value) return true;
+                const actualMinDate = parsedMinDate?.value;
+                const actualMaxDate = parsedMaxDate?.value;
+                
+                const minDate = actualMinDate && actualMaxDate 
+                  ? new Date(Math.min(actualMinDate.getTime(), actualMaxDate.getTime()))
+                  : actualMinDate || actualMaxDate;
+                const maxDate = actualMinDate && actualMaxDate
+                  ? new Date(Math.max(actualMinDate.getTime(), actualMaxDate.getTime()))
+                  : actualMinDate || actualMaxDate;
+
+                if (minDate && date < minDate) return true;
+                if (maxDate && date > maxDate) return true;
                 return false;
               }}
-              startMonth={parsedMinDate?.value}
-              endMonth={parsedMaxDate?.value}
             />
           </PopoverContent>
         </Popover>

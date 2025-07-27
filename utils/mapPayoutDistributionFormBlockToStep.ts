@@ -6,7 +6,7 @@ export function mapPayoutDistributionFormBlockToStep(
   amount: number
 ): EnhancedBlock | null {
   try {
-    if (block.blockType !== "payoutDistributionFormBlock") {
+    if (block.blockType !== "payoutDistributionBlock") {
       console.warn(`Bloque no válido para este mapeador: ${block.blockType}`);
       return null;
     }
@@ -14,7 +14,7 @@ export function mapPayoutDistributionFormBlockToStep(
     // const stepTitle = getStepTitle(block, index);
 
     const mappedFields: EnhancedBlock = {
-      blockType: "payoutDistributionFormBlock",
+      blockType: "payoutDistributionBlock",
       blockName: block.blockName,
       introContent: block.introContent || "",
       value: block.value,
@@ -29,7 +29,7 @@ export function mapPayoutDistributionFormBlockToStep(
 
     return mappedFields;
   } catch (error) {
-    console.error("Error al mapear payoutDistributionFormBlock", error);
+    console.error("Error al mapear payoutDistributionBlock", error);
     return null;
   }
 }

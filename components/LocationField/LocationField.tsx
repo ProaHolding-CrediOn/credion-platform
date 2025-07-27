@@ -28,7 +28,6 @@ export default memo(function LocationField({
   const [error, setError] = useState<string | null>(null);
 
   const required = validations?.find(value => value.name === "required")?.value as boolean;
-  const fieldNameResidencia = 'residencia'
 
   useEffect(() => {
     async function fetchCountries() {
@@ -87,9 +86,9 @@ export default memo(function LocationField({
       return true;
     }
 
-    const isValid = !!(location.pais && location.pais?.name !== '' &&
-      location.estado && location.estado?.name !== '' &&
-      location.ciudad && location.ciudad?.name !== '');
+    const isValid = !!(location.pais && location.pais?.value !== '' &&
+      location.estado && location.estado?.value !== '' &&
+      location.ciudad && location.ciudad?.value !== '');
     if (!isValid) {
       setError("Debe seleccionar país, estado y ciudad");
     } else {
@@ -98,39 +97,39 @@ export default memo(function LocationField({
     return isValid;
   };
 
-  const handleCountryChange = (fieldName: string, name: string) => {
-    const selectedCountry = countries.find((c) => c.name === name);
+  const handleCountryChange = (fieldName: string, countryName: string) => {
+    const selectedCountry = countries.find((c) => c.name === countryName);
     if (!selectedCountry) return;
 
-    const data = { pais: { id: selectedCountry.id, name: selectedCountry.name }, estado: { id: "", name: "" }, ciudad: { id: "", name: "" } }
+    const data = { pais: { id: selectedCountry.id, value: selectedCountry.name }, estado: { id: "", value: "" }, ciudad: { id: "", value: "" } }
     setLocationValue(data);
     setCountryId(selectedCountry.id);
 
-    onChange(fieldNameResidencia, data);
-    onValidationChange?.(fieldNameResidencia, validate(data), data);
+    onChange(name, data);
+    onValidationChange?.(name, validate(data), data);
   };
 
-  const handleStateChange = (fieldName: string, name: string) => {
-    const selectedState = states.find((s) => s.name === name);
+  const handleStateChange = (fieldName: string, stateName: string) => {
+    const selectedState = states.find((s) => s.name === stateName);
     if (!selectedState) return;
 
-    const data = { ...locationValue, estado: { id: selectedState.id, name: selectedState.name }, ciudad: { id: "", name: "" } };
+    const data = { ...locationValue, estado: { id: selectedState.id, value: selectedState.name }, ciudad: { id: "", value: "" } };
     setLocationValue(data)
     setStateId(selectedState.id);
 
-    onChange(fieldNameResidencia, data);
-    onValidationChange?.(fieldNameResidencia, validate(data), data);
+    onChange(name, data);
+    onValidationChange?.(name, validate(data), data);
   };
 
-  const handleCityChange = (fieldName: string, name: string) => {
-    const selectedCity = cities.find((c) => c.name === name);
+  const handleCityChange = (fieldName: string, cityName: string) => {
+    const selectedCity = cities.find((c) => c.name === cityName);
     if (!selectedCity) return;
 
-    const data = { ...locationValue, ciudad: { id: selectedCity.id, name: selectedCity.name } };
+    const data = { ...locationValue, ciudad: { id: selectedCity.id, value: selectedCity.name } };
     setLocationValue(data)
 
-    onChange(fieldNameResidencia, data);
-    onValidationChange?.(fieldNameResidencia, validate(data), data);
+    onChange(name, data);
+    onValidationChange?.(name, validate(data), data);
   };
 
   // Opciones para los comboboxes
@@ -143,8 +142,8 @@ export default memo(function LocationField({
   if (countryOptions.length === 0 && locationValue.pais?.id) {
     countryOptions.push({
       id: locationValue.pais.id,
-      label: locationValue.pais.name,
-      value: locationValue.pais.name,
+      label: locationValue.pais.value,
+      value: locationValue.pais.value,
     });
     if (!countryId) setCountryId(locationValue.pais.id);
   }
@@ -158,8 +157,8 @@ export default memo(function LocationField({
   if (stateOptions.length === 0 && locationValue.estado?.id) {
     stateOptions.push({
       id: locationValue.estado.id,
-      label: locationValue.estado.name,
-      value: locationValue.estado.name,
+      label: locationValue.estado.value,
+      value: locationValue.estado.value,
     });
     if (!stateId) setStateId(locationValue.estado.id);
   }
@@ -173,8 +172,8 @@ export default memo(function LocationField({
   if (cityOptions.length === 0 && locationValue.ciudad?.id) {
     cityOptions.push({
       id: locationValue.ciudad.id,
-      label: locationValue.ciudad.name,
-      value: locationValue.ciudad.name,
+      label: locationValue.ciudad.value,
+      value: locationValue.ciudad.value,
     });
   }
 
@@ -191,7 +190,7 @@ export default memo(function LocationField({
           <CustomSelectField
             name={`${name}-country`}
             label="País"
-            value={locationValue.pais?.name}
+            value={locationValue.pais?.value}
             options={countryOptions}
             validations={
               required ? [{ name: "required", value: true }] : []
@@ -204,7 +203,7 @@ export default memo(function LocationField({
           <CustomSelectField
             name={`${name}-state`}
             label="Estado"
-            value={locationValue.estado?.name}
+            value={locationValue.estado?.value}
             options={stateOptions}
             validations={
               required ? [{ name: "required", value: true }] : []
@@ -217,7 +216,7 @@ export default memo(function LocationField({
           <CustomSelectField
             name={`${name}-city`}
             label="Ciudad"
-            value={locationValue.ciudad?.name}
+            value={locationValue.ciudad?.value}
             options={cityOptions}
             validations={
               required ? [{ name: "required", value: true }] : []
