@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import { BlockState, createFormStore, FieldState, FormData } from "@/stores/formStore";
 import { formatPrice, getInitialValueForType } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import TextViewer from "@/components/TextViewer/TextViewer";
+import { Label } from "@/components/ui/label";
 
 export default function PayoutDistributionFormBlockRenderer({ block, blockKey, store }: BlockRendererProps) {
     block = block as PayoutDistributionFormBlock
@@ -199,11 +201,15 @@ export default function PayoutDistributionFormBlockRenderer({ block, blockKey, s
     return (
       <div className="space-y-4" key={'payout-distrubition'}>
         <div className="flex justify-between items-center font-light">
-          <p className="text-xl">Información de Pago</p>
+          <p className="text-xl font-light">Información de Pago</p>
           {remainingAmount > 0 && <span className="text-sm text-muted-foreground">{`Pendiente por ingresar ${formatPrice(remainingAmount)} COP`}</span>}
           {remainingAmount < 0 && <span className="text-sm text-destructive">{`Excedido por ${formatPrice(remainingAmount)} COP, válida para continuar`}</span>}
           {remainingAmount === 0 && <span className="text-sm text-success">Has ingresado la totalidad correctamente</span>}
         </div>
+        
+        {block.introContent && <Label className="text-xs text-muted-foreground font-light">
+            <TextViewer text={block.introContent} />
+        </Label>}
 
         <div className="space-y-2">
           {Object.entries(entries).map((entry, index) => (
