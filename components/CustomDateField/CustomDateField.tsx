@@ -1,6 +1,6 @@
 "use client";
 
-import { memo, useEffect, useState } from "react";
+import { memo, useEffect, useMemo, useState } from "react";
 import { CustomDateFieldProps } from "./CustomDateField.type";
 import { Label } from "@radix-ui/react-label";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
@@ -8,7 +8,7 @@ import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
-import { format } from "date-fns";
+import { addYears, format, subYears } from "date-fns";
 import { es as esLocale } from "date-fns/locale/es";
 import TextViewer from "../TextViewer/TextViewer";
 
@@ -80,7 +80,9 @@ export default memo(function CustomDateField({
     const maxDate = validations?.find(value => value.name === "maxDate")?.value as string;
     const daysLeft = validations?.find(value => value.name === "daysLeft")?.value as boolean;
     const parsedMinDate = minDate ? parseRelativeDate(minDate) : undefined;
+    console.log('parsedMinDate', parsedMinDate)
     const parsedMaxDate = maxDate ? parseRelativeDate(maxDate) : undefined;
+    console.log('parsedMaxDate', parsedMaxDate)
 
     const [initialMonth, setInitialMonth] = useState<Date>(() => {
       let dateToShow = selectedDate || new Date();
@@ -107,14 +109,18 @@ export default memo(function CustomDateField({
           return false;
       }
 
-      if (parsedMinDate && date && date > parsedMinDate.value) {
-          setError(`La fecha debe ser mayor a hoy menos ${parsedMinDate.quantity} ${parsedMinDate.unit}`);
+      if (date) {
+        // Validar fecha mínima: la fecha debe ser MAYOR O IGUAL a la fecha mínima
+        if (parsedMinDate && date < parsedMinDate.value) {
+          setError(`La fecha debe ser mayor o igual a ${format(parsedMinDate.value, 'dd/MM/yyyy', { locale: esLocale })}`);
           return false;
-      }
+        }
 
-      if (parsedMaxDate && date && date < parsedMaxDate.value) {
-          setError(`La fecha debe ser menor a hoy menos ${parsedMaxDate.quantity} ${parsedMaxDate.unit}`);
+        // Validar fecha máxima: la fecha debe ser MENOR O IGUAL a la fecha máxima
+        if (parsedMaxDate && date > parsedMaxDate.value) {
+          setError(`La fecha debe ser menor o igual a ${format(parsedMaxDate.value, 'dd/MM/yyyy', { locale: esLocale })}`);
           return false;
+        }
       }
 
       setError(null);
@@ -131,12 +137,14 @@ export default memo(function CustomDateField({
     }
 
     const displayDate = selectedDate ? format(selectedDate, 'PPP', { locale: esLocale }) : 'Selecciona una fecha';
-    
-    const hiddenDates = (date: Date) => {
-      if (parsedMinDate && date < parsedMinDate.value) return true;
-      if (parsedMaxDate && date > parsedMaxDate.value) return true;
-      return false;
-    };
+    const actualMinDate = parsedMinDate?.value;
+    const actualMaxDate = parsedMaxDate?.value;
+    const minDateRange = actualMinDate && actualMaxDate 
+      ? new Date(Math.min(actualMinDate.getTime(), actualMaxDate.getTime()))
+      : actualMinDate || actualMaxDate;
+    const maxDateRange = actualMinDate && actualMaxDate
+      ? new Date(Math.max(actualMinDate.getTime(), actualMaxDate.getTime()))
+      : actualMinDate || actualMaxDate;
 
     return (
       <div className="space-y-2">
@@ -167,20 +175,12 @@ export default memo(function CustomDateField({
               className="rounded-md border shadow-sm p-3"
               defaultMonth={initialMonth}
               disabled={(date) => {
-                const actualMinDate = parsedMinDate?.value;
-                const actualMaxDate = parsedMaxDate?.value;
-                
-                const minDate = actualMinDate && actualMaxDate 
-                  ? new Date(Math.min(actualMinDate.getTime(), actualMaxDate.getTime()))
-                  : actualMinDate || actualMaxDate;
-                const maxDate = actualMinDate && actualMaxDate
-                  ? new Date(Math.max(actualMinDate.getTime(), actualMaxDate.getTime()))
-                  : actualMinDate || actualMaxDate;
-
-                if (minDate && date < minDate) return true;
-                if (maxDate && date > maxDate) return true;
+                if (minDate && date < minDateRange!) return true;
+                if (maxDate && date > maxDateRange!) return true;
                 return false;
               }}
+              fromYear={minDateRange?.getFullYear()}
+              toYear={maxDateRange?.getFullYear()}
             />
           </PopoverContent>
         </Popover>

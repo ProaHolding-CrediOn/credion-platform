@@ -26,14 +26,14 @@ const markdownOptions = {
     li: {
       component: ({ children, ...props }: any) => (
         <li className="flex items-start hover:opacity-80 transition-opacity" {...props}>
-          <span className="text-muted-foreground font-medium mr-2.5">—</span>
-          <span className="text-muted-foreground">{children}</span>
+          <span className="text-foreground font-medium mr-2.5">—</span>
+          <span className="text-foreground">{children}</span>
         </li>
       )
     },
     p: {
       props: {
-        className: "mb-4"
+        className: "mb-2"
       }
     },
     br: {
