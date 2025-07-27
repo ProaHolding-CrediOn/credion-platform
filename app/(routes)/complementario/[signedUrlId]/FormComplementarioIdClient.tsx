@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useFormComplementario } from "./useFormComplementario";
+import Image from "next/image";
 
 export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlId: string }) {
     const router = useRouter()
@@ -31,6 +32,7 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
     const [user, setUser] = useState<{ name: string } | null>(null)
     const [amount, setAmount] = useState<number>(0)
     const [error, setError] = useState<boolean>(false)
+    const [formVersion, setFormVersion] = useState<number>(1)
     const rehydrated = useFormComplementario.getState().rehydrated
     const submitted = useFormComplementario.getState().submitted
 
@@ -46,6 +48,7 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
             const data = await response.json();
             const mappedSteps = mapPayloadFormToSteps(data, amount);
             console.log('mappedSteps', mappedSteps)
+            setFormVersion(data?.version || 1)
             setSteps(mappedSteps)
             initialData(mappedSteps)
         } catch (error) {
@@ -185,7 +188,7 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify({ creditId: creditId, formComplementario: formData }),
+                body: JSON.stringify({ creditId: creditId, formComplementario: formData, version: formVersion }),
             })
 
             if (!response.ok) {
@@ -306,12 +309,20 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
                         </div>
                     </div>
                 ) : (
-                    <FormRenderer
-                        steps={steps}
-                        onSubmit={handleSubmit}
-                        submitting={submitting}
-                        store={useFormComplementario}
-                    />
+                    <main className="flex w-full flex-1 items-start justify-center sm:px-6 md:px-8">
+                        <div className="w-full max-w-2xl space-y-6">
+                            <div className="flex flex-col items-center">
+                                <Image src="/logo_text.svg" alt="Logo" width={200} height={100} className="mx-auto" />
+                                <Label className="text-muted-foreground text-sm mt-2">F-AC-02</Label>
+                            </div>
+                            <FormRenderer
+                                steps={steps}
+                                onSubmit={handleSubmit}
+                                submitting={submitting}
+                                store={useFormComplementario}
+                            />
+                        </div>
+                    </main>
                 )}
 
                 </div>

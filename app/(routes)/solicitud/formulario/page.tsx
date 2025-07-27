@@ -16,6 +16,7 @@ import { BlockState, FieldState, FormData } from "@/stores/formStore";
 import { getInitialValueForType } from "@/lib/utils";
 import { useFormSolicitud } from "./useFormSolicitud";
 import Image from "next/image";
+import { Label } from "@/components/ui/label";
 
 export default function FormularioPage() {
   const { isAuthenticated, loading } = useAuth();
@@ -24,6 +25,7 @@ export default function FormularioPage() {
   const [showDialog, setShowDialog] = useState(false);
   const [dialogMessage, setDialogMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [formVersion, setFormVersion] = useState<number>(1)
   const rehydrated = useFormSolicitud.getState().rehydrated
   const submitted = useFormSolicitud.getState().submitted
 
@@ -47,6 +49,7 @@ export default function FormularioPage() {
 
         const data = await response.json();
         const mappedSteps = mapPayloadFormToSteps(data);
+        setFormVersion(data?.version || 1)
         setSteps(mappedSteps);
       } catch (error) {
         console.error("No se pudo cargar el formulario:", error);
@@ -123,7 +126,7 @@ export default function FormularioPage() {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
-        body: JSON.stringify({ formSolicitud: formData })
+        body: JSON.stringify({ formSolicitud: formData, version: formVersion }),
       })
 
       if (!response.ok) {
@@ -197,8 +200,10 @@ export default function FormularioPage() {
     <div className="flex flex-col bg-background text-foreground min-h-screen">
       <main className="flex w-full flex-1 items-start justify-center px-4 py-8 sm:px-6 md:px-8">
         <div className="w-full max-w-2xl space-y-6">
-          <Image src="/logo_text.svg" alt="Logo" width={200} height={100} className="mx-auto" />
-          F-AC-02
+          <div className="flex flex-col items-center">
+            <Image src="/logo_text.svg" alt="Logo" width={200} height={100} className="mx-auto" />
+            <Label className="text-muted-foreground text-sm mt-2">F-AC-02</Label>
+          </div>
           <FormRenderer steps={steps} onSubmit={handleSubmit} submitting={submitting} store={useFormSolicitud} />
         </div>
       </main>

@@ -14,6 +14,7 @@ import { ArrowRightIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import Image from "next/image";
 
 export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: string }) {
     const router = useRouter()
@@ -30,6 +31,7 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
     const [creditId, setCreditId] = useState<string>('')
     const [user, setUser] = useState<{ name: string } | null>(null)
     const [error, setError] = useState<boolean>(false)
+    const [formVersion, setFormVersion] = useState<number>(1)
     const rehydrated = useFormVehiculo.getState().rehydrated
     const submitted = useFormVehiculo.getState().submitted
 
@@ -45,6 +47,7 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
             const data = await response.json();
             const mappedSteps = mapPayloadFormToSteps(data);
             console.log('mappedSteps', mappedSteps)
+            setFormVersion(data?.version || 1)
             setSteps(mappedSteps)
             initialData(mappedSteps)
         } catch (error) {
@@ -179,7 +182,7 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify({ creditId: creditId, formVehiculo: formData }),
+                body: JSON.stringify({ creditId: creditId, formVehiculo: formData, version: formVersion }),
             })
 
             if (!response.ok) {
@@ -298,12 +301,20 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
                         </div>
                     </div>
                 ) : (
-                    <FormRenderer
-                        steps={steps}
-                        onSubmit={handleSubmit}
-                        submitting={submitting}
-                        store={useFormVehiculo}
-                    />
+                    <main className="flex w-full flex-1 items-start justify-center sm:px-6 md:px-8">
+                        <div className="w-full max-w-2xl space-y-6">
+                            <div className="flex flex-col items-center">
+                                <Image src="/logo_text.svg" alt="Logo" width={200} height={100} className="mx-auto" />
+                                <Label className="text-muted-foreground text-sm mt-2">F-AC-03</Label>
+                            </div>
+                            <FormRenderer
+                                steps={steps}
+                                onSubmit={handleSubmit}
+                                submitting={submitting}
+                                store={useFormVehiculo}
+                            />
+                        </div>
+                    </main>
                 )}
 
                 </div>

@@ -20,7 +20,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
     const token = req.headers.get('Authorization') as string
-    const { creditId, formComplementario } = await req.json()
+    const { creditId, formComplementario, version } = await req.json()
 
     const response = await fetch(`${process.env.CORE_SERVICE_API_URL}/credit/form-complementario`, {
         method: "POST",
@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
             Authorization: token,
             "Content-Type": "application/json"
         },
-        body: JSON.stringify({ creditId, formComplementario }),
+        body: JSON.stringify({ creditId, formComplementario, version }),
     })
 
     if (!response.ok) {
