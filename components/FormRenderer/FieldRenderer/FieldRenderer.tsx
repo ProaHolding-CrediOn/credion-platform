@@ -19,6 +19,7 @@ import CustomTextareaField from "@/components/CustomTextareaField/CustomTextarea
 import FileUploadField from "@/components/FileUploadField/FileUploadField";
 import CustomNumberField from "@/components/CustomNumberField/CustomNumberField";
 import { UploadedFile } from "@/components/FileUploadField/FileUploadField.type";
+import PlacaField from "@/components/PlacaField/PlacaField";
 
 export const isMessageField = (field: EnhancedField): field is MessageField => {
   return "lines" in field && field.type === "message";
@@ -200,6 +201,19 @@ export default function FieldRenderer({
                         label={field.label}
                         validations={field.validation}
                         value={currentValue as UploadedFile[]}
+                        onChange={onDataChange}
+                        onValidationChange={onValidationChange}
+                    />
+                )}
+
+                {(field.type === "placaField") && (
+                    <PlacaField
+                        key={`field-${field.name}`}
+                        name={field.name}
+                        label={field.label}
+                        value={currentValue as string}
+                        explain={field.explain}
+                        validations={field.validation}
                         onChange={onDataChange}
                         onValidationChange={onValidationChange}
                     />
