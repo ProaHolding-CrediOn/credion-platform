@@ -10,7 +10,7 @@ export default function Home() {
 
     useEffect(() => {
         const timeout = setTimeout(() => {
-            router.push('/solicitud')
+            router.push('/solicitud/formulario')
         }, 3000)
 
         return () => clearTimeout(timeout)
@@ -27,7 +27,7 @@ export default function Home() {
                 </h1>
                 <p className="mt-2 text-muted-foreground font-light">
                     Si no eres redirigido automáticamente,{" "}
-                    <Link href="/solicitud" className="text-blue-500 underline hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-500">
+                    <Link href="/solicitud/formulario" className="text-blue-500 underline hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-500">
                         haz clic aquí
                     </Link>.
                 </p>

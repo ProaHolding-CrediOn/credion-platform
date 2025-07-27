@@ -5,7 +5,7 @@ export const metadata = {
     title: 'Formulario complementario | Credion',
 }
 
-export default async function FormularioDesembolsoPage({ params }: { params: Promise<{ signedUrlId: string }>}) {
+export default async function FormularioComplementarioPage({ params }: { params: Promise<{ signedUrlId: string }>}) {
     const { signedUrlId } = await params
 
     if (!signedUrlId) return

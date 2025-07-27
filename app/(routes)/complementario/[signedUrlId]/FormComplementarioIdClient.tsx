@@ -15,6 +15,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { useFormComplementario } from "./useFormComplementario";
 import Image from "next/image";
+import TextViewer from "@/components/TextViewer/TextViewer";
 
 export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlId: string }) {
     const router = useRouter()
@@ -30,13 +31,13 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
     const [isChecked, setIsChecked] = useState(false);
     const [creditId, setCreditId] = useState<string>('')
     const [user, setUser] = useState<{ name: string } | null>(null)
-    const [amount, setAmount] = useState<number>(0)
     const [error, setError] = useState<boolean>(false)
     const [formVersion, setFormVersion] = useState<number>(1)
+    const [context, setContext] = useState('');
     const rehydrated = useFormComplementario.getState().rehydrated
     const submitted = useFormComplementario.getState().submitted
 
-    const fetchForm = async (amount: number) => {
+    const fetchForm = async () => {
         setLoading(true)
         try {
             const response = await fetch('/api/forms/complementario')
@@ -46,9 +47,10 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
             }
 
             const data = await response.json();
-            const mappedSteps = mapPayloadFormToSteps(data, amount);
+            const mappedSteps = mapPayloadFormToSteps(data);
             console.log('mappedSteps', mappedSteps)
             setFormVersion(data?.version || 1)
+            setContext(data?.context || '')
             setSteps(mappedSteps)
             initialData(mappedSteps)
         } catch (error) {
@@ -139,8 +141,7 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
                 setIsValid(true)
                 setCreditId(data.creditId)
                 setUser(data.user)
-                setAmount(data.info?.amount)
-                await fetchForm(data.info?.amount)
+                await fetchForm()
             } catch (error) {
                 setIsValid(false)
                 console.error("Error al validar el formulario:", error)
@@ -264,19 +265,22 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
         <div className="flex flex-col bg-background text-foreground min-h-screen">
             <main className="flex w-full flex-1 items-start justify-center px-4 py-8 sm:px-6 md:px-8">
                 <div className="w-full max-w-2xl space-y-6">
-
-                {!showForm ? (
+                {!showForm && !loading ? (
                     <div className="bg-card sm:bg-card sm:rounded-lg sm:shadow-md p-4 md:p-6 w-full space-y-4">
-                        <h1 className="text-xl md:text-3xl text-center font-light text-foreground">
-                            Hola <span className="font-semibold italic">{user?.name || 'Usuario'}</span>, hemos culminado el proceso de verificación de datos
+                        <div className="flex flex-col items-center mb-6">
+                            <Image
+                                src="/logo_text.svg"
+                                alt="Logo Credion"
+                                width={200}
+                                height={100}
+                            />
+                        </div>
+                        <h1 className="text-lg md:text-xl text-center font-light text-foreground">
+                            Hola <span className="font-semibold">{user?.name || 'Usuario'}</span>, que bueno que te encuentres aqui.
                         </h1>
-                        <span className="text-muted-foreground max-w-md mx-auto font-light">
-                            Para continuar ahora necesitamos que nos envies la información de tus cuentas bancarias para realizar el desembolso del dinero.
-                            {' '}
-                            Esta información nos permitirá avanzar con la ultima fase de la solicitud.
-                            {' '}
-                            Recuerda que tienes un aprobado de ${formatPrice(amount || 0)} pesos, si deseas puedes agregar varias cuentas donde depositar el dinero para realizar el desembolso total.
-                        </span>
+                        {context && <Label className="text-sm text-foreground font-light">
+                            <TextViewer text={context} />
+                        </Label>}
                         <div className="flex items-center justify-center space-x-2">
                             <Input
                             id="aceptar-politicas"

@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import Image from "next/image";
+import TextViewer from "@/components/TextViewer/TextViewer";
 
 export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: string }) {
     const router = useRouter()
@@ -32,6 +33,7 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
     const [user, setUser] = useState<{ name: string } | null>(null)
     const [error, setError] = useState<boolean>(false)
     const [formVersion, setFormVersion] = useState<number>(1)
+    const [context, setContext] = useState('');
     const rehydrated = useFormVehiculo.getState().rehydrated
     const submitted = useFormVehiculo.getState().submitted
 
@@ -48,6 +50,7 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
             const mappedSteps = mapPayloadFormToSteps(data);
             console.log('mappedSteps', mappedSteps)
             setFormVersion(data?.version || 1)
+            setContext(data?.context || '')
             setSteps(mappedSteps)
             initialData(mappedSteps)
         } catch (error) {
@@ -259,16 +262,22 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
             <main className="flex w-full flex-1 items-start justify-center px-4 py-8 sm:px-6 md:px-8">
                 <div className="w-full max-w-2xl space-y-6">
 
-                {!showForm ? (
+                {!showForm && !loading ? (
                     <div className="bg-card sm:bg-card sm:rounded-lg sm:shadow-md p-4 md:p-6 w-full space-y-4">
-                        <h1 className="text-xl md:text-3xl text-center font-light text-foreground">
-                            Hola <span className="font-semibold italic">{user?.name || 'Usuario'}</span>, continuemos con tu solicitud
+                        <div className="flex flex-col items-center mb-6">
+                            <Image
+                                src="/logo_text.svg"
+                                alt="Logo Credion"
+                                width={200}
+                                height={100}
+                            />
+                        </div>
+                        <h1 className="text-lg md:text-xl text-center font-light text-foreground">
+                            Hola <span className="font-semibold">{user?.name || 'Usuario'}</span>, has avanzado como no te imaginas!
                         </h1>
-                        <span className="text-muted-foreground max-w-md mx-auto font-light">
-                            Para continuar con la siguiente fase de tu solicitud de crédito, necesitamos que diligencies información adicional.
-                            {' '}
-                            Esta información nos permitirá avanzar con el análisis de tu solicitud.
-                        </span>
+                        {context && <Label className="text-sm text-foreground font-light">
+                            <TextViewer text={context} />
+                        </Label>}
                         <div className="flex items-center justify-center space-x-2">
                             <Input
                             id="aceptar-politicas"

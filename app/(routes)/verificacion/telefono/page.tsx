@@ -78,7 +78,7 @@ export default function TelefonoPage() {
           </form>
 
           <div className="text-center">
-            <Link href="/solicitud" className="text-sm text-muted-foreground hover:text-foreground">
+            <Link href="/solicitud/formulario" className="text-sm text-muted-foreground hover:text-foreground">
               ← Volver
             </Link>
           </div>
