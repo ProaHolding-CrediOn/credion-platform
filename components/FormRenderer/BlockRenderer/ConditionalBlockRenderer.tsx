@@ -2,6 +2,8 @@ import { ConditionalFormBlock, EnhancedField } from "@/types/FormField";
 import FieldRenderer from "../FieldRenderer/FieldRenderer";
 import { BlockRendererProps } from "./BlockRenderer.type";
 import { Separator } from "@/components/ui/separator";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 export default function ConditionalFormBlockRenderer({ block, blockKey, store }: BlockRendererProps) {
     block = block as ConditionalFormBlock
@@ -24,21 +26,22 @@ export default function ConditionalFormBlockRenderer({ block, blockKey, store }:
     return (
       <div key={`conditional`} className="space-y-4">
         <div className="space-y-2">
-          <p className="font-medium text-foreground">{block.label}</p>
+          <Label className="font-light text-sm text-foreground">{block.label}</Label>
           <div className="flex gap-4">
-            {block.options.map((opt) => (
-              <label key={opt.value} className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="radio"
-                  name={`conditional-${opt.value}`}
-                  value={opt.value}
-                  checked={selectedOption === opt.value}
-                  onChange={() => handleSelect(opt.value)}
-                  className="accent-black"
-                />
-                {opt.label}
-              </label>
-            ))}
+            <RadioGroup
+              onValueChange={handleSelect}
+              className="flex flex-col"
+            >
+              {block.options.map((opt) => {
+                const inputId = `radio-${opt.value}`
+                return (
+                  <div className="flex items-center gap-3" key={opt.value}>
+                    <RadioGroupItem id={inputId} value={opt.value} />
+                    <Label htmlFor={inputId} className="cursor-pointer font-light">{opt.label}</Label>
+                  </div>
+                )
+              })}
+            </RadioGroup>
           </div>
         </div>
 

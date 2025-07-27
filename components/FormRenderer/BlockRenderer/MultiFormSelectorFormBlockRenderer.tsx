@@ -155,8 +155,6 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
                 }
 
                 if (isValidStructure) {
-                    console.log('Cargando entries desde el store (formData)')
-
                     if (JSON.stringify(storedEntries) !== JSON.stringify(entries)) {
                         setEntries(storedEntries as unknown as Record<string, EntryData[]>);
                     }
@@ -522,21 +520,23 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
                             return (
                                 <div key={`conditional-${conditionalId}`} className="space-y-2">
                                     <div className="space-y-2">
-                                        <p className="font-light text-foreground">{formConfig.question}</p>
+                                        <Label className="font-light text-sm text-foreground">{formConfig.question}</Label>
                                         <div className="flex gap-4">
-                                            {formConfig.questionAnswers?.map((opt) => (
-                                                <label key={opt.value} className="font-light flex items-center gap-2 cursor-pointer">
-                                                    <input
-                                                        type='radio'
-                                                        name={`conditional-${opt.value}`}
-                                                        value={opt.value}
-                                                        checked={currentAnswer === opt.value}
-                                                        onChange={() => handleSelectConditional(opt.value, conditionalId, formConfig.expectedAnswer!, formConfig.form.fields)}
-                                                        className="accent-black"
-                                                    />
-                                                    {opt.label}
-                                                </label>
-                                            ))}
+                                            <RadioGroup
+                                                onValueChange={(value) => handleSelectConditional(value, conditionalId, formConfig.expectedAnswer!, formConfig.form.fields)}
+                                                className="flex flex-col"
+                                            >
+                                                {formConfig.questionAnswers?.map((opt) => {
+                                                    const inputId = `radio-${opt.value}`
+                                                    
+                                                    return (
+                                                        <div className="flex items-center gap-3">
+                                                            <RadioGroupItem id={inputId} value={opt.value} />
+                                                            <Label htmlFor={inputId} className="cursor-pointer font-light">{opt.label}</Label>
+                                                        </div>
+                                                    )
+                                                })}
+                                            </RadioGroup>
                                         </div>
                                     </div>
 

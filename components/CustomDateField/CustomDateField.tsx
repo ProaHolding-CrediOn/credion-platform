@@ -80,9 +80,7 @@ export default memo(function CustomDateField({
     const maxDate = validations?.find(value => value.name === "maxDate")?.value as string;
     const daysLeft = validations?.find(value => value.name === "daysLeft")?.value as boolean;
     const parsedMinDate = minDate ? parseRelativeDate(minDate) : undefined;
-    console.log('parsedMinDate', parsedMinDate)
     const parsedMaxDate = maxDate ? parseRelativeDate(maxDate) : undefined;
-    console.log('parsedMaxDate', parsedMaxDate)
 
     const [initialMonth, setInitialMonth] = useState<Date>(() => {
       let dateToShow = selectedDate || new Date();
