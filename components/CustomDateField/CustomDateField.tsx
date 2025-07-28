@@ -108,13 +108,11 @@ export default memo(function CustomDateField({
       }
 
       if (date) {
-        // Validar fecha mínima: la fecha debe ser MAYOR O IGUAL a la fecha mínima
         if (parsedMinDate && date < parsedMinDate.value) {
           setError(`La fecha debe ser mayor o igual a ${format(parsedMinDate.value, 'dd/MM/yyyy', { locale: esLocale })}`);
           return false;
         }
 
-        // Validar fecha máxima: la fecha debe ser MENOR O IGUAL a la fecha máxima
         if (parsedMaxDate && date > parsedMaxDate.value) {
           setError(`La fecha debe ser menor o igual a ${format(parsedMaxDate.value, 'dd/MM/yyyy', { locale: esLocale })}`);
           return false;

@@ -10,7 +10,6 @@ export default function ConditionalFormBlockRenderer({ block, blockKey, store }:
 
     const formData = store(state => state.formData)
     const selectedOption = formData?.[`Paso ${blockKey.layout + 1}`]?.[block.blockName]?.['Condicion'].value ?? "";
-
     const isExpected = block.expectedAnswers.some(ans => ans.value === selectedOption)
 
     const handleSelect = (value: string) => {
@@ -33,7 +32,7 @@ export default function ConditionalFormBlockRenderer({ block, blockKey, store }:
               className="flex flex-col"
             >
               {block.options.map((opt) => {
-                const inputId = `radio-${opt.value}`
+                const inputId = `radio-${block.blockName}-${opt.value}`
                 return (
                   <div className="flex items-center gap-3" key={opt.value}>
                     <RadioGroupItem id={inputId} value={opt.value} />
