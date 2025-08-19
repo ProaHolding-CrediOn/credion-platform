@@ -19,7 +19,7 @@ import TextViewer from "@/components/TextViewer/TextViewer";
 
 export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: string }) {
     const router = useRouter()
-    const { setFormData, setBlockStates, setFieldStates } = useFormVehiculo()
+    const { setFormData, setBlockStates, setFieldStates, setFormVersion, getFormVersion } = useFormVehiculo()
     const [loading, setLoading] = useState(true);
     const [isValid, setIsValid] = useState(true);
     const [validating, setValidating] = useState(true);
@@ -32,7 +32,6 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
     const [creditId, setCreditId] = useState<string>('')
     const [user, setUser] = useState<{ name: string } | null>(null)
     const [error, setError] = useState<boolean>(false)
-    const [formVersion, setFormVersion] = useState<number>(1)
     const [context, setContext] = useState('');
     const rehydrated = useFormVehiculo.getState().rehydrated
     const submitted = useFormVehiculo.getState().submitted
@@ -49,7 +48,11 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
             const data = await response.json();
             const mappedSteps = mapPayloadFormToSteps(data);
             console.log('mappedSteps', mappedSteps)
-            setFormVersion(data?.version || 1)
+            if (getFormVersion() !== data?.version) {
+                console.log('Version diferente, resetteando el formulario')
+                useFormVehiculo.getState().resetForm()
+                setFormVersion(data?.version || 1)
+            }
             setContext(data?.context || '')
             setSteps(mappedSteps)
             initialData(mappedSteps)
@@ -185,7 +188,7 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify({ creditId: creditId, formVehiculo: formData, version: formVersion }),
+                body: JSON.stringify({ creditId: creditId, formVehiculo: formData, version: getFormVersion() }),
             })
 
             if (!response.ok) {
@@ -195,6 +198,7 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
             setDialogMessage('Gracias por su información, prontamente nos estaremos comunicando.')
             setShowDialog(true);
             setError(false)
+            await useFormVehiculo.getState().resetForm()
             await useFormVehiculo.getState().setSubmitted(true)
             return true
         } catch (error) {

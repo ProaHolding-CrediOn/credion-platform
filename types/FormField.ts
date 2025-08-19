@@ -7,7 +7,7 @@ export type EnhancedField = Field | MessageField;
 export type FieldType = "text" | "email" | "number" | "textarea" | "select" | "message" |
   "customTextField" | "customDateField" | "phoneField" | "radioButtonField" | "priceField" |
   "countryStateCityField" | "secretariaTransitoField" | "customTextareaField" | "fileUploadField" |
-  "customNumberField" | "placaField";
+  "customNumberField" | "placaField" | "optionsField" | "conceptDetailsField";
 
 export const fieldTypesArray = [
   "text",
@@ -26,7 +26,9 @@ export const fieldTypesArray = [
   "customTextareaField",
   "fileUploadField",
   "customNumberField",
-  "placaField"
+  "placaField",
+  "optionsField",
+  "conceptDetailsField",
 ] as const;
 
 export interface FieldValidation {

@@ -433,7 +433,7 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
                                 <div className="flex flex-col gap-2">
                                     <Accordion type="single" collapsible className="w-full">
                                         {entryList.map((entry, index) => (
-                                            <AccordionItem value={`${optionLabel}-${index}`}>
+                                            <AccordionItem value={`${optionLabel}-${index}`} key={index}>
                                                 <AccordionTrigger>
                                                     <span className="font-light">{textToTitle(numeroEnPalabras(index))} {itemDetailTitle(optionLabel)}</span>
                                                 </AccordionTrigger>

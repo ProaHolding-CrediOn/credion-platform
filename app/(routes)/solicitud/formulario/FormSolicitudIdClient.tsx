@@ -24,7 +24,7 @@ import { ArrowRightIcon } from "lucide-react";
 
 export default function FormSolicitudIdClient() {
   const { isAuthenticated, loading } = useAuth();
-  const { setFormData, setBlockStates, setFieldStates } = useFormSolicitud();
+  const { setFormData, setBlockStates, setFieldStates, setFormVersion, getFormVersion } = useFormSolicitud();
   const [steps, setSteps] = useState<any[]>([]);
   const [showDialog, setShowDialog] = useState(false);
   const [dialogMessage, setDialogMessage] = useState("");
@@ -32,7 +32,6 @@ export default function FormSolicitudIdClient() {
   const [showForm, setShowForm] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
   const [context, setContext] = useState('');
-  const [formVersion, setFormVersion] = useState<number>(1)
   const rehydrated = useFormSolicitud.getState().rehydrated
   const submitted = useFormSolicitud.getState().submitted
 
@@ -56,7 +55,11 @@ export default function FormSolicitudIdClient() {
 
         const data = await response.json();
         const mappedSteps = mapPayloadFormToSteps(data);
-        setFormVersion(data?.version || 1)
+        if (getFormVersion() !== data?.version) {
+            console.log('Version diferente, resetteando el formulario')
+            setFormVersion(data?.version || 1)
+            useFormSolicitud.getState().resetForm()
+        }
         setContext(data?.context || '')
         setSteps(mappedSteps);
       } catch (error) {
@@ -134,7 +137,7 @@ export default function FormSolicitudIdClient() {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
         },
-        body: JSON.stringify({ formSolicitud: formData, version: formVersion }),
+        body: JSON.stringify({ formSolicitud: formData, version: getFormVersion() }),
       })
 
       if (!response.ok) {
@@ -143,6 +146,7 @@ export default function FormSolicitudIdClient() {
 
       setDialogMessage('Gracias por su información, prontamente nos estaremos comunicando.')
       setShowDialog(true);
+      await useFormSolicitud.getState().resetForm()
       await useFormSolicitud.getState().setSubmitted(true)
       return true
     } catch (error) {

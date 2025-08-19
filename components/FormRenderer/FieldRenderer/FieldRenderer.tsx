@@ -20,6 +20,10 @@ import FileUploadField from "@/components/FileUploadField/FileUploadField";
 import CustomNumberField from "@/components/CustomNumberField/CustomNumberField";
 import { UploadedFile } from "@/components/FileUploadField/FileUploadField.type";
 import PlacaField from "@/components/PlacaField/PlacaField";
+import OptionsField from "@/components/OptionsField/OptionsField";
+import { OptionsValue } from "@/components/OptionsField/OptionsField.type";
+import ConceptDetailsField from "@/components/ConceptDetailsField/ConceptDetailsField";
+import { ConceptDetailsValue } from "@/components/ConceptDetailsField/ConceptDetailsField.type";
 
 export const isMessageField = (field: EnhancedField): field is MessageField => {
   return "lines" in field && field.type === "message";
@@ -82,6 +86,7 @@ export default function FieldRenderer({
                         label={field.label}
                         value={currentValue as string}
                         validations={field.validation}
+                        explain={field.explain}
                         onChange={onDataChange}
                         onValidationChange={onValidationChange}
                     />
@@ -94,6 +99,7 @@ export default function FieldRenderer({
                         label={field.label}
                         value={currentValue as string}
                         validations={field.validation}
+                        explain={field.explain}
                         onChange={onDataChange}
                         onValidationChange={onValidationChange}
                     />
@@ -106,6 +112,7 @@ export default function FieldRenderer({
                         label={field.label}
                         value={currentValue as string}
                         validations={field.validation}
+                        explain={field.explain}
                         onChange={onDataChange}
                         onValidationChange={onValidationChange}
                     />
@@ -118,6 +125,7 @@ export default function FieldRenderer({
                         label={field.label}
                         value={currentValue as string}
                         validations={field.validation}
+                        explain={field.explain}
                         onChange={onDataChange}
                         onValidationChange={onValidationChange}
                     />
@@ -130,6 +138,7 @@ export default function FieldRenderer({
                         label={field.label}
                         value={currentValue as { codigoPais: string, codigoTelefono: string, telefono: string }}
                         validations={field.validation}
+                        explain={field.explain}
                         onChange={onDataChange}
                         onValidationChange={onValidationChange}
                     />
@@ -143,6 +152,7 @@ export default function FieldRenderer({
                         value={currentValue as string}
                         options={field.options}
                         validations={field.validation}
+                        explain={field.explain}
                         onChange={onDataChange}
                         onValidationChange={onValidationChange}
                     />
@@ -155,6 +165,7 @@ export default function FieldRenderer({
                         label={field.label}
                         value={currentValue as number}
                         validations={field.validation}
+                        explain={field.explain}
                         onChange={onDataChange}
                         onValidationChange={onValidationChange}
                     />
@@ -168,6 +179,7 @@ export default function FieldRenderer({
                         value={currentValue as string}
                         options={field.options}
                         validations={field.validation}
+                        explain={field.explain}
                         onChange={onDataChange}
                         onValidationChange={onValidationChange}
                     />
@@ -179,6 +191,7 @@ export default function FieldRenderer({
                         label={field.label}
                         validations={field.validation}
                         value={currentValue as LocationValue}
+                        explain={field.explain}
                         onChange={onDataChange}
                         onValidationChange={onValidationChange}
                     />
@@ -190,6 +203,7 @@ export default function FieldRenderer({
                         label={field.label}
                         validations={field.validation}
                         value={currentValue as SecretariaLocationValue}
+                        explain={field.explain}
                         onChange={onDataChange}
                         onValidationChange={onValidationChange}
                     />
@@ -201,6 +215,7 @@ export default function FieldRenderer({
                         label={field.label}
                         validations={field.validation}
                         value={currentValue as UploadedFile[]}
+                        explain={field.explain}
                         onChange={onDataChange}
                         onValidationChange={onValidationChange}
                     />
@@ -212,6 +227,33 @@ export default function FieldRenderer({
                         name={field.name}
                         label={field.label}
                         value={currentValue as string}
+                        explain={field.explain}
+                        validations={field.validation}
+                        onChange={onDataChange}
+                        onValidationChange={onValidationChange}
+                    />
+                )}
+
+                {field.type === "optionsField" && field.options && (
+                    <OptionsField
+                        key={`field-${field.name}`}
+                        name={field.name}
+                        label={field.label}
+                        value={currentValue as OptionsValue[]}
+                        options={field.options}
+                        explain={field.explain}
+                        validations={field.validation}
+                        onChange={onDataChange}
+                        onValidationChange={onValidationChange}
+                    />
+                )}
+
+                {field.type === "conceptDetailsField" && (
+                    <ConceptDetailsField
+                        key={`field-${field.name}`}
+                        name={field.name}
+                        label={field.label}
+                        value={currentValue as ConceptDetailsValue[]}
                         explain={field.explain}
                         validations={field.validation}
                         onChange={onDataChange}

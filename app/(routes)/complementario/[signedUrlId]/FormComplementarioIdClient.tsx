@@ -19,7 +19,7 @@ import TextViewer from "@/components/TextViewer/TextViewer";
 
 export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlId: string }) {
     const router = useRouter()
-    const { setFormData, setBlockStates, setFieldStates } = useFormComplementario()
+    const { setFormData, setBlockStates, setFieldStates, setFormVersion, getFormVersion } = useFormComplementario()
     const [loading, setLoading] = useState(true);
     const [isValid, setIsValid] = useState(true);
     const [validating, setValidating] = useState(true);
@@ -32,7 +32,6 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
     const [creditId, setCreditId] = useState<string>('')
     const [user, setUser] = useState<{ name: string } | null>(null)
     const [error, setError] = useState<boolean>(false)
-    const [formVersion, setFormVersion] = useState<number>(1)
     const [context, setContext] = useState('');
     const rehydrated = useFormComplementario.getState().rehydrated
     const submitted = useFormComplementario.getState().submitted
@@ -49,7 +48,11 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
             const data = await response.json();
             const mappedSteps = mapPayloadFormToSteps(data);
             console.log('mappedSteps', mappedSteps)
-            setFormVersion(data?.version || 1)
+            if (getFormVersion() !== data?.version) {
+                console.log('Version diferente, resetteando el formulario')
+                useFormComplementario.getState().resetForm()
+                setFormVersion(data?.version || 1)
+            }
             setContext(data?.context || '')
             setSteps(mappedSteps)
             initialData(mappedSteps)
@@ -189,7 +192,7 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify({ creditId: creditId, formComplementario: formData, version: formVersion }),
+                body: JSON.stringify({ creditId: creditId, formComplementario: formData, version: getFormVersion() }),
             })
 
             if (!response.ok) {
@@ -199,6 +202,7 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
             setDialogMessage('Gracias por su información, prontamente nos estaremos comunicando.')
             setShowDialog(true);
             setError(false)
+            await useFormComplementario.getState().resetForm()
             await useFormComplementario.getState().setSubmitted(true)
             return true
         } catch (error) {

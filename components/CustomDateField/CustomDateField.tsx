@@ -8,7 +8,7 @@ import { Button } from "../ui/button";
 import { cn } from "@/lib/utils";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
-import { addYears, format, subYears } from "date-fns";
+import { format } from "date-fns";
 import { es as esLocale } from "date-fns/locale/es";
 import TextViewer from "../TextViewer/TextViewer";
 

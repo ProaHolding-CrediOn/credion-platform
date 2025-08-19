@@ -10,16 +10,15 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useRouter } from "next/navigation";
 import { Step } from "@/types/FormField";
 import { ArrowRightIcon } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useFormDesembolso } from "./useFormDesembolso";
 import Image from "next/image";
 import TextViewer from "@/components/TextViewer/TextViewer";
+import { useEstudioDeCredito } from "./useEstudioDeCredito";
 
-export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: string }) {
+export default function EstudioDeCreditoIdClient({ signedUrlId }: { signedUrlId: string }) {
     const router = useRouter()
-    const { setFormData, setBlockStates, setFieldStates, setFormVersion, getFormVersion } = useFormDesembolso()
+    const { setFormData, setBlockStates, setFieldStates, setFormVersion, getFormVersion } = useEstudioDeCredito()
     const [loading, setLoading] = useState(true);
     const [isValid, setIsValid] = useState(true);
     const [validating, setValidating] = useState(true);
@@ -31,28 +30,27 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
     const [isChecked, setIsChecked] = useState(false);
     const [creditId, setCreditId] = useState<string>('')
     const [user, setUser] = useState<{ name: string } | null>(null)
-    const [amount, setAmount] = useState<number>(0)
     const [error, setError] = useState<boolean>(false)
     const [context, setContext] = useState('');
-    const rehydrated = useFormDesembolso.getState().rehydrated
-    const submitted = useFormDesembolso.getState().submitted
+    const rehydrated = useEstudioDeCredito.getState().rehydrated
+    const submitted = useEstudioDeCredito.getState().submitted
 
-    const fetchForm = async (amount: number) => {
+    const fetchForm = async () => {
         setLoading(true)
         try {
-            const response = await fetch('/api/forms/desembolso')
+            const response = await fetch('/api/forms/estudio')
 
             if (!response.ok) {
                 throw new Error("Error al cargar el formulario");
             }
 
             const data = await response.json();
-            const mappedSteps = mapPayloadFormToSteps(data, amount);
+            const mappedSteps = mapPayloadFormToSteps(data);
             console.log('mappedSteps', mappedSteps)
             if (getFormVersion() !== data?.version) {
                 console.log('Version diferente, resetteando el formulario')
-                useFormDesembolso.getState().resetForm()
                 setFormVersion(data?.version || 1)
+                useEstudioDeCredito.getState().resetForm()
             }
             setContext(data?.context || '')
             setSteps(mappedSteps)
@@ -65,7 +63,7 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
     }
 
     const initialData = (steps: Step[]) => {
-        const state = useFormDesembolso.getState()
+        const state = useEstudioDeCredito.getState()
 
         const isAlreadyLoaded = Object.keys(state.fieldStates).length > 0
         if (isAlreadyLoaded) {
@@ -90,7 +88,7 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
                     initialBlockStates[stepIndex][blockName] = false
                     initialFieldStates[stepIndex][blockName] = {}
 
-                    if (block.blockType === 'payoutDistributionBlock') {
+                    if (block.blockType === 'payoutDistributionBlock' || block.blockType === 'multiFormSelectorBlock') {
                         return
                     }
 
@@ -131,7 +129,7 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
         const validateForm = async () => {
             setValidating(true);
             try {
-                const response = await fetch(`/api/forms/desembolso/validate`, {
+                const response = await fetch(`/api/forms/estudio/validate`, {
                     method: "POST",
                     body: JSON.stringify({ signedUrlId }),
                 });
@@ -145,8 +143,7 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
                 setIsValid(true)
                 setCreditId(data.creditId)
                 setUser(data.user)
-                setAmount(data.info?.amount)
-                await fetchForm(data.info?.amount)
+                await fetchForm()
             } catch (error) {
                 setIsValid(false)
                 console.error("Error al validar el formulario:", error)
@@ -189,12 +186,12 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
     const handleSubmit = async (formData: any) => {
         setSubmitting(true);
         try {
-            const response = await fetch('/api/forms/desembolso', {
+            const response = await fetch('/api/forms/complementario', {
                 method: "POST",
                 headers: {
                     'Authorization': `Bearer ${localStorage.getItem('token')}`
                 },
-                body: JSON.stringify({ creditId: creditId, formDesembolso: formData, version: getFormVersion() }),
+                body: JSON.stringify({ creditId: creditId, formComplementario: formData, version: getFormVersion() }),
             })
 
             if (!response.ok) {
@@ -204,15 +201,14 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
             setDialogMessage('Gracias por su información, prontamente nos estaremos comunicando.')
             setShowDialog(true);
             setError(false)
-            await useFormDesembolso.getState().resetForm();
-            await useFormDesembolso.getState().setSubmitted(true)
+            await useEstudioDeCredito.getState().resetForm()
             return true
         } catch (error) {
             console.error('Error al enviar el formulario:', error)
             setDialogMessage('Ha ocurrido un error. Por favor, intenta nuevamente.')
             setShowDialog(true);
             setError(true)
-            await useFormDesembolso.getState().setSubmitted(false)
+            await useEstudioDeCredito.getState().setSubmitted(false)
             throw error
         } finally {
             setSubmitting(false);
@@ -225,8 +221,8 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
     }
 
     const handleGoHome = () => {
-        useFormDesembolso.getState().resetForm()
-        useFormDesembolso.getState().setSubmitted(false)
+        useEstudioDeCredito.getState().resetForm()
+        useEstudioDeCredito.getState().setSubmitted(false)
         window.location.href = "/"
     }
 
@@ -257,8 +253,8 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
     if (submitted) {
         return (
             <div className="text-center space-y-4 p-8">
-                <h2 className="text-xl font-semibold">¡Gracias por la información!</h2>
-                <p className="text-muted-foreground">Tu información fue enviada con éxito. Nos pondremos en contacto contigo pronto.</p>
+                <h2 className="text-xl font-semibold">¡Hemos guardado la informació!</h2>
+                <p className="text-muted-foreground">La información del cliente ha sido almacenada.</p>
 
                 <Button onClick={handleGoHome}>
                     Ir al inicio
@@ -271,7 +267,6 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
         <div className="flex flex-col bg-background text-foreground min-h-screen">
             <main className="flex w-full flex-1 items-start justify-center px-4 py-8 sm:px-6 md:px-8">
                 <div className="w-full max-w-2xl space-y-6">
-
                 {!showForm && !loading ? (
                     <div className="bg-card sm:bg-card sm:rounded-lg sm:shadow-md p-4 md:p-6 w-full space-y-4">
                         <div className="flex flex-col items-center mb-6">
@@ -283,31 +278,11 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
                             />
                         </div>
                         <h1 className="text-lg md:text-xl text-center font-light text-foreground">
-                            Hola <span className="font-semibold">{user?.name || 'Usuario'}</span>, hemos culminado el proceso de verificación de datos.
+                            Estudio del credito #{creditId}
                         </h1>
-                        <h2 className="text-base md:text-lg text-center font-light text-muted-foreground">¡Tienes un Pre Aprobado de <span className="font-semibold">${formatPrice(amount || 0)} COP</span>!</h2>
                         {context && <Label className="text-sm text-foreground font-light">
                             <TextViewer text={context} />
                         </Label>}
-                        <div className="flex items-center justify-center space-x-2">
-                            <Input
-                            id="aceptar-politicas"
-                            type="checkbox"
-                            checked={isChecked}
-                            onChange={(e) => setIsChecked(e.target.checked)}
-                            className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
-                            />
-                            <Label htmlFor="aceptar-politicas" className="text-sm font-light">
-                            Acepto los{' '}
-                            <Link href="/terminos-de-uso" className="text-primary hover:underline">
-                                Términos de Uso
-                            </Link>{' '}
-                            y las{' '}
-                            <Link href="/politica-de-privacidad" className="text-primary hover:underline">
-                                Políticas de Privacidad
-                            </Link>
-                            </Label>
-                        </div>
                         <div className="flex items-center justify-center">
                             <Button
                                 variant='outline'
@@ -325,17 +300,16 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
                         <div className="w-full max-w-2xl space-y-6">
                             <div className="flex flex-col items-center">
                                 <Image src="/logo_text.svg" alt="Logo" width={200} height={100} className="mx-auto" />
-                                <Label className="text-muted-foreground text-sm mt-2">F-AC-08</Label>
+                                <Label className="text-muted-foreground text-sm mt-2">F-AC-02</Label>
                             </div>
                             <FormRenderer
                                 steps={steps}
                                 onSubmit={handleSubmit}
                                 submitting={submitting}
-                                store={useFormDesembolso}
+                                store={useEstudioDeCredito}
                             />
                         </div>
                     </main>
-                    
                 )}
 
                 </div>

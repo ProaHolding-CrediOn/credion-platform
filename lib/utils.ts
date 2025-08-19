@@ -17,38 +17,8 @@ export function hasRequiredFields(fields: EnhancedField[]) {
   });
 };
 
-export function formatTitle(block: any) {
-  
-}
-
-export function extractMessageLines(field: any): string[] {
-  return field.message?.root?.children?.flatMap((paragraph: any) =>
-    paragraph.children
-      .filter((child: any) => child.type === "text")
-      .map((child: any) => child.text)
-  ) || [];
-}
-
 export function mapFormField(field: any): EnhancedField {
-  if (field.blockType === "message") {
-    const lines = extractMessageLines(field);
-    return {
-      name: field.name || "",
-      label: field.label || "",
-      type: "message",
-      lines
-    };
-  }
-
   let fieldType: FieldType = field.blockType || "text";
-  
-  let options = undefined;
-  if (field.options && Array.isArray(field.options)) {
-    options = field.options.map((opt: any) => ({
-      label: opt.label,
-      value: opt.value
-    }));
-  }
 
   let validations = [];
   if (field.required) validations.push({ name: 'required', value: true });
@@ -61,6 +31,43 @@ export function mapFormField(field: any): EnhancedField {
   if (field.maxValue) validations.push({ name: 'maxValue', value: field.maxValue });
   if (field.daysLeft) validations.push({ name: 'daysLeft', value: field.daysLeft });
   if (field.maxFiles) validations.push({ name: 'maxFiles', value: field.maxFiles });
+  if (field.inputType) validations.push({ name: 'inputType', value: field.inputType });
+
+  let options = undefined;
+  if (field.options && Array.isArray(field.options)) {
+    options = field.options.map((opt: any) => ({
+      id: opt.id,
+      label: opt.label,
+      value: opt.value
+    }));
+
+    if (field.options.some((opt: any) => opt.allowExtraFields)) {
+      const extraFields = field.options.reduce((acc: any, opt: any) => {
+        if (!opt.allowExtraFields) return acc;
+        return { ...acc, [opt.value]: opt.extraFields.map((extra: any) => ({
+          id: extra.id,
+          label: extra.fieldLabel,
+          value: extra.fieldLabel,
+          type: extra.fieldType,
+          required: extra.required
+        }))}
+      }, {})
+
+      validations.push({ name: 'extraFields', value: extraFields });
+    }
+  }
+
+  if (field.concepts && Array.isArray(field.concepts)) {
+    const concepts = field.concepts.map((opt: any) => ({
+      id: opt.id,
+      label: opt.label,
+      required: opt.required,
+      minValue: opt.minValue,
+      explaination: opt.explaination
+    }));
+
+    validations.push({ name: 'concepts', value: concepts });
+  }
 
   return {
     name: field.name,
@@ -84,6 +91,12 @@ export function getInitialValueForType(type: string): FormFieldValue {
       return { estado: { id: "", nombre: "" }, ciudad: { id: "", nombre: "" }, secretaria: { id: "", nombre: "" } };
 
     case "fileUploadField":
+      return [];
+
+    case "optionsField":
+      return {};
+
+    case "conceptDetailsField":
       return [];
 
     default:

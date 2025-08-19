@@ -1,0 +1,271 @@
+import { memo, useEffect, useState } from "react";
+import { Label } from "@radix-ui/react-label";
+import TextViewer from "../TextViewer/TextViewer";
+import { OptionFieldValue, OptionsFieldProps, OptionsValue } from "./OptionsField.type";
+import { Checkbox } from "@/components/ui/checkbox";
+import { FieldOption } from "@/types/FormField";
+import { ExtraFields } from "./ExtraFieldsRender";
+import { Separator } from "../ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../ui/select";
+
+type ExtraField = { id: string, label: string, value: string, type: string, required: boolean };
+
+export default memo(function OptionsField({
+  name,
+  label,
+  explain,
+  value = [],
+  options,
+  validations,
+  onChange,
+  onValidationChange,
+  disabled
+}: OptionsFieldProps) {
+  const [error, setError] = useState<string | null>(null);
+  const [touched, setTouched] = useState(false);
+  const [pendingSelections, setPendingSelections] = useState<{ option: FieldOption; extraValues: OptionFieldValue[] }[]>([]);
+  const [selectedSaved, setSelectedSaved] = useState(false);
+
+  useEffect(() => {
+    if (value) {
+      setTouched(true);
+      //validate(value);
+    }
+  }, []);
+
+  const required = validations?.find(value => value.name === "required")?.value as boolean;
+  let inputType = validations?.find(value => value.name === "inputType")?.value;
+  if (inputType !== 'select' && inputType !== 'radio' && inputType !== 'checkbox') {
+    inputType = 'select'
+  }
+
+  const extraFields = validations?.find(value => value.name === "extraFields")?.value as { [key: string]: ExtraField[] } | undefined;
+
+  const optionHasExtraFields = (optionValue: string) => {
+    return Object.keys(extraFields || {}).some(key => optionValue === key);
+  }
+
+  const validate = (inputValue: string): boolean => {
+    if (!touched) return true;
+
+    if (!required && inputValue.trim() === "") {
+        setError(null);
+        return true;
+    }
+
+    if (required && inputValue.trim() === "") {
+      setError("Este campo es obligatorio");
+      return false;
+    }
+
+    setError(null);
+    return true;
+  };
+
+  const handleCheckboxChange = (isChecked: boolean, option: FieldOption) => {
+    if (isChecked) {
+      if (optionHasExtraFields(option.value as string)) {
+        setPendingSelections((prev) => [
+            ...prev,
+            { option, extraValues: [] }
+        ]);
+      } else {
+        const optionValue: OptionsValue = { label: option.label, value: [] };
+        const newValue: OptionsValue[] = [...(Array.isArray(value) ? value : []), optionValue];
+        const isValid = validate(newValue.length ? "ok" : "");
+        onChange(name, newValue);
+        onValidationChange?.(name, isValid, newValue);
+      }
+    } else {
+      const newValue = (value as OptionsValue[]).filter(v => v.label !== option.value);
+      const isValid = validate(newValue.length ? "ok" : "");
+      onChange(name, newValue);
+      onValidationChange?.(name, isValid, newValue);
+
+      setPendingSelections((prev) => prev.filter(p => p.option.label !== option.value));
+    }
+  };
+
+  const handleExtraFieldChange = (optionValue: string, fieldLabel: string, fieldValue: string, fieldType: string) => {
+    setPendingSelections((prev) =>
+      prev.map((p) => {
+        if (p.option.value !== optionValue) return p;
+
+        const existsIndex = p.extraValues.findIndex(v => v.label === fieldLabel);
+        let updatedExtraValues;
+
+        if (existsIndex >= 0) {
+          updatedExtraValues = p.extraValues.map((v, i) => i === existsIndex ? { ...v, value: fieldValue } : v)
+        } else {
+          updatedExtraValues = [...p.extraValues, { label: fieldLabel, value: fieldValue, type: fieldType }]
+        }
+
+        return { ...p, extraValues: updatedExtraValues }
+      })
+    );
+  };
+
+  const checkAndConfirmPendingCheckbox = (optionValue: string) => {
+    const pending = pendingSelections.find(p => p.option.value === optionValue);
+    if (!pending) return;
+
+    const extrasConfig = extraFields?.[optionValue] || [];
+    const allFilled = extrasConfig.filter(f => f.required).every((f) => (pending.extraValues.find(v => v.label === f.label)?.value || "").trim() !== "");
+    
+    if (allFilled) {
+      const newValue: OptionsValue[]  = [...(Array.isArray(value) ? value : []), {
+        label: pending.option.label,
+        value: pending.extraValues as OptionFieldValue[]
+      }];
+      const isValid = validate(newValue.length ? "ok" : "");
+      onChange(name, newValue);
+      onValidationChange?.(name, isValid, newValue);
+
+      setPendingSelections((prev) => prev.filter(p => p.option.value !== optionValue));
+      if (inputType === 'select') setSelectedSaved(true);
+    }
+  };
+
+  const checkAndConfirmPendingSelect = (optionValue: string) => {
+    const pending = pendingSelections.find(p => p.option.value === optionValue);
+    if (!pending) return;
+
+    const extrasConfig = extraFields?.[optionValue] || [];
+    const allFilled = extrasConfig.filter(f => f.required).every((f) => (pending.extraValues.find(v => v.label === f.label)?.value || "").trim() !== "");
+    
+    if (allFilled) {
+      const newValue: OptionsValue[]  = [{
+        label: pending.option.label,
+        value: pending.extraValues as OptionFieldValue[]
+      }];
+      const isValid = validate(newValue.length ? "ok" : "");
+      onChange(name, newValue);
+      onValidationChange?.(name, isValid, newValue);
+
+      setPendingSelections((prev) => prev.filter(p => p.option.value !== optionValue));
+      if (inputType === 'select') setSelectedSaved(true);
+    }
+  };
+
+  const renderCheckboxOption = (options: FieldOption[]) => {
+    return options.map((option) => {
+      const checked = Array.isArray(value) && value.some(v => v.label === option.value);
+      const pending = pendingSelections.find(p => p.option.label === option.value);
+
+      return (
+        <div key={option.id} className="flex flex-col ">
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id={`${name}-${option.id}`}
+              checked={checked || !!pending}
+              onCheckedChange={(isChecked) => handleCheckboxChange(!!isChecked, option)}
+              disabled={disabled}
+            />
+            <Label htmlFor={`${name}-${option.id}`} className="text-sm font-light">
+              {option.label}
+            </Label>
+          </div>
+
+          {pending && (
+            <ExtraFields
+              optionValue={option.value as string}
+              pending={pending}
+              extraFields={extraFields}
+              disabled={disabled}
+              name={name}
+              handleExtraFieldChange={handleExtraFieldChange}
+              checkAndConfirmPending={checkAndConfirmPendingCheckbox}
+            />
+          )}
+
+          {!pending && checked && optionHasExtraFields(option.value as string) && (
+            <span className="pl-6 text-xs text-muted-foreground font-light">Información ingresada exitosamente, si desea modificar la información, vuelva a seleccionar el campo</span>
+          )}
+
+          {options.findLastIndex((o) => o.value === option.value) !== options.length - 1 && <Separator className="mt-2"/>}
+        </div>
+      );
+    });
+  };
+
+  const renderSelectOption = (options: FieldOption[]) => {
+    const handleSelectChange = (selectedValue: string) => {
+      const option = options.find(o => o.value === selectedValue);
+      if (!option) return;
+
+      const hasExtra = optionHasExtraFields(option.value as string);
+
+      if (hasExtra) {
+        setPendingSelections(prev => [
+          { option, extraValues: [] }
+        ]);
+        setSelectedSaved(false)
+      } else {
+        const newValue: OptionsValue[] = [
+          { label: option.label, value: [{ label: option.label, value: option.label }] }
+        ];
+        setSelectedSaved(true);
+        const isValid = validate(newValue.length ? "ok" : "");
+        onChange(name, newValue);
+        onValidationChange?.(name, isValid, newValue);
+      }
+    };
+
+    return (
+      <div className="flex flex-col gap-2">
+        <Select onValueChange={handleSelectChange}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Selecciona una opción" />
+          </SelectTrigger>
+          <SelectContent>
+            {options.map(option => (
+              <SelectItem key={option.id} value={option.value as string}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {pendingSelections.map(pending => (
+          <ExtraFields
+            key={pending.option.value}
+            optionValue={pending.option.value as string}
+            pending={pending}
+            extraFields={extraFields}
+            disabled={disabled}
+            name={name}
+            handleExtraFieldChange={handleExtraFieldChange}
+            checkAndConfirmPending={checkAndConfirmPendingSelect}
+          />
+        ))}
+
+        {selectedSaved && (
+          <span className="pl-6 text-xs text-muted-foreground font-light">Información ingresada exitosamente, si desea modificar la información, vuelva a seleccionar el campo</span>
+        )}
+        
+      </div>
+    );
+  };
+
+  return (
+    <div className="space-y-2">
+      <Label htmlFor={name} className="text-sm font-light">
+        {label} {required && <span className="text-destructive">*</span>}
+      </Label>
+      {explain && <Label className="text-xs text-muted-foreground font-light">
+        <TextViewer text={explain} />
+      </Label>}
+      {inputType === 'checkbox' && (
+        <div className="flex flex-col gap-4 mt-2">
+          {renderCheckboxOption(options)}
+        </div>
+      )}
+      {inputType === 'select' && (
+        <div className="flex flex-col gap-4 mt-2">
+          {renderSelectOption(options)}
+        </div>
+      )}
+      {error && <p className="text-sm text-destructive">{error}</p>}
+    </div>
+  );
+})

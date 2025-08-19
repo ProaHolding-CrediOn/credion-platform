@@ -38,7 +38,6 @@ export default function BlockRenderer({
   }
 
   if (isConditionalFormBlock(block)) {
-    console.log('block', block)
     return <ConditionalFormBlockRenderer block={block} blockKey={blockKey} store={store} />
   }
 

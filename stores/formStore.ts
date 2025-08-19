@@ -19,6 +19,7 @@ export interface FormStore {
   fieldStates: FieldState;
   blockStates: BlockState;
   currentStep: number;
+  version: number;
   submitted: boolean;
   
   setFormData: (data: FormData) => void;
@@ -32,6 +33,8 @@ export interface FormStore {
 
   setCurrentStep: (step: number) => void;
   setSubmitted: (submitted: boolean) => void;
+  setFormVersion: (value: number) => void;
+  getFormVersion: () => number;
 
   resetForm: () => void;
   clearPersistedStore: () => void;
@@ -47,6 +50,7 @@ export const createFormStore = (storeKey: string) => {
         blockStates: {},
         currentStep: 0,
         submitted: false,
+        version: 0,
         setFormData: (data) => set({ formData: data }),
         updateField: (layout, blockName, name, value) =>
           set((state) => {
@@ -126,12 +130,16 @@ export const createFormStore = (storeKey: string) => {
         },
         setCurrentStep: (step) => set({ currentStep: step }),
         setSubmitted: (value) => set({ submitted: value }),
+        setFormVersion: (value) => set({ version: value }),
+        getFormVersion: () => get().version,
         resetForm: () =>
           set({
             formData: {},
             blockStates: {},
             fieldStates: {},
             currentStep: 0,
+            submitted: false,
+            version: 0
           }),
         clearPersistedStore: () => {
           const storageKey = `form-${storeKey}`

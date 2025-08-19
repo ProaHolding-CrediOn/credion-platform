@@ -40,12 +40,12 @@ export default memo(function CustomPriceField({
   const validate = (value: number): boolean => {
     if (!touched) return true;
 
-    if (!required && value === 0) {
+    if (!required) {
         setError(null);
         return true;
     }
 
-    if (required && value <= 0) {
+    if (required && value < 0) {
       setError("Este campo es obligatorio");
       return false;
     }
