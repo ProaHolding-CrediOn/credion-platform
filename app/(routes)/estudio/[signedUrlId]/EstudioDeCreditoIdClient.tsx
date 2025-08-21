@@ -16,7 +16,7 @@ import Image from "next/image";
 import TextViewer from "@/components/TextViewer/TextViewer";
 import { useEstudioDeCredito } from "./useEstudioDeCredito";
 
-export default function EstudioDeCreditoIdClient({ signedUrlId }: { signedUrlId: string }) {
+export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signedUrlId: string, token: string }) {
     const router = useRouter()
     const { setFormData, setBlockStates, setFieldStates, setFormVersion, getFormVersion } = useEstudioDeCredito()
     const [loading, setLoading] = useState(true);
@@ -27,15 +27,14 @@ export default function EstudioDeCreditoIdClient({ signedUrlId }: { signedUrlId:
     const [dialogMessage, setDialogMessage] = useState("");
     const [submitting, setSubmitting] = useState(false);
     const [showForm, setShowForm] = useState(false);
-    const [isChecked, setIsChecked] = useState(false);
     const [creditId, setCreditId] = useState<string>('')
-    const [user, setUser] = useState<{ name: string } | null>(null)
+    const [customId, setCustomId] = useState<string>('')
     const [error, setError] = useState<boolean>(false)
     const [context, setContext] = useState('');
     const rehydrated = useEstudioDeCredito.getState().rehydrated
     const submitted = useEstudioDeCredito.getState().submitted
 
-    const fetchForm = async () => {
+    const fetchForm = async (formSolicitud: FormData, formComplementario: FormData) => {
         setLoading(true)
         try {
             const response = await fetch('/api/forms/estudio')
@@ -54,7 +53,7 @@ export default function EstudioDeCreditoIdClient({ signedUrlId }: { signedUrlId:
             }
             setContext(data?.context || '')
             setSteps(mappedSteps)
-            initialData(mappedSteps)
+            initialData(mappedSteps, formSolicitud, formComplementario)
         } catch (error) {
             console.error("No se pudo cargar el formulario:", error)
         } finally {
@@ -62,7 +61,20 @@ export default function EstudioDeCreditoIdClient({ signedUrlId }: { signedUrlId:
         }
     }
 
-    const initialData = (steps: Step[]) => {
+    const flattenFormData = (formData: FormData) => {
+        const flat: Record<string, any> = {}
+        for (const layoutId in formData) {
+            for (const blockName in formData[layoutId]) {
+                for (const fieldName in formData[layoutId][blockName]) {
+                    const key = `${blockName}.${fieldName}`
+                    flat[key] = formData[layoutId][blockName][fieldName]?.value
+                }
+            }
+        }
+        return flat
+    }
+
+    const initialData = (steps: Step[], formSolicitud: FormData, formComplementario: FormData) => {
         const state = useEstudioDeCredito.getState()
 
         const isAlreadyLoaded = Object.keys(state.fieldStates).length > 0
@@ -75,6 +87,10 @@ export default function EstudioDeCreditoIdClient({ signedUrlId }: { signedUrlId:
             const initialBlockStates: BlockState = {}
             const initialFieldStates: FieldState = {}
 
+
+            const solicitudFlat = flattenFormData(formSolicitud)
+            const complementarioFlat = flattenFormData(formComplementario)
+
             steps.forEach((step, stepIndex) => {
                 const layoutId = `Paso ${stepIndex + 1}`
                 initialFormData[layoutId] = {}
@@ -83,9 +99,8 @@ export default function EstudioDeCreditoIdClient({ signedUrlId }: { signedUrlId:
 
                 step.blocks.forEach((block: any) => {
                     const blockName = block.blockName
-
                     initialFormData[layoutId][blockName] = {}
-                    initialBlockStates[stepIndex][blockName] = false
+                    initialBlockStates[stepIndex][blockName] = true
                     initialFieldStates[stepIndex][blockName] = {}
 
                     if (block.blockType === 'payoutDistributionBlock' || block.blockType === 'multiFormSelectorBlock') {
@@ -93,19 +108,17 @@ export default function EstudioDeCreditoIdClient({ signedUrlId }: { signedUrlId:
                     }
 
                     block.form.fields.forEach((field: any) => {
+                        const key = `${blockName}.${field.name}`
+                        const existingValue = solicitudFlat[key] ?? complementarioFlat[key] ?? getInitialValueForType(field.type)
+
                         initialFormData[layoutId][blockName][field.name] = {
                             label: field.label,
-                            value: getInitialValueForType(field.type),
+                            value: existingValue,
                             type: field.type,
                             validation: field.validation
                         }
 
-                        const hasValidation = field?.validation
-                        const isRequired = field?.validation?.some((v: any) => v.name === 'required' && v.value === true)
-
-                        if (hasValidation) {
-                            initialFieldStates[stepIndex][blockName][field.name] = !isRequired
-                        }
+                        initialFieldStates[stepIndex][blockName][field.name] = true
                     })
 
                     if (block.blockType === 'conditionalFormBlock') {
@@ -131,7 +144,10 @@ export default function EstudioDeCreditoIdClient({ signedUrlId }: { signedUrlId:
             try {
                 const response = await fetch(`/api/forms/estudio/validate`, {
                     method: "POST",
-                    body: JSON.stringify({ signedUrlId }),
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ signedUrlId, token }),
                 });
 
                 if (!response.ok) {
@@ -139,11 +155,10 @@ export default function EstudioDeCreditoIdClient({ signedUrlId }: { signedUrlId:
                 }
 
                 const data = await response.json()
-                localStorage.setItem('token', data.token)
                 setIsValid(true)
                 setCreditId(data.creditId)
-                setUser(data.user)
-                await fetchForm()
+                setCustomId(data.customId)
+                await fetchForm(data.formSolicitud, data.formComplementario)
             } catch (error) {
                 setIsValid(false)
                 console.error("Error al validar el formulario:", error)
@@ -253,8 +268,8 @@ export default function EstudioDeCreditoIdClient({ signedUrlId }: { signedUrlId:
     if (submitted) {
         return (
             <div className="text-center space-y-4 p-8">
-                <h2 className="text-xl font-semibold">¡Hemos guardado la informació!</h2>
-                <p className="text-muted-foreground">La información del cliente ha sido almacenada.</p>
+                <h2 className="text-xl font-semibold">¡Hemos guardado la información!</h2>
+                <p className="text-muted-foreground">La información ha sido almacenada.</p>
 
                 <Button onClick={handleGoHome}>
                     Ir al inicio
@@ -278,7 +293,7 @@ export default function EstudioDeCreditoIdClient({ signedUrlId }: { signedUrlId:
                             />
                         </div>
                         <h1 className="text-lg md:text-xl text-center font-light text-foreground">
-                            Estudio del credito #{creditId}
+                            Estudio del credito #{customId}
                         </h1>
                         {context && <Label className="text-sm text-foreground font-light">
                             <TextViewer text={context} />
@@ -288,7 +303,6 @@ export default function EstudioDeCreditoIdClient({ signedUrlId }: { signedUrlId:
                                 variant='outline'
                                 onClick={() => setShowForm(true)}
                                 className="group w-full sm:w-auto justify-center"
-                                disabled={!isChecked}
                             >
                                 Haz click para comenzar
                                 <ArrowRightIcon className="ml-2 h-4 w-4" />
@@ -300,7 +314,8 @@ export default function EstudioDeCreditoIdClient({ signedUrlId }: { signedUrlId:
                         <div className="w-full max-w-2xl space-y-6">
                             <div className="flex flex-col items-center">
                                 <Image src="/logo_text.svg" alt="Logo" width={200} height={100} className="mx-auto" />
-                                <Label className="text-muted-foreground text-sm mt-2">F-AC-02</Label>
+                                <Label className="text-muted-foreground text-sm mt-2">Información general</Label>
+
                             </div>
                             <FormRenderer
                                 steps={steps}
