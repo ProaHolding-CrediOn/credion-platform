@@ -178,9 +178,42 @@ export default memo(function OptionsField({
             />
           )}
 
-          {!pending && checked && optionHasExtraFields(option.value as string) && (
-            <span className="pl-6 text-xs text-muted-foreground font-light">Información ingresada exitosamente, si desea modificar la información, vuelva a seleccionar el campo</span>
-          )}
+          {!pending && checked && optionHasExtraFields(option.value as string) && (() => {
+            const selected = Array.isArray(value) 
+              ? value.find(v => v.label === option.value) 
+              : null;
+
+            const formatValue = (val: any) => {
+              if (!val) return "";
+              const date = new Date(val);
+              if (!isNaN(date.getTime())) {
+                return date.toLocaleDateString("es-CO", {
+                  year: "numeric",
+                  month: "short",
+                  day: "2-digit"
+                });
+              }
+              return String(val);
+            };
+
+            return (
+              <div className="pl-6 text-xs text-muted-foreground font-light space-y-1">
+                <div>
+                  Información ingresada exitosamente, si desea modificar la información, vuelva a seleccionar el campo
+                </div>
+
+                {selected?.value && (
+                  <ul className="list-disc pl-4">
+                    {Object.entries(selected.value).map(([key, val]) => (
+                      <li key={key}>
+                        <span className="font-medium">{val.label}:</span> {formatValue(val.value)}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })()}
 
           {options.findLastIndex((o) => o.value === option.value) !== options.length - 1 && <Separator className="mt-2"/>}
         </div>
