@@ -1,3 +1,4 @@
+import { logError } from "@/lib/errorResponse"
 import { NextRequest, NextResponse } from "next/server"
 
 export async function POST(req: NextRequest) {
@@ -21,6 +22,7 @@ export async function POST(req: NextRequest) {
         const data = await uploadRes.json()
 
         if (!uploadRes.ok) {
+            logError(uploadRes)
             return NextResponse.json({ error: 'Error al subir el archivo' }, { status: uploadRes.status })
         }
 

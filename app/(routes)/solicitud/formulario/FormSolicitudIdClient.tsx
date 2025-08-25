@@ -57,8 +57,8 @@ export default function FormSolicitudIdClient() {
         const mappedSteps = mapPayloadFormToSteps(data);
         if (getFormVersion() !== data?.version) {
             console.log('Version diferente, resetteando el formulario')
-            setFormVersion(data?.version || 1)
             useFormSolicitud.getState().resetForm()
+            setFormVersion(data?.version || 1)
         }
         setContext(data?.context || '')
         setSteps(mappedSteps);
