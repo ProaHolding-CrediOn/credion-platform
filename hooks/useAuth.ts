@@ -12,3 +12,7 @@ export function useAuth() {
 
   return { isAuthenticated, loading };
 }
+
+export function removeAuth() {
+  localStorage.removeItem("auth_token");
+}

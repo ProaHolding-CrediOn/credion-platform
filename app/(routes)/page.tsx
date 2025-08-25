@@ -1,5 +1,6 @@
 'use client'
 
+import { removeAuth } from "@/hooks/useAuth";
 import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -9,9 +10,10 @@ export default function Home() {
     const router = useRouter();
 
     useEffect(() => {
+        removeAuth();
         const timeout = setTimeout(() => {
-            router.push('/solicitud/formulario')
-        }, 3000)
+            router.push('/verificacion/telefono')
+        }, 5000)
 
         return () => clearTimeout(timeout)
     }, [])
@@ -27,7 +29,7 @@ export default function Home() {
                 </h1>
                 <p className="mt-2 text-muted-foreground font-light">
                     Si no eres redirigido automáticamente,{" "}
-                    <Link href="/solicitud/formulario" className="text-blue-500 underline hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-500">
+                    <Link href="/verificacion/telefono" className="text-blue-500 underline hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-500">
                         haz clic aquí
                     </Link>.
                 </p>
