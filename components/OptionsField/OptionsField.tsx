@@ -147,6 +147,31 @@ export default memo(function OptionsField({
     }
   };
 
+  const formatValue = (val: any) => {
+    if (val == null) return "";
+
+    if (typeof val === "number") {
+      return val.toString();
+    }
+
+    if (typeof val === "string") {
+      const isDateLike = /^\d{4}-\d{2}-\d{2}(T.*)?$/.test(val);
+      if (isDateLike) {
+        const date = new Date(val);
+        if (!isNaN(date.getTime())) {
+          return date.toLocaleDateString("es-CO", {
+            year: "numeric",
+            month: "short",
+            day: "2-digit"
+          });
+        }
+      }
+      return val;
+    }
+
+    return String(val);
+  };
+
   const renderCheckboxOption = (options: FieldOption[]) => {
     return options.map((option) => {
       const checked = Array.isArray(value) && value.some(v => v.label === option.value);
@@ -182,19 +207,6 @@ export default memo(function OptionsField({
             const selected = Array.isArray(value) 
               ? value.find(v => v.label === option.value) 
               : null;
-
-            const formatValue = (val: any) => {
-              if (!val) return "";
-              const date = new Date(val);
-              if (!isNaN(date.getTime())) {
-                return date.toLocaleDateString("es-CO", {
-                  year: "numeric",
-                  month: "short",
-                  day: "2-digit"
-                });
-              }
-              return String(val);
-            };
 
             return (
               <div className="pl-6 text-xs text-muted-foreground font-light space-y-1">
@@ -244,9 +256,12 @@ export default memo(function OptionsField({
       }
     };
 
+    const selectedValue = Array.isArray(value) && value.length > 0 ? value[0].label : undefined;
+    const selectedOption = options.find(o => o.value === selectedValue);
+
     return (
       <div className="flex flex-col gap-2">
-        <Select onValueChange={handleSelectChange}>
+        <Select onValueChange={handleSelectChange} value={selectedValue}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="Selecciona una opción" />
           </SelectTrigger>
@@ -271,6 +286,24 @@ export default memo(function OptionsField({
             checkAndConfirmPending={checkAndConfirmPendingSelect}
           />
         ))}
+
+        {!pendingSelections.length && selectedOption && optionHasExtraFields(selectedOption.value as string) && (
+          <div className="pl-6 text-xs text-muted-foreground font-light space-y-1">
+            <div>
+              Información ingresada exitosamente, si desea modificar la información, vuelva a seleccionar el campo
+            </div>
+
+            {value[0]?.value && (
+              <ul className="list-disc pl-4">
+                {value[0].value.map((val: any, i: number) => (
+                  <li key={i}>
+                    <span className="font-medium">{val.label}:</span> {formatValue(val.value)}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        )}
 
         {selectedSaved && (
           <span className="pl-6 text-xs text-muted-foreground font-light">Información ingresada exitosamente, si desea modificar la información, vuelva a seleccionar el campo</span>

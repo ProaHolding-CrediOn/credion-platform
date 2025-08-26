@@ -28,6 +28,7 @@ export default function ConditionalFormBlockRenderer({ block, blockKey, store }:
           <Label className="font-light text-sm text-foreground">{block.label}</Label>
           <div className="flex gap-4">
             <RadioGroup
+              value={String(selectedOption)}
               onValueChange={handleSelect}
               className="flex flex-col"
             >

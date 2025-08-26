@@ -15,6 +15,7 @@ import Link from "next/link";
 import Image from "next/image";
 import TextViewer from "@/components/TextViewer/TextViewer";
 import { useEstudioDeCredito } from "./useEstudioDeCredito";
+import { EntryData } from "@/components/FormRenderer/BlockRenderer/MultiFormSelectorFormBlockRenderer";
 
 export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signedUrlId: string, token: string }) {
     const router = useRouter()
@@ -103,28 +104,57 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
                     initialBlockStates[stepIndex][blockName] = true
                     initialFieldStates[stepIndex][blockName] = {}
 
-                    if (block.blockType === 'payoutDistributionBlock' || block.blockType === 'multiFormSelectorBlock') {
-                        return
-                    }
+                    if (block.blockType === 'multiFormSelectorBlock') {
+                        console.log('block multiFormSelectorBlock', block)
+                        const layoutId = `Paso ${stepIndex + 1}`;
+                        const blockName = block.blockName;
 
-                    block.form.fields.forEach((field: any) => {
-                        const key = `${blockName}.${field.name}`
-                        const existingValue = solicitudFlat[key] ?? complementarioFlat[key] ?? getInitialValueForType(field.type)
+                        const existingRaw =
+                            (formSolicitud as any)?.[layoutId]?.[blockName] ??
+                            (formComplementario as any)?.[layoutId]?.[blockName] ??
+                            (solicitudFlat as any)[blockName] ??
+                            (complementarioFlat as any)[blockName];
 
-                        initialFormData[layoutId][blockName][field.name] = {
-                            label: field.label,
-                            value: existingValue,
-                            type: field.type,
-                            validation: field.validation
+                        let parsed: Record<string, EntryData[]> = {};
+                        if (existingRaw && typeof existingRaw === 'object' && !Array.isArray(existingRaw)) {
+                            const hasArrays = Object.values(existingRaw).some((v: any) => Array.isArray(v));
+                            if (hasArrays) parsed = existingRaw as Record<string, EntryData[]>;
                         }
 
-                        initialFieldStates[stepIndex][blockName][field.name] = true
-                    })
+                        if (!Object.keys(parsed).length) {
+                            for (const opt of block.options ?? []) parsed[opt.label] = [];
+                        }
+
+                        (initialFormData as any)[layoutId][blockName] = parsed;
+
+                        initialBlockStates[stepIndex][blockName] = true;
+                        initialFieldStates[stepIndex][blockName] = {};
+                        return;
+                    } else {
+                        block.form.fields.forEach((field: any) => {
+                            const key = `${blockName}.${field.name}`
+                            const existingValue = solicitudFlat[key] ?? complementarioFlat[key] ?? getInitialValueForType(field.type)
+
+                            initialFormData[layoutId][blockName][field.name] = {
+                                label: field.label,
+                                value: existingValue,
+                                type: field.type,
+                                validation: field.validation
+                            }
+
+                            initialFieldStates[stepIndex][blockName][field.name] = true
+                        })
+                    }
+
+                    
 
                     if (block.blockType === 'conditionalFormBlock') {
+                        const key = `${blockName}.Condicion`
+                        const existingValue = solicitudFlat[key] ?? complementarioFlat[key] ?? ""
+
                         initialFormData[layoutId][blockName]['Condicion'] = {
                             label: block.label,
-                            value: "",
+                            value: existingValue,
                             type: 'Conditional',
                             validation: []
                         }

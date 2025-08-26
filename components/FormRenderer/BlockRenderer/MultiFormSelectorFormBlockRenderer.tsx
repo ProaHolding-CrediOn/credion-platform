@@ -21,7 +21,7 @@ export interface StoredFieldData {
     validation: any;
 }
 
-type EntryData = Record<string, StoredFieldData>;
+export type EntryData = Record<string, StoredFieldData>;
 
 export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, store }: BlockRendererProps) {
     block = block as MultiFormSelectorFormBlock
