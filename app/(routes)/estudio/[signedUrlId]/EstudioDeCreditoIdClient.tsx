@@ -34,6 +34,7 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
     const [context, setContext] = useState('');
     const rehydrated = useEstudioDeCredito.getState().rehydrated
     const submitted = useEstudioDeCredito.getState().submitted
+    const [basicInformation, setBasicInformation] = useState<Record<string, any>>()
 
     const fetchForm = async (formSolicitud: FormData, formComplementario: FormData) => {
         setLoading(true)
@@ -75,6 +76,16 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
         return flat
     }
 
+    const setInfo = (formSolicitud: FormData, formComplementario: FormData) => {
+        const basic = {
+            'Primer Nombre': formSolicitud?.['Paso 1']?.['datosSolicitante']?.['primerNombre']?.value,
+            'Segundo Nombre': formSolicitud?.['Paso 1']?.['datosSolicitante']?.['segundoNombre']?.value,
+            'Primer Apellido': formSolicitud?.['Paso 1']?.['datosSolicitante']?.['primerApellido']?.value,
+            'Segundo Apellido': formSolicitud?.['Paso 1']?.['datosSolicitante']?.['segundoApellido']?.value,
+        }
+        setBasicInformation(basic)
+    }
+
     const initialData = (steps: Step[], formSolicitud: FormData, formComplementario: FormData) => {
         const state = useEstudioDeCredito.getState()
 
@@ -105,7 +116,6 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
                     initialFieldStates[stepIndex][blockName] = {}
 
                     if (block.blockType === 'multiFormSelectorBlock') {
-                        console.log('block multiFormSelectorBlock', block)
                         const layoutId = `Paso ${stepIndex + 1}`;
                         const blockName = block.blockName;
 
@@ -189,6 +199,7 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
                 setCreditId(data.creditId)
                 setCustomId(data.customId)
                 await fetchForm(data.formSolicitud, data.formComplementario)
+                setInfo(data.formSolicitud, data.formComplementario)
             } catch (error) {
                 setIsValid(false)
                 console.error("Error al validar el formulario:", error)
@@ -344,8 +355,12 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
                         <div className="w-full max-w-2xl space-y-6">
                             <div className="flex flex-col items-center">
                                 <Image src="/logo_text.svg" alt="Logo" width={200} height={100} className="mx-auto" />
-                                <Label className="text-muted-foreground text-sm mt-2">Información general</Label>
-
+                                <Label className="text-muted-foreground text-sm mt-2">Información general credito {customId}</Label>
+                                {basicInformation && Object.entries(basicInformation).map(([key, value]) => (
+                                    value && <Label className="text-muted-foreground text-sm mt-2" key={key}>
+                                        {key}: {value}
+                                    </Label>
+                                ))}
                             </div>
                             <FormRenderer
                                 steps={steps}

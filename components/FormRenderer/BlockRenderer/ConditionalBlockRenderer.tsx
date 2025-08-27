@@ -4,6 +4,7 @@ import { BlockRendererProps } from "./BlockRenderer.type";
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import TextViewer from "@/components/TextViewer/TextViewer";
 
 export default function ConditionalFormBlockRenderer({ block, blockKey, store }: BlockRendererProps) {
     block = block as ConditionalFormBlock
@@ -26,6 +27,9 @@ export default function ConditionalFormBlockRenderer({ block, blockKey, store }:
       <div key={`conditional`} className="space-y-4">
         <div className="space-y-2">
           <Label className="font-light text-sm text-foreground">{block.label}</Label>
+          {block.introContent && <Label className="text-sm text-foreground font-light">
+              <TextViewer text={block.introContent} />
+          </Label>}
           <div className="flex gap-4">
             <RadioGroup
               value={String(selectedOption)}

@@ -32,7 +32,7 @@ export default function BlockRenderer({
   blockKey,
   store
 }: BlockRendererProps) {
-
+    
   if (isRegularFormBlock(block)) {
     return <FormBlockRenderer block={block} blockKey={blockKey} store={store} />;
   }

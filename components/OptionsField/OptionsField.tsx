@@ -233,61 +233,79 @@ export default memo(function OptionsField({
     });
   };
 
-  const renderSelectOption = (options: FieldOption[]) => {
-    const handleSelectChange = (selectedValue: string) => {
-      const option = options.find(o => o.value === selectedValue);
-      if (!option) return;
+const renderSelectOption = (options: FieldOption[]) => {
+  const handleSelectChange = (selectedValue: string) => {
+    const option = options.find(o => String(o.value) === selectedValue);
+    if (!option) return;
 
-      const hasExtra = optionHasExtraFields(option.value as string);
+    const hasExtra = optionHasExtraFields(String(option.value));
 
-      if (hasExtra) {
-        setPendingSelections(prev => [
-          { option, extraValues: [] }
-        ]);
-        setSelectedSaved(false)
-      } else {
-        const newValue: OptionsValue[] = [
-          { label: option.label, value: [{ label: option.label, value: option.label }] }
-        ];
-        setSelectedSaved(true);
-        const isValid = validate(newValue.length ? "ok" : "");
-        onChange(name, newValue);
-        onValidationChange?.(name, isValid, newValue);
-      }
-    };
+    if (hasExtra) {
+      // Mostrar de una vez la opción seleccionada en el Select (estado local)
+      setPendingSelections([{ option, extraValues: [] }]);
+      setSelectedSaved(false);
+    } else {
+      // Confirmar inmediatamente
+      const newValue: OptionsValue[] = [
+        { label: option.label, value: [{ label: option.label, value: option.label }] }
+      ];
+      setSelectedSaved(true);
+      const isValid = validate(newValue.length ? "ok" : "");
+      onChange(name, newValue);
+      onValidationChange?.(name, isValid, newValue);
+      // Asegurar que no quede pendiente previo
+      setPendingSelections([]);
+    }
+  };
 
-    const selectedValue = Array.isArray(value) && value.length > 0 ? value[0].label : undefined;
-    const selectedOption = options.find(o => o.value === selectedValue);
+  // Valor confirmado (mapeado por label → option.value)
+  const committedOptionValue =
+    Array.isArray(value) && value.length > 0
+      ? String(options.find(o => o.label === value[0].label)?.value ?? "")
+      : undefined;
 
-    return (
-      <div className="flex flex-col gap-2">
-        <Select onValueChange={handleSelectChange} value={selectedValue}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Selecciona una opción" />
-          </SelectTrigger>
-          <SelectContent>
-            {options.map(option => (
-              <SelectItem key={option.id} value={option.value as string}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+  // Valor pendiente (si hay extraFields por diligenciar)
+  const pendingOptionValue = pendingSelections[0]?.option
+    ? String(pendingSelections[0].option.value)
+    : undefined;
 
-        {pendingSelections.map(pending => (
-          <ExtraFields
-            key={pending.option.value}
-            optionValue={pending.option.value as string}
-            pending={pending}
-            extraFields={extraFields}
-            disabled={disabled}
-            name={name}
-            handleExtraFieldChange={handleExtraFieldChange}
-            checkAndConfirmPending={checkAndConfirmPendingSelect}
-          />
-        ))}
+  // El Select debe mostrar primero el pendiente; si no hay, el confirmado
+  const selectValue = pendingOptionValue ?? committedOptionValue;
 
-        {!pendingSelections.length && selectedOption && optionHasExtraFields(selectedOption.value as string) && (
+  // Para el resumen, usa el confirmado (cuando no hay pending)
+  const committedOption = options.find(o => String(o.value) === committedOptionValue);
+
+  return (
+    <div className="flex flex-col gap-2">
+      <Select value={selectValue} onValueChange={handleSelectChange}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Selecciona una opción" />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map(option => (
+            <SelectItem key={option.id} value={String(option.value)}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      {pendingSelections.map(pending => (
+        <ExtraFields
+          key={String(pending.option.value)}
+          optionValue={String(pending.option.value)}
+          pending={pending}
+          extraFields={extraFields}
+          disabled={disabled}
+          name={name}
+          handleExtraFieldChange={handleExtraFieldChange}
+          checkAndConfirmPending={checkAndConfirmPendingSelect}
+        />
+      ))}
+
+      {!pendingSelections.length &&
+        committedOption &&
+        optionHasExtraFields(String(committedOption.value)) && (
           <div className="pl-6 text-xs text-muted-foreground font-light space-y-1">
             <div>
               Información ingresada exitosamente, si desea modificar la información, vuelva a seleccionar el campo
@@ -303,15 +321,17 @@ export default memo(function OptionsField({
               </ul>
             )}
           </div>
-        )}
+      )}
 
-        {selectedSaved && (
-          <span className="pl-6 text-xs text-muted-foreground font-light">Información ingresada exitosamente, si desea modificar la información, vuelva a seleccionar el campo</span>
-        )}
-        
-      </div>
-    );
-  };
+      {selectedSaved && (
+        <span className="pl-6 text-xs text-muted-foreground font-light">
+          Información ingresada exitosamente, si desea modificar la información, vuelva a seleccionar el campo
+        </span>
+      )}
+    </div>
+  );
+};
+
 
   return (
     <div className="space-y-2">
