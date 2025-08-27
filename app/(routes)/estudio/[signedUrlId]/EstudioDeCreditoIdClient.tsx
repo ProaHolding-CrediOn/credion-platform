@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { mapPayloadFormToSteps } from "@/utils/mapPayloadFormToSteps";
 import { BlockState, FieldState, FormData } from "@/stores/formStore";
-import { formatPrice, getInitialValueForType } from "@/lib/utils";
+import { getInitialValueForType } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import FormRenderer from "@/components/FormRenderer/FormRenderer";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -11,11 +11,12 @@ import { useRouter } from "next/navigation";
 import { Step } from "@/types/FormField";
 import { ArrowRightIcon } from "lucide-react";
 import { Label } from "@/components/ui/label";
-import Link from "next/link";
 import Image from "next/image";
 import TextViewer from "@/components/TextViewer/TextViewer";
 import { useEstudioDeCredito } from "./useEstudioDeCredito";
 import { EntryData } from "@/components/FormRenderer/BlockRenderer/MultiFormSelectorFormBlockRenderer";
+import { TimeLeft, TimerForm } from "@/components/TimeForm";
+import { getJwtExpiryDate } from "@/lib/tokenExpiryTime";
 
 export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signedUrlId: string, token: string }) {
     const router = useRouter()
@@ -35,6 +36,10 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
     const rehydrated = useEstudioDeCredito.getState().rehydrated
     const submitted = useEstudioDeCredito.getState().submitted
     const [basicInformation, setBasicInformation] = useState<Record<string, any>>()
+    const [formSessionExpired, setFormSessionExpired] = useState(false)
+    const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
+    const [expired, setExpired] = useState(false);
+    const limitTo15Minutes = false;
 
     const fetchForm = async (formSolicitud: FormData, formComplementario: FormData) => {
         setLoading(true)
@@ -203,10 +208,6 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
             } catch (error) {
                 setIsValid(false)
                 console.error("Error al validar el formulario:", error)
-                const timeout = setTimeout(() => {
-                    router.push('/')
-                }, 3000)
-                return () => clearTimeout(timeout)
             } finally {
                 setValidating(false)
             }
@@ -214,6 +215,67 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
 
         validateForm()
     }, [signedUrlId])
+
+    useEffect(() => {
+        if (!token) {
+            setExpired(true);
+            return;
+        }
+
+        const handleTimeUp = () => {
+            setFormSessionExpired(true)
+        }
+
+        const calculateMaxExpiry = () => {
+            const expiryDate = getJwtExpiryDate(token);
+            const now = Date.now();
+
+            if (!expiryDate || expiryDate.getTime() <= now) {
+                return now;
+            }
+
+            const tokenDurationMs = expiryDate.getTime() - now;
+
+            if (limitTo15Minutes) {
+                return now + Math.min(tokenDurationMs, 15 * 60 * 1000);
+            } else {
+                return now + tokenDurationMs;
+            }
+        };
+
+        const finalExpiryTime = calculateMaxExpiry();
+
+        const timer = setInterval(() => {
+        const now = Date.now();
+        const remainingMs = finalExpiryTime - now;
+
+        if (remainingMs <= 0) {
+            setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+            setExpired(true);
+            clearInterval(timer);
+            handleTimeUp()
+        } else {
+            const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+            const minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
+            const seconds = Math.floor((remainingMs / 1000) % 60);
+            setTimeLeft({ hours, minutes, seconds });
+            setExpired(false);
+        }
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [token, limitTo15Minutes]);
+
+    const handleDialogClose = () => {
+        setShowDialog(false);
+        if (!error) window.location.href = "/";
+    }
+
+    const handleGoHome = () => {
+        useEstudioDeCredito.getState().resetForm()
+        useEstudioDeCredito.getState().setSubmitted(false)
+        window.location.href = "/"
+    }
 
     if (validating) {
         return (
@@ -229,23 +291,36 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
 
     if (!isValid && !validating) {
         return (
-            <div className="flex flex-col bg-background text-foreground">
-                <main className="flex-1 w-full">
-                    <div className="w-full p-4 sm:p-6 md:p-8">
-                        <p className="text-muted-foreground">URL no válida, en un momento será redirigido</p>
+            <div className="flex flex-col text-muted-foreground">
+                <main className="flex-1 w-full flex items-center justify-center p-4 sm:p-6 md:p-8">
+                    <div className="max-w-md w-full bg-white rounded-xl shadow-lg border border-gray-200 text-center p-6 sm:p-8">
+                        <Image src="/logo.svg" alt="Logo" width={100} height={100} className="mx-auto mb-4" />
+                        <h2 className="text-xl font-semibold text-foreground mb-2">
+                            Enlace no válido
+                        </h2>
+                        <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
+                            El enlace que intentas acceder no es válido o ha expirado. 
+                            Por favor, genera uno nuevo en el Dashboard administrativo.
+                        </p>
+                        <Button
+                            onClick={handleGoHome}
+                            className="w-full"
+                        >
+                            Volver al inicio
+                        </Button>
                     </div>
                 </main>
             </div>
-        )
+        );
     }
 
     const handleSubmit = async (formData: any) => {
         setSubmitting(true);
         try {
-            const response = await fetch('/api/forms/complementario', {
+            const response = await fetch('/api/forms/estudio', {
                 method: "POST",
                 headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+                    'Authorization': `Bearer ${token}`
                 },
                 body: JSON.stringify({ creditId: creditId, formComplementario: formData, version: getFormVersion() }),
             })
@@ -254,7 +329,7 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
                 throw new Error('Error al enviar el formulario');
             }
 
-            setDialogMessage('Gracias por su información, prontamente nos estaremos comunicando.')
+            setDialogMessage('La información ha sido guardada correctamente')
             setShowDialog(true);
             setError(false)
             await useEstudioDeCredito.getState().resetForm()
@@ -271,20 +346,9 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
         }
     };
 
-    const handleDialogClose = () => {
-        setShowDialog(false);
-        if (!error) window.location.href = "/";
-    }
-
-    const handleGoHome = () => {
-        useEstudioDeCredito.getState().resetForm()
-        useEstudioDeCredito.getState().setSubmitted(false)
-        window.location.href = "/"
-    }
-
     if (loading || !steps.length) {
         return (
-            <div className="flex flex-col bg-background text-foreground">
+            <div className="flex flex-col bg-background text-foreground text-center">
                 <main className="flex-1 w-full">
                 <div className="w-full p-4 sm:p-6 md:p-8">
                     <p className="text-muted-foreground">Cargando formulario...</p>
@@ -296,7 +360,7 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
 
     if (!rehydrated) {
         return (
-            <div className="flex flex-col bg-background text-foreground">
+            <div className="flex flex-col bg-background text-foreground text-center">
                 <main className="flex-1 w-full">
                 <div className="w-full p-4 sm:p-6 md:p-8">
                     <p className="text-muted-foreground">Cargando formulario guardado...</p>
@@ -350,7 +414,7 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
                             </Button>
                         </div>
                     </div>
-                ) : (
+                ) : (!formSessionExpired &&
                     <main className="flex w-full flex-1 items-start justify-center sm:px-6 md:px-8">
                         <div className="w-full max-w-2xl space-y-6">
                             <div className="flex flex-col items-center">
@@ -369,9 +433,41 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
                                 store={useEstudioDeCredito}
                             />
                         </div>
+                        {token && <div className="fixed bottom-4 right-4">
+                            <TimerForm key="timer-form-unique" timeLeft={timeLeft} expired={expired} />
+                        </div>}
                     </main>
                 )}
-
+                {formSessionExpired && (
+                    <div className="bg-card sm:bg-card sm:rounded-lg sm:shadow-md p-4 md:p-6 w-full space-y-4">
+                        <div className="flex flex-col items-center mb-6">
+                            <Image
+                                src="/logo_text.svg"
+                                alt="Logo Credion"
+                                width={200}
+                                height={100}
+                            />
+                        </div>
+                        <h1 className="text-lg md:text-xl text-center font-light text-foreground">
+                            Estudio del credito #{customId}
+                        </h1>
+                        <Label className="text-sm text-foreground font-light">
+                            La sesión ha expirado, por favor, dirigete al Dashboard administrativo y genera nuevamente un link de Estudio de Credito.
+                        </Label>
+                        <div className="flex items-center justify-center">
+                            <Button
+                                variant='outline'
+                                onClick={() => {
+                                    window.location.href = `https://dashboard.credion.com.co/solicitudes/${customId}`
+                                }}
+                                className="group w-full sm:w-auto justify-center"
+                            >
+                                Ir al Dashboard
+                                <ArrowRightIcon className="ml-2 h-4 w-4" />
+                            </Button>
+                        </div>
+                    </div>
+                )}
                 </div>
             </main>
             <Dialog open={showDialog} onOpenChange={handleDialogClose}>
