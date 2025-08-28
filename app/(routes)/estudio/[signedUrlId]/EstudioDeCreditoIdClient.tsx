@@ -55,8 +55,8 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
             console.log('mappedSteps', mappedSteps)
             if (getFormVersion() !== data?.version) {
                 console.log('Version diferente, resetteando el formulario')
-                setFormVersion(data?.version || 1)
                 useEstudioDeCredito.getState().resetForm()
+                setFormVersion(data?.version || 1)
             }
             setContext(data?.context || '')
             setSteps(mappedSteps)
@@ -74,7 +74,11 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
             for (const blockName in formData[layoutId]) {
                 for (const fieldName in formData[layoutId][blockName]) {
                     const key = `${blockName}.${fieldName}`
-                    flat[key] = formData[layoutId][blockName][fieldName]?.value
+                    if (Array.isArray(formData[layoutId][blockName][fieldName])) {
+                        flat[key] = formData[layoutId][blockName][fieldName]
+                    } else {
+                        flat[key] = formData[layoutId][blockName][fieldName]?.value
+                    }
                 }
             }
         }
@@ -96,7 +100,7 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
 
         const isAlreadyLoaded = Object.keys(state.fieldStates).length > 0
         if (isAlreadyLoaded) {
-            return
+            //return
         }
 
         if (!!steps) {
@@ -107,6 +111,7 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
 
             const solicitudFlat = flattenFormData(formSolicitud)
             const complementarioFlat = flattenFormData(formComplementario)
+            console.log('complementarioFlat', complementarioFlat)
 
             steps.forEach((step, stepIndex) => {
                 const layoutId = `Paso ${stepIndex + 1}`
@@ -121,29 +126,16 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
                     initialFieldStates[stepIndex][blockName] = {}
 
                     if (block.blockType === 'multiFormSelectorBlock') {
-                        const layoutId = `Paso ${stepIndex + 1}`;
-                        const blockName = block.blockName;
+                        console.log('multiFormSelectorBlock', block)
+                        for (const opt of block.options ?? []) {
+                            const key = `${block.blockName}.${opt.label}`
+                            const existingValue = solicitudFlat[key] ?? complementarioFlat[key] ?? []
+                            console.log('existingValue', existingValue)
 
-                        const existingRaw =
-                            (formSolicitud as any)?.[layoutId]?.[blockName] ??
-                            (formComplementario as any)?.[layoutId]?.[blockName] ??
-                            (solicitudFlat as any)[blockName] ??
-                            (complementarioFlat as any)[blockName];
+                            initialFormData[layoutId][blockName][opt.label] = existingValue
 
-                        let parsed: Record<string, EntryData[]> = {};
-                        if (existingRaw && typeof existingRaw === 'object' && !Array.isArray(existingRaw)) {
-                            const hasArrays = Object.values(existingRaw).some((v: any) => Array.isArray(v));
-                            if (hasArrays) parsed = existingRaw as Record<string, EntryData[]>;
+                            initialFieldStates[stepIndex][blockName][opt.label] = true
                         }
-
-                        if (!Object.keys(parsed).length) {
-                            for (const opt of block.options ?? []) parsed[opt.label] = [];
-                        }
-
-                        (initialFormData as any)[layoutId][blockName] = parsed;
-
-                        initialBlockStates[stepIndex][blockName] = true;
-                        initialFieldStates[stepIndex][blockName] = {};
                         return;
                     } else {
                         block.form.fields.forEach((field: any) => {
@@ -268,7 +260,7 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
 
     const handleDialogClose = () => {
         setShowDialog(false);
-        if (!error) window.location.href = "/";
+        if (!error) window.location.href = `https://dashboard.credion.com.co/solicitudes/${customId}`;
     }
 
     const handleGoHome = () => {
@@ -322,7 +314,7 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
                 headers: {
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ creditId: creditId, formComplementario: formData, version: getFormVersion() }),
+                body: JSON.stringify({ creditId: creditId, formEstudio: formData, version: getFormVersion() }),
             })
 
             if (!response.ok) {
