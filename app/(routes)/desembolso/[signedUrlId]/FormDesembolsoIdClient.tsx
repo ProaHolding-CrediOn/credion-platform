@@ -16,6 +16,8 @@ import Link from "next/link";
 import { useFormDesembolso } from "./useFormDesembolso";
 import Image from "next/image";
 import TextViewer from "@/components/TextViewer/TextViewer";
+import { TimeLeft, TimerForm } from "@/components/TimeForm";
+import { getJwtExpiryDate } from "@/lib/tokenExpiryTime";
 
 export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: string }) {
     const router = useRouter()
@@ -36,6 +38,15 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
     const [context, setContext] = useState('');
     const rehydrated = useFormDesembolso.getState().rehydrated
     const submitted = useFormDesembolso.getState().submitted
+    const [token, setToken] = useState<string>('');
+    const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
+    const [expired, setExpired] = useState(false);
+    const limitTo15Minutes = true;
+
+    useEffect(() => {
+        const storedToken = localStorage.getItem('token') || '';
+        setToken(storedToken);
+    }, []);
 
     const fetchForm = async (amount: number) => {
         setLoading(true)
@@ -162,6 +173,69 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
         validateForm()
     }, [signedUrlId])
 
+    useEffect(() => {
+        if (!token) {
+            setExpired(true);
+            return;
+        }
+
+        const handleTimeUp = () => {
+            setTimeout(() => {
+                window.location.reload();
+            }, 30000);
+        }
+
+        const calculateMaxExpiry = () => {
+            const expiryDate = getJwtExpiryDate(token);
+            const now = Date.now();
+
+            if (!expiryDate || expiryDate.getTime() <= now) {
+                return now;
+            }
+
+            const tokenDurationMs = expiryDate.getTime() - now;
+
+            if (limitTo15Minutes) {
+                return now + Math.min(tokenDurationMs, 15 * 60 * 1000);
+            } else {
+                return now + tokenDurationMs;
+            }
+        };
+
+        const finalExpiryTime = calculateMaxExpiry();
+
+        const timer = setInterval(() => {
+        const now = Date.now();
+        const remainingMs = finalExpiryTime - now;
+
+        if (remainingMs <= 0) {
+            setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+            setExpired(true);
+            clearInterval(timer);
+            handleTimeUp()
+        } else {
+            const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+            const minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
+            const seconds = Math.floor((remainingMs / 1000) % 60);
+            setTimeLeft({ hours, minutes, seconds });
+            setExpired(false);
+        }
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, [token, limitTo15Minutes]);
+
+    const handleDialogClose = () => {
+        setShowDialog(false);
+        if (!error) window.location.href = "/";
+    }
+
+    const handleGoHome = () => {
+        useFormDesembolso.getState().resetForm()
+        useFormDesembolso.getState().setSubmitted(false)
+        window.location.href = "/"
+    }
+
     if (validating) {
         return (
             <div className="flex flex-col bg-background text-foreground">
@@ -176,14 +250,27 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
 
     if (!isValid && !validating) {
         return (
-            <div className="flex flex-col bg-background text-foreground">
-                <main className="flex-1 w-full">
-                    <div className="w-full p-4 sm:p-6 md:p-8">
-                        <p className="text-muted-foreground">URL no válida, en un momento será redirigido</p>
+            <div className="flex flex-col text-muted-foreground">
+                <main className="flex-1 w-full flex items-center justify-center p-4 sm:p-6 md:p-8">
+                    <div className="max-w-md w-full bg-white rounded-xl shadow-lg border border-gray-200 text-center p-6 sm:p-8">
+                        <Image src="/logo.svg" alt="Logo" width={100} height={100} className="mx-auto mb-4" />
+                        <h2 className="text-xl font-semibold text-foreground mb-2">
+                            Enlace no válido
+                        </h2>
+                        <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
+                            El enlace que intentas acceder no es válido o ha expirado. 
+                            Por favor, contacta a tu asesor para obtener más información.
+                        </p>
+                        <Button
+                            onClick={handleGoHome}
+                            className="w-full"
+                        >
+                            Volver al inicio
+                        </Button>
                     </div>
                 </main>
             </div>
-        )
+        );
     }
 
     const handleSubmit = async (formData: any) => {
@@ -218,17 +305,6 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
             setSubmitting(false);
         }
     };
-
-    const handleDialogClose = () => {
-        setShowDialog(false);
-        if (!error) window.location.href = "/";
-    }
-
-    const handleGoHome = () => {
-        useFormDesembolso.getState().resetForm()
-        useFormDesembolso.getState().setSubmitted(false)
-        window.location.href = "/"
-    }
 
     if (loading || !steps.length) {
         return (
@@ -334,8 +410,10 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
                                 store={useFormDesembolso}
                             />
                         </div>
+                        {token && <div className="fixed bottom-4 right-4">
+                            <TimerForm key="timer-form-unique" timeLeft={timeLeft} expired={expired} />
+                        </div>}
                     </main>
-                    
                 )}
 
                 </div>
