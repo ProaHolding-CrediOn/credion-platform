@@ -176,7 +176,7 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
         const handleTimeUp = () => {
             setTimeout(() => {
                 window.location.reload();
-            }, 10000);
+            }, 30000);
         }
 
         const calculateMaxExpiry = () => {

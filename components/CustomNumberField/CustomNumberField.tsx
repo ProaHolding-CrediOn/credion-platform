@@ -38,8 +38,8 @@ export default memo(function CustomNumberField({
   }, []);
 
   const required = validations?.find(value => value.name === "required")?.value as boolean;
-  const maxLength = validations?.find(value => value.name === "maxLength")?.value as number || 250;
-  const minLength = validations?.find(value => value.name === "minLength")?.value as number || 0;
+  const maxValue = validations?.find(value => value.name === "maxValue")?.value as number || 250;
+  const minValue = validations?.find(value => value.name === "minValue")?.value as number || 0;
 
   const validate = (inputValue: string): boolean => {
     if (!touched) return true;
@@ -56,13 +56,13 @@ export default memo(function CustomNumberField({
       return false;
     }
 
-    if (minLength > 0 && cleaned.length < minLength) {
-      setError(`Debe tener al menos ${minLength} dígitos`);
+    if (minValue && Number(cleaned) < minValue) {
+      setError(`El valor minimo es ${formatNumber(String(minValue))}`);
       return false;
     }
 
-    if (cleaned.length > maxLength) {
-      setError(`Máximo ${maxLength} dígitos permitidos`);
+    if (maxValue && Number(cleaned) > maxValue) {
+      setError(`El valor máximo es ${formatNumber(String(maxValue))}`);
       return false;
     }
 
@@ -101,7 +101,6 @@ export default memo(function CustomNumberField({
         value={value}
         onChange={handleChange}
         onFocus={() => setTouched(true)}
-        maxLength={maxLength + Math.floor(maxLength / 3)}
         placeholder={`Ingrese ${label.toLowerCase()}`}
         className={`${error ? "border-destructive" : ""} placeholder:font-light`}
       />

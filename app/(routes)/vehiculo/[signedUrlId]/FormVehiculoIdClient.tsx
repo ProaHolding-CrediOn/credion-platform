@@ -172,7 +172,7 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
         const handleTimeUp = () => {
             setTimeout(() => {
                 window.location.reload();
-            }, 10000);
+            }, 30000);
         }
 
         const calculateMaxExpiry = () => {
