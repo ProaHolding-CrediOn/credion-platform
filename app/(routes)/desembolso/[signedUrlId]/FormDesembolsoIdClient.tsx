@@ -161,10 +161,6 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
             } catch (error) {
                 setIsValid(false)
                 console.error("Error al validar el formulario:", error)
-                const timeout = setTimeout(() => {
-                    router.push('/')
-                }, 3000)
-                return () => clearTimeout(timeout)
             } finally {
                 setValidating(false)
             }
@@ -238,7 +234,7 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
 
     if (validating) {
         return (
-            <div className="flex flex-col bg-background text-foreground">
+            <div className="flex flex-col bg-background text-foreground text-center">
                 <main className="flex-1 w-full">
                     <div className="w-full p-4 sm:p-6 md:p-8">
                         <p className="text-muted-foreground">Verificando URL...</p>
