@@ -33,7 +33,8 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
     const [isChecked, setIsChecked] = useState(false);
     const [creditId, setCreditId] = useState<string>('')
     const [user, setUser] = useState<{ name: string } | null>(null)
-    const [amount, setAmount] = useState<number>(0)
+    const [approvedAmount, setApprovedAmount] = useState<number>(0)
+    const [disbursementAmount, setDisbursementAmount] = useState<number>(0)
     const [error, setError] = useState<boolean>(false)
     const [context, setContext] = useState('');
     const rehydrated = useFormDesembolso.getState().rehydrated
@@ -48,7 +49,7 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
         setToken(storedToken);
     }, []);
 
-    const fetchForm = async (amount: number) => {
+    const fetchForm = async (info: Record<string, any>) => {
         setLoading(true)
         try {
             const response = await fetch('/api/forms/desembolso')
@@ -58,7 +59,7 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
             }
 
             const data = await response.json();
-            const mappedSteps = mapPayloadFormToSteps(data, amount);
+            const mappedSteps = mapPayloadFormToSteps(data, info);
             console.log('mappedSteps', mappedSteps)
             if (getFormVersion() !== data?.version) {
                 console.log('Version diferente, resetteando el formulario')
@@ -156,8 +157,9 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
                 setIsValid(true)
                 setCreditId(data.creditId)
                 setUser(data.user)
-                setAmount(data.info?.amount)
-                await fetchForm(data.info?.amount)
+                setApprovedAmount(data.info?.approvedAmount || 0)
+                setDisbursementAmount(data.info?.disbursementAmount || 0)
+                await fetchForm(data.info)
             } catch (error) {
                 setIsValid(false)
                 console.error("Error al validar el formulario:", error)
@@ -357,7 +359,8 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
                         <h1 className="text-lg md:text-xl text-center font-light text-foreground">
                             Hola <span className="font-semibold">{user?.name || 'Usuario'}</span>, hemos culminado el proceso de verificación de datos.
                         </h1>
-                        <h2 className="text-base md:text-lg text-center font-light text-muted-foreground">¡Tienes un Pre Aprobado de <span className="font-semibold">${formatPrice(amount || 0)} COP</span>!</h2>
+                        <h2 className="text-base md:text-lg text-center font-light text-foreground">¡Tienes un Pre Aprobado de <span className="font-semibold">${formatPrice(approvedAmount || 0)} COP</span>!</h2>
+                        <h2 className="text-sm md:text-base text-center font-light text-muted-foreground">Luego de deducciones, tienes un Desembolso de <span className="font-semibold">${formatPrice(disbursementAmount || 0)} COP</span></h2>
                         {context && <Label className="text-sm text-foreground font-light">
                             <TextViewer text={context} />
                         </Label>}

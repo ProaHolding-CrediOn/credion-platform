@@ -4,7 +4,7 @@ import { EnhancedBlock, LayoutStep, PayloadFormStep, Step } from "@/types/FormFi
 import { mapMultiFormSelectorFormBlockToStep } from "./mapMultiFormSelectorFormBlockToStep";
 import { mapPayoutDistributionFormBlockToStep } from "./mapPayoutDistributionFormBlockToStep";
 
-export function mapPayloadFormToSteps(payloadData: any, amount?: number): Step[] {
+export function mapPayloadFormToSteps(payloadData: any, info?: Record<string, any>): Step[] {
   const steps: Step[] = [];
 
   if (!payloadData.layouts || !Array.isArray(payloadData.layouts)) {
@@ -30,7 +30,7 @@ export function mapPayloadFormToSteps(payloadData: any, amount?: number): Step[]
           break;
 
         case "payoutDistributionBlock":
-          layoutBlock = mapPayoutDistributionFormBlockToStep(block, amount as number);
+          layoutBlock = mapPayoutDistributionFormBlockToStep(block, info!);
           layoutBlock && blocks.push(layoutBlock);
           break;
 

@@ -16,7 +16,7 @@ export default function PayoutDistributionFormBlockRenderer({ block, blockKey, s
     const [showForm, setShowForm] = useState(false)
     const [editingIndex, setEditingIndex] = useState<number | null>(null)
     const maxEntries = block.maxEntries || 1
-    const remainingAmount = block.amount - entries.reduce((sum, entry) => sum + Number(entry.cantidad?.value | 0), 0)
+    const remainingAmount = block.info.disbursementAmount - entries.reduce((sum, entry) => sum + Number(entry.cantidad?.value | 0), 0)
 
     useEffect(() => {
       const layoutId = `Paso ${blockKey.layout + 1}`

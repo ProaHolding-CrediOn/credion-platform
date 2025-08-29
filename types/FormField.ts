@@ -104,7 +104,7 @@ export interface PayoutDistributionFormBlock {
   introContent?: string;
   value: string;
   label: string;
-  amount: number;
+  info: Record<string, any>;
   maxEntries: number;
   form: {
     title: string;

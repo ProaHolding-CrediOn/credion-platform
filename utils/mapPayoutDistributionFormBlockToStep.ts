@@ -3,7 +3,7 @@ import { EnhancedBlock, PayloadFormStep, Step } from "@/types/FormField";
 
 export function mapPayoutDistributionFormBlockToStep(
   block: PayloadFormStep,
-  amount: number
+  info: Record<string, any>
 ): EnhancedBlock | null {
   try {
     if (block.blockType !== "payoutDistributionBlock") {
@@ -19,7 +19,7 @@ export function mapPayoutDistributionFormBlockToStep(
       introContent: block.introContent || "",
       value: block.value,
       label: block.label,
-      amount,
+      info,
       maxEntries: block.maxEntries,
       form: {
         title: block.form.title,
