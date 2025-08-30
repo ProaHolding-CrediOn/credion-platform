@@ -64,8 +64,17 @@ export default memo(function CustomPhoneField({
       return true;
     }
 
-    if (!code || !number || number.length !== 10) {
-      setError("El teléfono debe tener al menos 10 dígitos");
+    if (!code || !phoneCode) {
+      setError("Todos los campos son obligatorios");
+      return false;
+    }
+
+    // Validación solo para Colombia
+    if (phoneCode === '57' && number.length !== 10) {
+      setError("El teléfono debe tener 10 dígitos");
+      return false;
+    } else if (phoneCode !== '57' && number.length < 5) {
+      setError("El teléfono debe tener al menos 5 dígitos");
       return false;
     }
 
@@ -98,7 +107,7 @@ export default memo(function CustomPhoneField({
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const raw = e.target.value;
-    const onlyNumbers = raw.replace(/\D/g, "").slice(0, 10);
+    const onlyNumbers = raw.replace(/\D/g, "").slice(0, 15);
     setPhoneNumber(onlyNumbers);
     setTouched(true);
 
@@ -157,7 +166,7 @@ export default memo(function CustomPhoneField({
           onChange={handlePhoneChange}
           onFocus={() => setTouched(true)}
           placeholder="Ingrese su numero"
-          maxLength={10}
+          maxLength={15}
           className="placeholder:font-light"
         />
       </div>
