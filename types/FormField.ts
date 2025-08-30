@@ -81,6 +81,7 @@ export interface MultiFormSelectorFormBlock {
   introContent?: string;
   value: string;
   label: string;
+  required?: boolean;
   options: {
     label: string;
     maxEntries: number;

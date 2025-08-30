@@ -100,6 +100,14 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
                 initialBlockStates[stepIndex][blockName] = false
                 initialFieldStates[stepIndex][blockName] = {}
 
+                if (block.blockType === 'multiFormSelectorBlock') {
+                    initialBlockStates[stepIndex][blockName] = block.required ? false : true
+                }
+
+                if (block.blockType === 'payoutDistributionBlock' || block.blockType === 'multiFormSelectorBlock') {
+                    return
+                }
+
                 block.form.fields.forEach((field: any) => {
                     initialFormData[layoutId][blockName][field.name] = {
                     label: field.label,

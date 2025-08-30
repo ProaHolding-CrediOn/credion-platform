@@ -100,6 +100,10 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
                     initialBlockStates[stepIndex][blockName] = false
                     initialFieldStates[stepIndex][blockName] = {}
 
+                    if (block.blockType === 'multiFormSelectorBlock') {
+                        initialBlockStates[stepIndex][blockName] = block.required ? false : true
+                    }
+
                     if (block.blockType === 'payoutDistributionBlock' || block.blockType === 'multiFormSelectorBlock') {
                         return
                     }

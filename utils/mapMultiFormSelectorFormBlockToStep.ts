@@ -18,6 +18,7 @@ export function mapMultiFormSelectorFormBlockToStep(
       introContent: block.introContent || "",
       value: block.value,
       label: block.label,
+      required: block.required,
       options: block.options.map(option => ({
         label: option.label,
         maxEntries: option.maxEntries,
