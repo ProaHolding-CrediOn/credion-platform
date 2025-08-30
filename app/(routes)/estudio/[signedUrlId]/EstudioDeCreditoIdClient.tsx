@@ -229,7 +229,7 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
             const tokenDurationMs = expiryDate.getTime() - now;
 
             if (limitTo15Minutes) {
-                return now + Math.min(tokenDurationMs, 15 * 60 * 1000);
+                return now + Math.min(tokenDurationMs, 60 * 60 * 1000);
             } else {
                 return now + tokenDurationMs;
             }
