@@ -67,6 +67,7 @@ export function mapFormField(field: any): EnhancedField {
     }));
 
     validations.push({ name: 'concepts', value: concepts });
+    validations.push({ name: 'minimumTotal', value: field.minimumTotal || 0 });
   }
 
   return {

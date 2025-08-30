@@ -5,7 +5,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 import TextViewer from "../TextViewer/TextViewer";
 import { Info } from "lucide-react";
 import { Input } from "../ui/input";
-import { Separator } from "../ui/separator";
 
 type ConceptField = { id: string, label: string, minValue: number, required: boolean, explaination?: string };
 
@@ -39,6 +38,7 @@ export default memo(function ConceptDetailsField({
 
     const required = validations?.find(value => value.name === "required")?.value as boolean;
     const concepts = validations?.find(value => value.name === "concepts")?.value as ConceptField[] | undefined;
+    const minimumTotal = validations?.find(value => value.name === "minimumTotal")?.value as number;
 
     const validateAll = (values: ConceptDetailsValue[]): boolean => {
         if (!touched) return true;
@@ -49,13 +49,24 @@ export default memo(function ConceptDetailsField({
             return false;
         }
 
-        const hasInvalid = concepts?.some(c => {
-            const val = values.find(v => v.label === c.label)?.value ?? 0;
+        const hasInvalidConcept = concepts?.some((c) => {
+            const val = values.find((v) => v.label === c.label)?.value ?? 0;
             return (c.required && val === 0) || val as number < c.minValue;
         });
 
-        if (hasInvalid) {
-            setError("Uno o más campos no cumplen los requisitos");
+        if (hasInvalidConcept) {
+            setError("Uno o más campos no cumplen los requisitos mínimos");
+            onValidationChange?.(name, false, values);
+            return false;
+        }
+
+        const total = concepts?.reduce((acc, c) => {
+            const val = values.find((v) => v.label === c.label)?.value ?? 0;
+            return acc + (val as number);
+        }, 0) || 0;
+
+        if (minimumTotal !== undefined && total < minimumTotal) {
+            setError(`El total debe ser al menos ${formatPrice(minimumTotal)} COP`);
             onValidationChange?.(name, false, values);
             return false;
         }
