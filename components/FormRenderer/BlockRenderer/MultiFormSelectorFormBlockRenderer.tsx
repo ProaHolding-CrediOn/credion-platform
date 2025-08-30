@@ -345,10 +345,29 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
         return `${optionLabel.charAt(0).toUpperCase() + optionLabel.slice(1)}${optionLabel.charAt(optionLabel.length - 1).toLowerCase() === 's' ? '' : 's'}`
     }
 
+    const extractLeafValues = (value: any): string[] => {
+        if (value === null || value === undefined) return [];
+        if (typeof value !== 'object') return [String(value)];
+
+        if (Array.isArray(value.value) && typeof value.label === 'string') {
+            return value.value.flatMap((item: any) => extractLeafValues(item.value));
+        }
+
+        if ('label' in value && 'value' in value) {
+            return extractLeafValues(value.value);
+        }
+
+        if (Array.isArray(value)) {
+            return value.flatMap(extractLeafValues);
+        }
+
+        return Object.values(value).flatMap(extractLeafValues);
+    };
+
     const formatEntryToText = (entry: EntryData): string => {
         return Object.values(entry)
-            .map((field) => String(field.value))
-            .filter((value) => value !== 'null' && value !== 'undefined' && value.trim() !== '')
+            .flatMap((field) => extractLeafValues(field.value))
+            .filter((val) => val.trim() !== '')
             .join(', ');
     };
 
@@ -358,40 +377,41 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
         }
 
         if (typeof value !== 'object') {
-            if (typeof value === 'string') {
-                return value
+            const str = String(value).trim();
+            return str === '' ? '-' : str;
+        }
+
+        if (Array.isArray(value)) {
+            const results: string[] = [];
+
+            for (const item of value) {
+            const formatted = formatFieldValue(item);
+            if (formatted !== '-') {
+                results.push(formatted);
             }
-            try {
-                return JSON.stringify(value);
-            } catch (error) {
-                return String(value);
+            }
+
+            return results.length > 0 ? results.join(', ') : '-';
+        }
+
+        if ('label' in value && 'value' in value) {
+            return formatFieldValue(value.value);
+        }
+
+        const values = Object.values(value);
+        if (values.length === 0) {
+            return '-';
+        }
+
+        const results: string[] = [];
+        for (const propValue of values) {
+            const formatted = formatFieldValue(propValue);
+            if (formatted !== '-') {
+                results.push(formatted);
             }
         }
 
-        try {
-            if (Object.prototype.hasOwnProperty.call(value, 'value')) {
-                return formatFieldValue(value.value);
-            }
-
-            const foundValues: string[] = [];
-            for (const [key, propValue] of Object.entries(value)) {
-                if (propValue != null && typeof propValue === 'object' && 'value' in propValue) {
-                    foundValues.push(`${textToTitle(key)} - ${formatFieldValue((propValue as any).value)} `);
-                }
-            }
-
-            if (foundValues.length > 0) {
-                return foundValues.join('- ');
-            }
-
-            return JSON.stringify(value);
-        } catch (error) {
-            try {
-                return JSON.stringify(value);
-            } catch (e) {
-                return String('-');
-            }
-        }
+        return results.length > 0 ? results.join(', ') : '-';
     }
 
     const handleSelectConditional = (value: string, conditionalId: string, expectedAnswer: string, formFields: EnhancedField[]) => {
@@ -435,7 +455,7 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
                                                         className="font-light block max-w-xs truncate"
                                                         title={formatEntryToText(entry)}
                                                     >
-                                                        {textToTitle(formatEntryToText(entry))}
+                                                        {index + 1}. {textToTitle(formatEntryToText(entry))} ...
                                                     </span>
                                                 </AccordionTrigger>
                                                 <AccordionContent>
@@ -445,15 +465,19 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
                                                             const formattedValue = formatFieldValue(field?.value);
 
                                                             return !(formattedValue === '' || formattedValue === '-')
-                                                        }).map(([key, fieldData]) => {
+                                                        }).map(([key, fieldData], idx) => {
                                                             const field = fieldData as StoredFieldData;
                                                             const formattedValue = formatFieldValue(field?.value);
                                                             const label = field?.label ?? key;
 
                                                             return (
-                                                                <div className="flex items-center justify-between" key={key}>
-                                                                    <span className="font-light text-muted-foreground mr-2">{label}:</span>
-                                                                    <span className="font-light text-foreground break-words text-right">{formattedValue}</span>
+                                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2" key={key}>
+                                                                    <span className="font-light text-muted-foreground text-sm sm:text-right min-w-fit">
+                                                                        {label}:
+                                                                    </span>
+                                                                    <span className="font-light text-foreground break-words text-sm text-right">
+                                                                        {formattedValue}
+                                                                    </span>
                                                                 </div>
                                                             )
                                                         })}

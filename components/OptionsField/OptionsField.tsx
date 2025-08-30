@@ -303,9 +303,6 @@ const renderSelectOption = (options: FieldOption[]) => {
         committedOption &&
         optionHasExtraFields(String(committedOption.value)) && (
           <div className="pl-6 text-xs text-muted-foreground font-light space-y-1">
-            <div>
-              Información ingresada exitosamente, si desea modificar la información, vuelva a seleccionar el campo
-            </div>
 
             {value[0]?.value && (
               <ul className="list-disc pl-4">
@@ -321,7 +318,7 @@ const renderSelectOption = (options: FieldOption[]) => {
 
       {selectedSaved && (
         <span className="pl-6 text-xs text-muted-foreground font-light">
-          Información ingresada exitosamente, si desea modificar la información, vuelva a seleccionar el campo
+          Información ingresada exitosamente
         </span>
       )}
     </div>
