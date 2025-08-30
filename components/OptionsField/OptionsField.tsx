@@ -210,10 +210,6 @@ export default memo(function OptionsField({
 
             return (
               <div className="pl-6 text-xs text-muted-foreground font-light space-y-1">
-                <div>
-                  Información ingresada exitosamente, si desea modificar la información, vuelva a seleccionar el campo
-                </div>
-
                 {selected?.value && (
                   <ul className="list-disc pl-4">
                     {Object.entries(selected.value).map(([key, val]) => (

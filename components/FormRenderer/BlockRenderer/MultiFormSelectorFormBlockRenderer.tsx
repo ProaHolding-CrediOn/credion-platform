@@ -183,6 +183,7 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
     }, [localStore, blockKey.layout, showForm])
 
     const handleNew = (optionLabel: string) => {
+        setOpenSelector(false);
         setShowForm(true)
         setSelectedOption(optionLabel)
         const tempKey = `multiform-temp-${Date.now()}-${Math.floor(Math.random() * 1000)}`
@@ -344,13 +345,12 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
         return `${optionLabel.charAt(0).toUpperCase() + optionLabel.slice(1)}${optionLabel.charAt(optionLabel.length - 1).toLowerCase() === 's' ? '' : 's'}`
     }
 
-    const itemDetailTitle = (optionLabel: string) => {
-        let text = `${optionLabel.charAt(0).toUpperCase() + optionLabel.slice(1)}`
-        if (text.charAt(text.length - 1).toLowerCase() === 's') {
-            text = text.slice(0, -1)
-        }
-        return text.toLocaleLowerCase()
-    }
+    const formatEntryToText = (entry: EntryData): string => {
+        return Object.values(entry)
+            .map((field) => String(field.value))
+            .filter((value) => value !== 'null' && value !== 'undefined' && value.trim() !== '')
+            .join(', ');
+    };
 
     const formatFieldValue = (value: any): string => {
         if (value === null) {
@@ -421,10 +421,6 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
             </Label>}
 
             <div key='list'>
-                {optionWithEntries.length === 0 && (
-                    <p className="text-muted-foreground font-light text-sm">No se han agregado {block.value}</p>
-                )}
-
                 <div className="w-full space-y-2">
                     {optionWithEntries.map(([optionLabel, entryList]) => (
                         <div key={optionLabel} className="shadow px-4 py-2 rounded-md flex justify-between items-start">
@@ -435,7 +431,12 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
                                         {entryList.map((entry, index) => (
                                             <AccordionItem value={`${optionLabel}-${index}`} key={index}>
                                                 <AccordionTrigger>
-                                                    <span className="font-light">{textToTitle(numeroEnPalabras(index))} {itemDetailTitle(optionLabel)}</span>
+                                                    <span
+                                                        className="font-light block max-w-xs truncate"
+                                                        title={formatEntryToText(entry)}
+                                                    >
+                                                        {textToTitle(formatEntryToText(entry))}
+                                                    </span>
                                                 </AccordionTrigger>
                                                 <AccordionContent>
                                                     <div key={index} className="text-sm p-0">
@@ -479,33 +480,43 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
             </div>
 
             <div className="w-full">
-                <Popover open={openSelector} onOpenChange={setOpenSelector}>
-                    <PopoverTrigger asChild>
-                        <Button className="w-full justify-start cursor-pointer" disabled={!!selectedOption}>
-                            Agregar {block.value}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-0" side="bottom" align="center">
-                        <Command>
-                            <CommandList>
-                                <CommandEmpty>No se encontraron opciones.</CommandEmpty>
-                                <CommandGroup>
-                                    {block.options.map((option) => (
-                                        <CommandItem
-                                            key={option.label}
-                                            value={option.label}
-                                            onSelect={handleNew}
-                                            className="cursor-pointer"
-                                            disabled={disableItem(option.label)}
-                                        >
-                                            {option.label}
-                                        </CommandItem>
-                                    ))}
-                                </CommandGroup>
-                            </CommandList>
-                        </Command>
-                    </PopoverContent>
-                </Popover>
+                {block.options.length === 1 ? (
+                    <Button
+                        className="w-full justify-start cursor-pointer"
+                        disabled={!!selectedOption || disableItem(block.options[0].label)}
+                        onClick={() => handleNew(block.options[0].label)}
+                    >
+                        Agregar {block.value}
+                    </Button>
+                ) : (
+                    <Popover open={openSelector} onOpenChange={setOpenSelector}>
+                        <PopoverTrigger asChild>
+                            <Button className="w-full justify-start cursor-pointer" disabled={!!selectedOption}>
+                                Agregar {block.value}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-0" side="bottom" align="center">
+                            <Command>
+                                <CommandList>
+                                    <CommandEmpty>No se encontraron opciones.</CommandEmpty>
+                                    <CommandGroup>
+                                        {block.options.map((option) => (
+                                            <CommandItem
+                                                key={option.label}
+                                                value={option.label}
+                                                onSelect={handleNew}
+                                                className="cursor-pointer"
+                                                disabled={disableItem(option.label)}
+                                            >
+                                                {option.label}
+                                            </CommandItem>
+                                        ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
+                )}
             </div>
 
             {showForm && localStore && selectedOptionForm && (
