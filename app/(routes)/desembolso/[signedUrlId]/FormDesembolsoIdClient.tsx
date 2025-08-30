@@ -360,7 +360,7 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
                             Hola <span className="font-semibold">{user?.name || 'Usuario'}</span>, hemos culminado el proceso de verificación de datos.
                         </h1>
                         <h2 className="text-base md:text-lg text-center font-light text-foreground">¡Tienes un Pre Aprobado de <span className="font-semibold">${formatPrice(approvedAmount || 0)} COP</span>!</h2>
-                        <h2 className="text-sm md:text-base text-center font-light text-muted-foreground">Luego de deducciones, tienes un Desembolso de <span className="font-semibold">${formatPrice(disbursementAmount || 0)} COP</span></h2>
+                        <h2 className="text-sm md:text-base text-center font-light text-muted-foreground">Luego de deducciones, tendrás un desembolso de <span className="font-semibold">${formatPrice(disbursementAmount || 0)} COP</span></h2>
                         {context && <Label className="text-sm text-foreground font-light">
                             <TextViewer text={context} />
                         </Label>}
