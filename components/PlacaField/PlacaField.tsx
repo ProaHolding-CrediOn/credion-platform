@@ -36,20 +36,22 @@ export default memo(function PlacaField({
   const validate = (inputValue: string): boolean => {
     if (!touched) return true;
 
-    if (!required && inputValue.trim() === "") {
-        setError(null);
-        return true;
-    }
+    const trimmed = inputValue.trim();
 
-    if (required && inputValue.trim() === "") {
+    if (required && !trimmed) {
       setError("Este campo es obligatorio");
       return false;
     }
 
-    const placaRegex = /^[A-Z]{3}-\d{2}[A-Z0-9]?$/;
-    if (!placaRegex.test(inputValue)) {
-        setError('Formato inválido. Ejemplo: "AAA-00A"');
-        return false;
+    if (!trimmed) {
+      setError(null);
+      return true;
+    }
+
+    const placaRegex = /^[A-Z]{3}\d{2}[A-Z0-9]?$/;
+    if (!placaRegex.test(trimmed)) {
+      setError('Formato inválido. Use: "AAA00A"');
+      return false;
     }
 
     setError(null);
@@ -67,6 +69,31 @@ export default memo(function PlacaField({
     }, 500)
   }
 
+  const handleChange = (userInput: string) => {
+    let clean = userInput.toUpperCase().replace(/[^A-Z0-9]/g, "");
+    let formatted = "";
+
+    const letters = clean.slice(0, 3).replace(/[^A-Z]/g, "");
+    formatted += letters;
+
+    if (letters.length === 3) {
+      formatted += "-";
+    }
+
+    const numbers = clean.slice(3, 5).replace(/[^0-9]/g, "");
+    formatted += numbers;
+
+    const lastChar = clean.charAt(5);
+    if (lastChar && /[A-Z0-9]/.test(lastChar)) {
+      formatted += lastChar;
+    }
+
+    formatted = formatted.slice(0, 6);
+
+    onChange(name, formatted);
+    handleDebouncedValidation(formatted);
+  }
+
   return (
     <div className="space-y-2">
       <div className="flex-1">
@@ -81,29 +108,9 @@ export default memo(function PlacaField({
         id={name}
         type="text"
         value={value}
-        onChange={(e) => {
-          let rawValue = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, "");
-          let formatted = "";
-
-          const letters = rawValue.slice(0, 3).replace(/[^A-Z]/g, "");
-          formatted += letters;
-
-          if (letters.length === 3) {
-            formatted += "-";
-          }
-
-          const numbers = rawValue.slice(3, 5).replace(/[^0-9]/g, "");
-          formatted += numbers;
-
-          const last = rawValue.charAt(5);
-          if (last && /[A-Z0-9]/.test(last)) {
-            formatted += last;
-          }
-
-          onChange(name, formatted);
-          handleDebouncedValidation(formatted);
-        }}
+        onChange={(e) => handleChange(e.target.value)}
         onFocus={() => setTouched(true)}
+        maxLength={6}
         placeholder={`Ingrese ${label.toLowerCase()}`}
         className={`${error ? "border-destructive" : ""} placeholder:font-light`}
       />
