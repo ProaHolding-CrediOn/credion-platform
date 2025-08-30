@@ -344,6 +344,10 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
     const itemTitle = (optionLabel: string) => {
         return `${optionLabel.charAt(0).toUpperCase() + optionLabel.slice(1)}${optionLabel.charAt(optionLabel.length - 1).toLowerCase() === 's' ? '' : 's'}`
     }
+    const shortenText = (text: string, maxLength: number) => {
+        if (text.length <= maxLength) return text;
+        return text.slice(0, maxLength).trim() + '...';
+    };
 
     const extractLeafValues = (value: any): string[] => {
         if (value === null || value === undefined) return [];
@@ -443,19 +447,24 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
             <div key='list'>
                 <div className="w-full space-y-2">
                     {optionWithEntries.map(([optionLabel, entryList]) => (
-                        <div key={optionLabel} className="shadow px-4 py-2 rounded-md flex justify-between items-start">
+                        <div key={optionLabel} className="w-full shadow px-4 py-2 rounded-md flex justify-between items-start">
                             <div className="flex-1">
                                 <Label className="font-light text-sm">{itemTitle(optionLabel)}</Label>
                                 <div className="flex flex-col gap-2">
                                     <Accordion type="single" collapsible className="w-full">
                                         {entryList.map((entry, index) => (
-                                            <AccordionItem value={`${optionLabel}-${index}`} key={index}>
-                                                <AccordionTrigger>
+                                            <AccordionItem value={`${optionLabel}-${index}`} key={index} className="w-full">
+                                                <AccordionTrigger className="w-full">
                                                     <span
-                                                        className="font-light block max-w-xs truncate"
+                                                        className="font-light text-sm block min-w-0 truncate"
                                                         title={formatEntryToText(entry)}
                                                     >
-                                                        {index + 1}. {textToTitle(formatEntryToText(entry))} ...
+                                                        <span className="hidden sm:inline">
+                                                            {index + 1}. {textToTitle(formatEntryToText(entry))}
+                                                        </span>
+                                                        <span className="inline sm:hidden">
+                                                            {index + 1}. {shortenText(textToTitle(formatEntryToText(entry)), 30)}
+                                                        </span>
                                                     </span>
                                                 </AccordionTrigger>
                                                 <AccordionContent>
@@ -471,11 +480,14 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
                                                             const label = field?.label ?? key;
 
                                                             return (
-                                                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2" key={key}>
-                                                                    <span className="font-light text-muted-foreground text-sm sm:text-right min-w-fit">
+                                                                <div 
+                                                                    className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-2" 
+                                                                    key={key}
+                                                                >
+                                                                    <span className="text-sm font-light text-muted-foreground">
                                                                         {label}:
                                                                     </span>
-                                                                    <span className="font-light text-foreground break-words text-sm text-right">
+                                                                    <span className="font-light text-foreground break-words text-sm text-left">
                                                                         {formattedValue}
                                                                     </span>
                                                                 </div>
