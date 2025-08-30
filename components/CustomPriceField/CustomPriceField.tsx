@@ -128,7 +128,7 @@ export default memo(function CustomPriceField({
               handleDebouncedValidation(parseNumber(inputValue))
             }}
             onFocus={() => setTouched(true)}
-            placeholder={`0`}
+            placeholder={`Ingrese ${label.toLowerCase()}`}
             className={`pl-8 pr-16 placeholder:font-light ${error ? "border-destructive" : ""}`}
         />
       </div>
