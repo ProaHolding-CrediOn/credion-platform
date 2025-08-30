@@ -10,7 +10,7 @@ import { Command, CommandEmpty, CommandGroup, CommandItem, CommandList } from "@
 import { BlockState, createFormStore, FieldState, FormData } from "@/stores/formStore";
 import { getInitialValueForType, numeroEnPalabras } from "@/lib/utils";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { Trash2Icon } from "lucide-react";
+import { Plus, Trash2Icon } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 
@@ -411,7 +411,7 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
     }
 
     return (
-        <div className="space-y-6" key="multi-form-selector">
+        <div className="space-y-2" key="multi-form-selector">
             <div className="flex items-center justify-between" ref={entriesListRef}>
                 <p className="font-light">{block.label}</p>
             </div>
@@ -486,13 +486,13 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
                         disabled={!!selectedOption || disableItem(block.options[0].label)}
                         onClick={() => handleNew(block.options[0].label)}
                     >
-                        Agregar {block.value}
+                        <Plus className="mr-2 h-4 w-4" /> Agregar {block.value}
                     </Button>
                 ) : (
                     <Popover open={openSelector} onOpenChange={setOpenSelector}>
                         <PopoverTrigger asChild>
                             <Button className="w-full justify-start cursor-pointer" disabled={!!selectedOption}>
-                                Agregar {block.value}
+                                <Plus className="mr-2 h-4 w-4" /> Agregar {block.value}
                             </Button>
                         </PopoverTrigger>
                         <PopoverContent className="p-0" side="bottom" align="center">
