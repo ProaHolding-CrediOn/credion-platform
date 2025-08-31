@@ -7,6 +7,7 @@ import { formatPrice, getInitialValueForType } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import TextViewer from "@/components/TextViewer/TextViewer";
 import { Label } from "@/components/ui/label";
+import { formatFieldValue } from "@/lib/formatFields";
 
 export default function PayoutDistributionFormBlockRenderer({ block, blockKey, store }: BlockRendererProps) {
     block = block as PayoutDistributionFormBlock
@@ -198,6 +199,31 @@ export default function PayoutDistributionFormBlockRenderer({ block, blockKey, s
       setEditingIndex(null);
     };
 
+    const renderItem = (key2: string, field: any) => {
+      const label = field?.label ?? key2 ?? ''
+      const isCantidad = key2.toLowerCase() === 'cantidad'
+      if (isCantidad || key2 === '0') return null
+
+      try {
+        const value = formatFieldValue(field?.value)
+        
+        return (
+          <div key={key2} className="flex items-center justify-between">
+            <span className="font-light text-muted-foreground mr-2">{label}:</span>
+            <span className="font-light text-foreground">{value}</span>
+          </div>
+        )
+      } catch (error) {
+        console.log('Error al renderizar el item', error)
+        return (
+          <div key={key2} className="flex items-center justify-between">
+            <span className="font-light text-muted-foreground mr-2">{label}:</span>
+            <span className="font-light text-foreground">No disponible</span>
+          </div>
+        )
+      }
+    }
+
     return (
       <div className="space-y-4" key={'payout-distrubition'}>
         <div className="flex justify-between items-center font-light">
@@ -213,24 +239,11 @@ export default function PayoutDistributionFormBlockRenderer({ block, blockKey, s
 
         <div className="space-y-2">
           {Object.entries(entries).map((entry, index) => (
-            <div className="shadow p-4 rounded-md flex justify-between items-start gap-4 bg-muted/5">
+            <div className="shadow p-4 rounded-md flex justify-between items-start gap-4 bg-muted/5" key={index}>
               <div className="flex-1">
                 {Object.entries(entry).map(([key, value]) => (
                   <div key={key} className="text-sm">
-                    {Object.entries(value).map(([key2, field]) => {
-                      const isCantidad = key2.toLowerCase() === 'cantidad'
-                      const value = field?.value
-                      const label = field?.label ?? key2
-
-                      if (isCantidad || key2 === '0') return null
-
-                      return (
-                        <div key={key2} className="flex items-center justify-between">
-                          <span className="font-light text-muted-foreground mr-2">{label}:</span>
-                          <span className="font-light text-foreground">{value}</span>
-                        </div>
-                      )
-                    })}
+                    {Object.entries(value).map(([key2, field]) => renderItem(key2, field))}
                   </div>
                 ))}
 

@@ -13,6 +13,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Plus, Trash2Icon } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
+import { formatFieldValue } from "@/lib/formatFields";
 
 export interface StoredFieldData {
     label: string;
@@ -374,49 +375,6 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
             .filter((val) => val.trim() !== '')
             .join(', ');
     };
-
-    const formatFieldValue = (value: any): string => {
-        if (value === null) {
-            return '-'
-        }
-
-        if (typeof value !== 'object') {
-            const str = String(value).trim();
-            return str === '' ? '-' : str;
-        }
-
-        if (Array.isArray(value)) {
-            const results: string[] = [];
-
-            for (const item of value) {
-            const formatted = formatFieldValue(item);
-            if (formatted !== '-') {
-                results.push(formatted);
-            }
-            }
-
-            return results.length > 0 ? results.join(', ') : '-';
-        }
-
-        if ('label' in value && 'value' in value) {
-            return formatFieldValue(value.value);
-        }
-
-        const values = Object.values(value);
-        if (values.length === 0) {
-            return '-';
-        }
-
-        const results: string[] = [];
-        for (const propValue of values) {
-            const formatted = formatFieldValue(propValue);
-            if (formatted !== '-') {
-                results.push(formatted);
-            }
-        }
-
-        return results.length > 0 ? results.join(', ') : '-';
-    }
 
     const handleSelectConditional = (value: string, conditionalId: string, expectedAnswer: string, formFields: EnhancedField[]) => {
         setConditionalAnswers(prev => ({
