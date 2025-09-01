@@ -24,6 +24,7 @@ import OptionsField from "@/components/OptionsField/OptionsField";
 import { OptionsValue } from "@/components/OptionsField/OptionsField.type";
 import ConceptDetailsField from "@/components/ConceptDetailsField/ConceptDetailsField";
 import { ConceptDetailsValue } from "@/components/ConceptDetailsField/ConceptDetailsField.type";
+import YearField from "@/components/YearField/YearField";
 
 export const isMessageField = (field: EnhancedField): field is MessageField => {
   return "lines" in field && field.type === "message";
@@ -254,6 +255,19 @@ export default function FieldRenderer({
                         name={field.name}
                         label={field.label}
                         value={currentValue as ConceptDetailsValue[]}
+                        explain={field.explain}
+                        validations={field.validation}
+                        onChange={onDataChange}
+                        onValidationChange={onValidationChange}
+                    />
+                )}
+
+                {field.type === "yearField" && (
+                    <YearField
+                        key={`field-${field.name}`}
+                        name={field.name}
+                        label={field.label}
+                        value={currentValue as number}
                         explain={field.explain}
                         validations={field.validation}
                         onChange={onDataChange}

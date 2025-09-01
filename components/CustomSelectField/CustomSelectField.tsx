@@ -59,10 +59,10 @@ export default memo(function CustomSelectField({
   };
 
   const filteredOptions = options.filter((option) => {
-    const optionSearch = normalizeText(option.label)
-    const searchTermSearch = normalizeText(searchTerm).toLowerCase()
-    return optionSearch.includes(searchTermSearch)
-  }
+      const optionSearch = normalizeText(option.label)
+      const searchTermSearch = normalizeText(searchTerm).toLowerCase()
+      return optionSearch.includes(searchTermSearch)
+    }
   );
 
   const selectedOption = options.find((option) => option.value === value);

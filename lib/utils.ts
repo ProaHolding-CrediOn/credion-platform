@@ -29,7 +29,10 @@ export function mapFormField(field: any): EnhancedField {
   if (field.maxDate) validations.push({ name: 'maxDate', value: field.maxDate });
   if (field.minValue) validations.push({ name: 'minValue', value: field.minValue });
   if (field.maxValue) validations.push({ name: 'maxValue', value: field.maxValue });
+  if (field.minYear) validations.push({ name: 'minYear', value: field.minYear });
+  if (field.maxYear) validations.push({ name: 'maxYear', value: field.maxYear });
   if (field.daysLeft) validations.push({ name: 'daysLeft', value: field.daysLeft });
+  if (field.yearsLeft) validations.push({ name: 'yearsLeft', value: field.yearsLeft });
   if (field.maxFiles) validations.push({ name: 'maxFiles', value: field.maxFiles });
   if (field.inputType) validations.push({ name: 'inputType', value: field.inputType });
 
