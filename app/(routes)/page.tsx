@@ -1,39 +1,48 @@
 'use client'
 
-import { removeAuth } from "@/hooks/useAuth";
-import { ArrowRightIcon } from "lucide-react";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useRouter } from "next/navigation"
+import { Button } from "@/components/ui/button"
+import Image from "next/image"
+import { Play } from "lucide-react"
+import Link from "next/link"
 
-export default function Home() {
-    const router = useRouter();
+export default function LandingPage() {
+  const router = useRouter()
 
-    useEffect(() => {
-        removeAuth();
-        const timeout = setTimeout(() => {
-            router.push('/verificacion/telefono')
-        }, 5000)
-
-        return () => clearTimeout(timeout)
-    }, [])
-
-    return (
-        <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4">
-            <div className="w-full md:w-1/2 flex flex-col items-center justify-start p-8 text-center space-y-6">
-                <div className="animate-bounce mb-6">
-                    <ArrowRightIcon className="h-18 w-18 mx-auto" />
-                </div>
-                <h1 className="text-2xl md:text-3xl font-light mt-6 text-foreground">
-                    Te estamos redirigiendo a la página de solicitud
-                </h1>
-                <p className="mt-2 text-muted-foreground font-light">
-                    Si no eres redirigido automáticamente,{" "}
-                    <Link href="/verificacion/telefono" className="text-blue-500 underline hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-500">
-                        haz clic aquí
-                    </Link>.
-                </p>
-            </div>
+  return (
+    <div className="flex flex-col items-center justify-center bg-background px-6 py-12 text-center">
+      <div className="mb-8">
+        <Image
+          src="/logo_text.svg"
+          alt="Credion"
+          width={240}
+          height={100}
+          priority
+        />
       </div>
-    );
+
+      <h1 className="text-3xl font-light text-foreground mb-4">
+        Bienvenido a Credion
+      </h1>
+      <p className="text-base text-muted-foreground max-w-2xl mb-8">
+        Esta página está dedicada a recopilar tu información para procesar tu
+        solicitud de crédito de vehículo.  
+        Durante este proceso pasaremos por diferentes etapas en las que nos
+        comunicaremos contigo para avanzar de manera segura y transparente.
+      </p>
+
+      <Button
+        onClick={() => router.push("/verificacion/telefono")}
+      >
+        <Play className="h-4 w-4" /> Iniciar proceso
+      </Button>
+
+      <p className="mt-10 text-sm text-muted-foreground">
+        ¿Tienes alguna duda?{" "}
+        <Link href="/contacto" className="text-sm text-muted-foreground hover:text-foreground underline">
+            Contáctanos
+        </Link>
+      </p>
+    </div>
+  )
 }

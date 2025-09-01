@@ -24,20 +24,18 @@ export default function ContactPage() {
           <div>
             <h3 className="font-medium text-sm text-muted-foreground">📞 Teléfonos</h3>
             <ul className="text-muted-foreground list-disc list-inside ml-2">
-              <li>+57 300 123 4567</li>
-              <li>+57 310 987 6543</li>
+              <li>+34 630 92 76 47</li>
             </ul>
           </div>
 
           <div>
             <h3 className="font-medium text-sm text-muted-foreground">✉️ Correos</h3>
             <ul className="text-muted-foreground list-disc list-inside ml-2">
-              <li>contacto@credion.com.co</li>
-              <li>soporte@credion.com.co</li>
+              <li>info@credion.com.co</li>
             </ul>
           </div>
 
-          <Link href="https://wa.me/573001234567 " target="_blank" rel="noopener noreferrer">
+          <Link href="https://wa.me/34630927647" target="_blank" rel="noopener noreferrer">
             <Button className="w-full bg-green-600 hover:bg-green-700 text-white cursor-pointer">
               <MessageCircleMore className="w-4 h-4 mr-2" />
               Escríbenos por WhatsApp
