@@ -74,8 +74,13 @@ export function ExtraFields({
                 type="number"
                 value={currentValue}
                 placeholder={`Ingrese ${extraField.label.toLowerCase()}`}
-                onChange={(e) => handleExtraFieldChange(optionValue, extraField.label, e.target.value, "number")}
+                onChange={(e) => {
+                  const value = e.target.value
+                  if (Number(value) < 0) return
+                  handleExtraFieldChange(optionValue, extraField.label, value, "number")
+                }}
                 disabled={disabled}
+                min={0}
                 className="border rounded px-2 py-1 font-light placeholder:font-light"
               />
             )}
