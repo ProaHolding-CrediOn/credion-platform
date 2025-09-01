@@ -57,8 +57,9 @@ export default function TelefonoPage() {
       <div className="w-full md:w-1/2 px-4 flex flex-col items-center">
         <div className="w-full space-y-6 bg-background p-8 md:max-w-md md:border md:border-border md:shadow-sm md:rounded-lg">
           <h2 className="text-xl font-light text-foreground">Ingresa tu número de celular</h2>
-
-          <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4">
+          <span className="text-muted-foreground text-sm">Necesitamos tu número de celular para validar tu identidad.</span>
+          <span className="text-muted-foreground text-sm">Te enviaremos un mensaje de texto con un código de verificación.</span>
+          <form onSubmit={(e) => { e.preventDefault(); handleSubmit(); }} className="space-y-4 mt-4">
             <div className="space-y-2">
               <CustomPhoneField
                 name="telefono"

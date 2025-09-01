@@ -253,7 +253,7 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
             setTimeLeft({ hours, minutes, seconds });
             setExpired(false);
         }
-        }, 1000);
+        }, 60 *1000);
 
         return () => clearInterval(timer);
     }, [token, limitTo15Minutes]);

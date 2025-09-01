@@ -214,11 +214,10 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
         } else {
             const hours = Math.floor(remainingMs / (1000 * 60 * 60));
             const minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
-            const seconds = Math.floor((remainingMs / 1000) % 60);
-            setTimeLeft({ hours, minutes, seconds });
+            setTimeLeft({ hours, minutes, seconds: 0 });
             setExpired(false);
         }
-        }, 1000);
+        }, 60 * 1000);
 
         return () => clearInterval(timer);
     }, [token, limitTo15Minutes]);

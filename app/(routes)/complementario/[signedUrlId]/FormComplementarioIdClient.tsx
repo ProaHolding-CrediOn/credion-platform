@@ -203,22 +203,21 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
         const finalExpiryTime = calculateMaxExpiry();
 
         const timer = setInterval(() => {
-        const now = Date.now();
-        const remainingMs = finalExpiryTime - now;
+            const now = Date.now();
+            const remainingMs = finalExpiryTime - now;
 
-        if (remainingMs <= 0) {
-            setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
-            setExpired(true);
-            clearInterval(timer);
-            handleTimeUp()
-        } else {
-            const hours = Math.floor(remainingMs / (1000 * 60 * 60));
-            const minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
-            const seconds = Math.floor((remainingMs / 1000) % 60);
-            setTimeLeft({ hours, minutes, seconds });
-            setExpired(false);
-        }
-        }, 1000);
+            if (remainingMs <= 0) {
+                setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+                setExpired(true);
+                clearInterval(timer);
+                handleTimeUp()
+            } else {
+                const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+                const minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
+                setTimeLeft({ hours, minutes, seconds: 0 });
+                setExpired(false);
+            }
+        }, 60 * 1000);
 
         return () => clearInterval(timer);
     }, [token, limitTo15Minutes]);
