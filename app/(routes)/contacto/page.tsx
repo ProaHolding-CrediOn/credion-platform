@@ -9,6 +9,7 @@ import { MessageCircleMore } from "lucide-react";
 import Link from "next/link";
 
 export default function ContactPage() {
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -26,7 +27,7 @@ export default function ContactPage() {
     const { name, email, message } = formData;
 
     if (!name || !email || !message) {
-      alert("Por favor, completa todos los campos.");
+      setError("Por favor, complete todos los campos.");
       return;
     }
 
@@ -121,6 +122,8 @@ export default function ContactPage() {
             >
               Enviar Mensaje
             </Button>
+
+            {error && <p className="text-red-500 mt-2">{error}</p>}
           </form>
         </div>
       </div>
