@@ -397,7 +397,7 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
                         <div className="w-full max-w-2xl space-y-6">
                             <div className="flex flex-col items-center">
                                 <Image src="/logo_text.svg" alt="Logo" width={200} height={100} className="mx-auto" />
-                                <Label className="text-muted-foreground text-sm mt-2">F-AC-03</Label>
+                                <Label className="text-muted-foreground text-sm mt-2">Formulario del Vehículo F-AC-03</Label>
                             </div>
                             <FormRenderer
                                 steps={steps}
