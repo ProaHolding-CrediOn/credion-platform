@@ -20,7 +20,6 @@ import { TimeLeft, TimerForm } from "@/components/TimeForm";
 import { getJwtExpiryDate } from "@/lib/tokenExpiryTime";
 
 export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlId: string }) {
-    const router = useRouter()
     const { setFormData, setBlockStates, setFieldStates, setFormVersion, getFormVersion } = useFormComplementario()
     const [loading, setLoading] = useState(true);
     const [isValid, setIsValid] = useState(true);
@@ -41,11 +40,6 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
     const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
     const [expired, setExpired] = useState(false);
     const limitTo15Minutes = true;
-
-    useEffect(() => {
-        const storedToken = localStorage.getItem('token') || '';
-        setToken(storedToken);
-    }, []);
 
     const fetchForm = async () => {
         setLoading(true)
