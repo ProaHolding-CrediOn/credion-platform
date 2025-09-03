@@ -76,16 +76,12 @@ export default memo(function PlacaField({
     const letters = clean.slice(0, 3).replace(/[^A-Z]/g, "");
     formatted += letters;
 
-    if (letters.length === 3) {
-      formatted += "-";
-    }
-
-    const numbers = clean.slice(3, 5).replace(/[^0-9]/g, "");
+    const numbers = clean.slice(letters.length, letters.length + 2).replace(/[^0-9]/g, "");
     formatted += numbers;
 
-    const lastChar = clean.charAt(5);
-    if (lastChar && /[A-Z0-9]/.test(lastChar)) {
-      formatted += lastChar;
+    const remaining = clean.slice(letters.length + numbers.length);
+    if (remaining.length > 0 && /[A-Z0-9]/.test(remaining[0])) {
+      formatted += remaining[0];
     }
 
     formatted = formatted.slice(0, 6);
