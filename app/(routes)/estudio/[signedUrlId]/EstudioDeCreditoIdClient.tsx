@@ -324,6 +324,7 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
             setDialogMessage('La información ha sido guardada correctamente')
             setShowDialog(true);
             setError(false)
+            localStorage.removeItem('token')
             await useEstudioDeCredito.getState().resetForm()
             return true
         } catch (error) {

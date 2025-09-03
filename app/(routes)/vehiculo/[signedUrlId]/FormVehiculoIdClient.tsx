@@ -203,21 +203,21 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
         const finalExpiryTime = calculateMaxExpiry();
 
         const timer = setInterval(() => {
-        const now = Date.now();
-        const remainingMs = finalExpiryTime - now;
+            const now = Date.now();
+            const remainingMs = finalExpiryTime - now;
 
-        if (remainingMs <= 0) {
-            setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
-            setExpired(true);
-            clearInterval(timer);
-            handleTimeUp()
-        } else {
-            const hours = Math.floor(remainingMs / (1000 * 60 * 60));
-            const minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
-            setTimeLeft({ hours, minutes, seconds: 0 });
-            setExpired(false);
-        }
-        }, 60 * 1000);
+            if (remainingMs <= 0) {
+                setTimeLeft({ hours: 0, minutes: 0, seconds: 0 });
+                setExpired(true);
+                clearInterval(timer);
+                handleTimeUp()
+            } else {
+                const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+                const minutes = Math.floor((remainingMs / (1000 * 60)) % 60);
+                setTimeLeft({ hours, minutes, seconds: 0 });
+                setExpired(false);
+            }
+        }, 10 * 1000);
 
         return () => clearInterval(timer);
     }, [token, limitTo15Minutes]);
@@ -288,6 +288,8 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
             setDialogMessage('Gracias por su información, prontamente nos estaremos comunicando.')
             setShowDialog(true);
             setError(false)
+            localStorage.removeItem('token')
+            setToken('')
             await useFormVehiculo.getState().resetForm()
             await useFormVehiculo.getState().setSubmitted(true)
             return true

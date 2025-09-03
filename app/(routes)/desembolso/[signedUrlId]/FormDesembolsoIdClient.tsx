@@ -288,6 +288,8 @@ export default function FormDesembolsoIdClient({ signedUrlId }: { signedUrlId: s
             setDialogMessage('Gracias por su información, prontamente nos estaremos comunicando.')
             setShowDialog(true);
             setError(false)
+            localStorage.removeItem('token')
+            setToken('')
             await useFormDesembolso.getState().resetForm();
             await useFormDesembolso.getState().setSubmitted(true)
             return true

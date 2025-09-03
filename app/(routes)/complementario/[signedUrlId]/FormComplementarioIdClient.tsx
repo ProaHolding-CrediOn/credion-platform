@@ -288,6 +288,8 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
             setDialogMessage('Gracias por su información, prontamente nos estaremos comunicando.')
             setShowDialog(true);
             setError(false)
+            localStorage.removeItem('token')
+            setToken('')
             await useFormComplementario.getState().resetForm()
             await useFormComplementario.getState().setSubmitted(true)
             return true
