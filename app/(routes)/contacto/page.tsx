@@ -31,7 +31,7 @@ export default function ContactPage() {
       return;
     }
 
-    const recipient = "info@credion.com.co";
+    const recipient = "contacto@credion.com.co";
     const subject = `Consulta de ${encodeURIComponent(name)}`;
     const body = `
       Nombre: ${name}
@@ -59,20 +59,29 @@ export default function ContactPage() {
           </div>
 
           <div>
-            <h3 className="font-medium text-sm text-muted-foreground">📞 Teléfonos</h3>
+            <h3 className="font-medium text-sm text-muted-foreground">📞 Teléfono</h3>
             <ul className="text-muted-foreground list-disc list-inside ml-2">
-              <li>+57 301 773 0706</li>
+              <li>+57 333 4310479</li>
             </ul>
           </div>
 
           <div>
-            <h3 className="font-medium text-sm text-muted-foreground">✉️ Correos</h3>
+            <h3 className="font-medium text-sm text-muted-foreground">✉️ Correo</h3>
             <ul className="text-muted-foreground list-disc list-inside ml-2">
-              <li>info@credion.com.co</li>
+              <li>contacto@credion.com.co</li>
             </ul>
           </div>
 
-          <Link href="https://wa.me/573017730706" target="_blank" rel="noopener noreferrer">
+          <div>
+            <h3 className="font-medium text-sm text-muted-foreground">📍 Dirección</h3>
+            <ul className="text-muted-foreground list-disc list-inside ml-2">
+              <li>Edificio Milla de Oro</li>
+              <li>Cra. 42 #3 Sur 81 Torre 1 Piso 15</li>
+              <li>El Poblado, Medellín.</li>
+            </ul>
+          </div>
+
+          <Link href="https://wa.me/573334310479" target="_blank" rel="noopener noreferrer">
             <Button className="w-full bg-green-600 hover:bg-green-700 text-white cursor-pointer">
               <MessageCircleMore className="w-4 h-4 mr-2" />
               Escríbenos por WhatsApp
