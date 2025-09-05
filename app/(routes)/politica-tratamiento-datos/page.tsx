@@ -1,14 +1,14 @@
 import { Suspense } from "react"
-import TerminosDeUsoClient from "./TerminosDeUsoClient"
+import PoliticaTratamientoDatosClient from "./PoliticaTratamientoDatosClient"
 
 export const metadata = {
-    title: 'Terminos de Uso | Credion',
+    title: 'Política de Tratamiento de Datos Personales | Credion',
 }
 
 export default async function PoliticaTratamientoDatosPage() {
     return (
         <Suspense fallback={<div className="p-6 text-center">Cargando información...</div>}>
-           <TerminosDeUsoClient />
+           <PoliticaTratamientoDatosClient />
         </Suspense>
     )
 }
