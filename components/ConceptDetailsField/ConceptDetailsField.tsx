@@ -115,11 +115,12 @@ export default memo(function ConceptDetailsField({
                 return Number(acc) + Number(val);
             }, 0) || 0;
 
-            const totalIdx = updatedValues.findIndex((v) => v.label === label);
+            const totalLabel = `${label} totales`
+            const totalIdx = updatedValues.findIndex((v) => v.label === totalLabel);
             if (totalIdx >= 0) {
-                updatedValues[totalIdx] = { label: `${label} totales`, value: total, type: "priceField" };
+                updatedValues[totalIdx] = { label: totalLabel, value: total, type: "priceField" };
             } else {
-                updatedValues.push({ label: `${label} totales`, value: total, type: "priceField" });
+                updatedValues.push({ label: totalLabel, value: total, type: "priceField" });
             }
 
             const isValid = validateAll(updatedValues);
