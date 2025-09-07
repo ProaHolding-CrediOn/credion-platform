@@ -596,6 +596,8 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
                     </div>
                 </div>
             )}
+
+            <Separator className="my-4" />
         </div>
     );
 }

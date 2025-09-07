@@ -272,7 +272,7 @@ export default function FormSolicitudIdClient() {
                 <div className="w-full max-w-2xl space-y-6">
                     <div className="flex flex-col items-center">
                         <Image src="/logo_text.svg" alt="Logo" width={200} height={100} className="mx-auto" />
-                        <Label className="text-muted-foreground text-sm mt-2">F-AC-02</Label>
+                        <Label className="text-muted-foreground text-sm mt-2">Formulario de Solicitud F-AC-02</Label>
                     </div>
                     <FormRenderer steps={steps} onSubmit={handleSubmit} submitting={submitting} store={useFormSolicitud} />
                 </div>
