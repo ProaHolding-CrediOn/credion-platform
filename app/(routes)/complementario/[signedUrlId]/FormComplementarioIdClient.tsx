@@ -95,7 +95,6 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
                         const required = field?.validation?.some((v: any) => v.name === 'required' && v.value === true)
                         return !required
                     }) ?? false
-                    console.log('initialBlockStates ', stepIndex, blockName, initialBlockStates[stepIndex][blockName])
                     initialFieldStates[stepIndex][blockName] = {}
 
                     if (block.blockType === 'multiFormSelectorBlock') {
