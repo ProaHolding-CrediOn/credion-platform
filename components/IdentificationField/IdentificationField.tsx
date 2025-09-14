@@ -56,6 +56,11 @@ function validarDocumento(doc: string): { tipo: TipoDoc; valido: boolean; mensaj
   return { tipo: "INVALIDO", valido: false, mensaje: "Documento inválido" };
 }
 
+function formatNumberWithDots(value: string): string {
+  if (!/^\d+$/.test(value)) return value; // si tiene letras, no se formatea
+  return new Intl.NumberFormat("es-CO").format(Number(value));
+}
+
 export default memo(function IdentificationField({
   name,
   label,
@@ -70,9 +75,12 @@ export default memo(function IdentificationField({
   const [docInfo, setDocInfo] = useState<{ tipo: TipoDoc; valido: boolean; mensaje?: string } | null>(null);
   const debouncedValidationRef = useRef<number | null>(null);
 
+  const [rawValue, setRawValue] = useState(value.replace(/\./g, ""));
+
   useEffect(() => {
     if (value) {
       setTouched(true);
+      setRawValue(value.replace(/\./g, ""));
     }
 
     return () => {
@@ -80,7 +88,7 @@ export default memo(function IdentificationField({
         window.clearTimeout(debouncedValidationRef.current);
       }
     };
-  }, []);
+  }, [value]);
 
   const required = validations?.find((v) => v.name === "required")?.value as boolean;
 
@@ -135,9 +143,10 @@ export default memo(function IdentificationField({
       <Input
         id={name}
         type="text"
-        value={value}
+        value={formatNumberWithDots(rawValue)}
         onChange={(e) => {
-          let inputValue = e.target.value;
+          let inputValue = e.target.value.replace(/\./g, "");
+          setRawValue(inputValue);
           onChange(name, inputValue);
           handleDebouncedValidation(inputValue);
         }}
