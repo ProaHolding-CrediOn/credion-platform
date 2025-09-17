@@ -9,7 +9,7 @@ export default function OtpPage() {
   const [phone, setPhone] = useState({ codigoTelefono: '57', telefono: '' });
   const [code, setCode] = useState("");
   const [isValid, setIsValid] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(30);
+  const [timeLeft, setTimeLeft] = useState(60);
   const [canResend, setCanResend] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
