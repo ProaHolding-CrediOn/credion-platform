@@ -14,6 +14,7 @@ import { Plus, Trash2Icon } from "lucide-react";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Separator } from "@/components/ui/separator";
 import { formatFieldValue } from "@/lib/formatFields";
+import { format, formatDate } from "date-fns";
 
 export interface StoredFieldData {
     label: string;
@@ -352,18 +353,27 @@ export default function MultiFormSelectorFormBlockRenderer({ block, blockKey, st
 
     const extractLeafValues = (value: any): string[] => {
         if (value === null || value === undefined) return [];
-        if (typeof value !== 'object') return [String(value)];
 
-        if (Array.isArray(value.value) && typeof value.label === 'string') {
-            return value.value.flatMap((item: any) => extractLeafValues(item.value));
+        if (value instanceof Date) {
+            return [formatDate(value, 'dd/MM/yyyy')];
+        }
+
+        if (typeof value !== 'object') {
+            return [String(value)];
+        }
+
+        if (Array.isArray(value)) {
+            return value.flatMap(extractLeafValues);
         }
 
         if ('label' in value && 'value' in value) {
             return extractLeafValues(value.value);
         }
 
-        if (Array.isArray(value)) {
-            return value.flatMap(extractLeafValues);
+        if (typeof value === 'object') {
+            return Object.entries(value)
+                .filter(([key]) => key !== 'id')
+                .flatMap(([key, val]) => extractLeafValues(val));
         }
 
         return Object.values(value).flatMap(extractLeafValues);

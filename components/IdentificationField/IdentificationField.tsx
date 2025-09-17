@@ -143,7 +143,11 @@ export default memo(function IdentificationField({
       <Input
         id={name}
         type="text"
-        value={formatNumberWithDots(rawValue)}
+        value={
+          docInfo?.tipo === "PASAPORTE"
+            ? rawValue // se escribe tal cual
+            : formatNumberWithDots(rawValue) // numérico con miles
+        }
         onChange={(e) => {
           let inputValue = e.target.value.replace(/\./g, "");
           setRawValue(inputValue);
