@@ -105,6 +105,15 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
                         return
                     }
 
+                    if (block.blockType === 'conditionalFormBlock') {
+                        initialFormData[layoutId][blockName]['Condicion'] = {
+                            label: block.label,
+                            value: "",
+                            type: 'Conditional',
+                            validation: []
+                        }
+                    }
+
                     block.form.fields.forEach((field: any) => {
                         initialFormData[layoutId][blockName][field.name] = {
                             label: field.label,
@@ -120,15 +129,6 @@ export default function FormComplementarioIdClient({ signedUrlId }: { signedUrlI
                             initialFieldStates[stepIndex][blockName][field.name] = !isRequired
                         }
                     })
-
-                    if (block.blockType === 'conditionalFormBlock') {
-                        initialFormData[layoutId][blockName]['Condicion'] = {
-                            label: block.label,
-                            value: "",
-                            type: 'Conditional',
-                            validation: []
-                        }
-                    }
                 })
             })
 

@@ -107,6 +107,15 @@ export default function FormSolicitudIdClient() {
               return
           }
 
+          if (block.blockType === 'conditionalFormBlock') {
+            initialFormData[layoutId][blockName]['Condicion'] = {
+              label: block.label,
+              value: "",
+              type: 'Conditional',
+              validation: []
+            }
+          }
+
           block.form.fields.forEach((field: any) => {
             initialFormData[layoutId][blockName][field.name] = {
               label: field.label,
@@ -122,15 +131,6 @@ export default function FormSolicitudIdClient() {
               initialFieldStates[stepIndex][blockName][field.name] = !isRequired
             }
           })
-
-          if (block.blockType === 'conditionalFormBlock') {
-            initialFormData[layoutId][blockName]['Condicion'] = {
-              label: block.label,
-              value: "",
-              type: 'Conditional',
-              validation: []
-            }
-          }
         })
       })
 

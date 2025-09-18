@@ -138,6 +138,18 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
                         }
                         return;
                     } else {
+                        if (block.blockType === 'conditionalFormBlock') {
+                            const key = `${blockName}.Condicion`
+                            const existingValue = solicitudFlat[key] ?? complementarioFlat[key] ?? ""
+
+                            initialFormData[layoutId][blockName]['Condicion'] = {
+                                label: block.label,
+                                value: existingValue,
+                                type: 'Conditional',
+                                validation: []
+                            }
+                        }
+                        
                         block.form.fields.forEach((field: any) => {
                             const key = `${blockName}.${field.name}`
                             const existingValue = solicitudFlat[key] ?? complementarioFlat[key] ?? getInitialValueForType(field.type)
@@ -151,20 +163,6 @@ export default function EstudioDeCreditoIdClient({ signedUrlId, token }: { signe
 
                             initialFieldStates[stepIndex][blockName][field.name] = true
                         })
-                    }
-
-                    
-
-                    if (block.blockType === 'conditionalFormBlock') {
-                        const key = `${blockName}.Condicion`
-                        const existingValue = solicitudFlat[key] ?? complementarioFlat[key] ?? ""
-
-                        initialFormData[layoutId][blockName]['Condicion'] = {
-                            label: block.label,
-                            value: existingValue,
-                            type: 'Conditional',
-                            validation: []
-                        }
                     }
                 })
             })

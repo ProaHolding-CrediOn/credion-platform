@@ -88,47 +88,47 @@ export default function FormVehiculoIdClient({ signedUrlId }: { signedUrlId: str
                 initialFieldStates[stepIndex] = {};
 
                 step.blocks.forEach((block: any) => {
-                const blockName = block.blockName
+                    const blockName = block.blockName
 
-                initialFormData[layoutId][blockName] = {}
-                initialBlockStates[stepIndex][blockName] = block.form?.fields?.every((field: any) => {
-                    const required = field?.validation?.some((v: any) => v.name === 'required' && v.value === true)
-                    return !required
-                }) ?? false
-                initialFieldStates[stepIndex][blockName] = {}
+                    initialFormData[layoutId][blockName] = {}
+                    initialBlockStates[stepIndex][blockName] = block.form?.fields?.every((field: any) => {
+                        const required = field?.validation?.some((v: any) => v.name === 'required' && v.value === true)
+                        return !required
+                    }) ?? false
+                    initialFieldStates[stepIndex][blockName] = {}
 
-                if (block.blockType === 'multiFormSelectorBlock') {
-                    initialBlockStates[stepIndex][blockName] = block.required ? false : true
-                }
-
-                if (block.blockType === 'payoutDistributionBlock' || block.blockType === 'multiFormSelectorBlock') {
-                    return
-                }
-
-                block.form.fields.forEach((field: any) => {
-                    initialFormData[layoutId][blockName][field.name] = {
-                    label: field.label,
-                    value: getInitialValueForType(field.type),
-                    type: field.type,
-                    validation: field.validation
+                    if (block.blockType === 'multiFormSelectorBlock') {
+                        initialBlockStates[stepIndex][blockName] = block.required ? false : true
                     }
 
-                    const hasValidation = field?.validation
-                    const isRequired = field?.validation?.some((v: any) => v.name === 'required' && v.value === true)
-
-                    if (hasValidation) {
-                    initialFieldStates[stepIndex][blockName][field.name] = !isRequired
+                    if (block.blockType === 'payoutDistributionBlock' || block.blockType === 'multiFormSelectorBlock') {
+                        return
                     }
-                })
 
-                if (block.blockType === 'conditionalFormBlock') {
-                    initialFormData[layoutId][blockName]['Condicion'] = {
-                        label: block.label,
-                        value: "",
-                        type: 'Conditional',
-                        validation: []
+                    if (block.blockType === 'conditionalFormBlock') {
+                        initialFormData[layoutId][blockName]['Condicion'] = {
+                            label: block.label,
+                            value: "",
+                            type: 'Conditional',
+                            validation: []
+                        }
                     }
-                }
+
+                    block.form.fields.forEach((field: any) => {
+                        initialFormData[layoutId][blockName][field.name] = {
+                        label: field.label,
+                        value: getInitialValueForType(field.type),
+                        type: field.type,
+                        validation: field.validation
+                        }
+
+                        const hasValidation = field?.validation
+                        const isRequired = field?.validation?.some((v: any) => v.name === 'required' && v.value === true)
+
+                        if (hasValidation) {
+                        initialFieldStates[stepIndex][blockName][field.name] = !isRequired
+                        }
+                    })
                 })
             })
 
