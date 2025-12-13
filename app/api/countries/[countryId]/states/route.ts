@@ -1,8 +1,9 @@
 import { logError } from "@/lib/errorResponse"
-import { Params } from "@/types/Params"
 import { NextRequest, NextResponse } from "next/server"
 
-export async function GET(req: NextRequest, context: { params: Promise<Params>}) {
+type RouteParams = { countryId: string }
+
+export async function GET(req: NextRequest, context: { params: Promise<RouteParams>}) {
     try {
         const { countryId } = await context.params
         const response = await fetch(`${process.env.CORE_SERVICE_API_URL}/states?where[country][equals]=${countryId}&limit=0&sort=name`)

@@ -1,1 +1,1 @@
-export type Params = { id: string; countryId: string, stateId: string, cityId: string }
+// export type Params = { id: string; countryId: string, stateId: string, cityId: string }
