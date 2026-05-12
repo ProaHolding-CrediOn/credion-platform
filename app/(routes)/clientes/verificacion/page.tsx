@@ -105,12 +105,12 @@ export default function ClientesVerificacionPage() {
   return (
     <div className="space-y-6">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium mb-4">
+        <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-300 px-3 py-1 rounded-full text-sm font-medium mb-4">
           <ShieldCheck className="w-4 h-4" /> Verificación
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold mb-3">
+        <h1 className="text-4xl md:text-5xl font-bold mb-3 text-foreground">
           Ingresá tu{' '}
-          <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-blue-600 to-purple-500 dark:from-blue-400 dark:to-purple-300 bg-clip-text text-transparent">
             código
           </span>
         </h1>
@@ -141,14 +141,14 @@ export default function ClientesVerificacionPage() {
             </div>
 
             {error && (
-              <div className="flex items-start gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3">
+              <div className="flex items-start gap-2 text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded p-3">
                 <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 {error}
               </div>
             )}
 
             {info && (
-              <div className="flex items-start gap-2 text-sm text-green-700 bg-green-50 border border-green-200 rounded p-3">
+              <div className="flex items-start gap-2 text-sm text-green-700 dark:text-green-300 bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/30 rounded p-3">
                 <ShieldCheck className="w-4 h-4 flex-shrink-0 mt-0.5" />
                 {info}
               </div>
@@ -174,7 +174,7 @@ export default function ClientesVerificacionPage() {
                 type="button"
                 onClick={handleResend}
                 disabled={resending || loading}
-                className="text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
+                className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium disabled:opacity-50"
               >
                 {resending ? 'Reenviando...' : 'Reenviar código'}
               </button>
@@ -189,7 +189,7 @@ export default function ClientesVerificacionPage() {
               )}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 text-sm text-green-700 hover:text-green-800 font-medium"
+              className="inline-flex items-center gap-2 text-sm text-green-700 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 font-medium"
             >
               <MessageCircle className="w-4 h-4" /> Escribinos por WhatsApp
             </a>
