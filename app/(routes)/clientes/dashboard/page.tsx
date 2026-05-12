@@ -62,20 +62,20 @@ const CREDIT_CARDS = [
 // ────────────────────────────────────────────────────────────────────
 
 const STATUS_LABEL: Record<string, { label: string; color: string }> = {
-  creado: { label: 'Solicitud creada', color: 'bg-slate-100 text-slate-700' },
-  revision: { label: 'En revisión', color: 'bg-amber-100 text-amber-800' },
-  preaprobado: { label: 'Preaprobado', color: 'bg-blue-100 text-blue-800' },
-  aprobado: { label: 'Aprobado', color: 'bg-emerald-100 text-emerald-800' },
-  tomado: { label: 'Tomado', color: 'bg-purple-100 text-purple-800' },
-  desistido: { label: 'Desistido', color: 'bg-slate-100 text-slate-600' },
-  rechazado: { label: 'No aprobado', color: 'bg-red-100 text-red-700' },
-  duplicado: { label: 'Duplicado', color: 'bg-slate-100 text-slate-600' },
-  cancelado: { label: 'Cancelado', color: 'bg-slate-100 text-slate-600' },
-  test: { label: 'Prueba', color: 'bg-slate-100 text-slate-600' },
+  creado: { label: 'Solicitud creada', color: 'bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300' },
+  revision: { label: 'En revisión', color: 'bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300' },
+  preaprobado: { label: 'Preaprobado', color: 'bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-300' },
+  aprobado: { label: 'Aprobado', color: 'bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300' },
+  tomado: { label: 'Tomado', color: 'bg-purple-100 text-purple-800 dark:bg-purple-500/15 dark:text-purple-300' },
+  desistido: { label: 'Desistido', color: 'bg-slate-100 text-slate-600 dark:bg-slate-500/15 dark:text-slate-400' },
+  rechazado: { label: 'No aprobado', color: 'bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300' },
+  duplicado: { label: 'Duplicado', color: 'bg-slate-100 text-slate-600 dark:bg-slate-500/15 dark:text-slate-400' },
+  cancelado: { label: 'Cancelado', color: 'bg-slate-100 text-slate-600 dark:bg-slate-500/15 dark:text-slate-400' },
+  test: { label: 'Prueba', color: 'bg-slate-100 text-slate-600 dark:bg-slate-500/15 dark:text-slate-400' },
 }
 
 function statusBadge(status: string) {
-  const s = STATUS_LABEL[status] || { label: status, color: 'bg-slate-100 text-slate-700' }
+  const s = STATUS_LABEL[status] || { label: status, color: 'bg-slate-100 text-slate-700 dark:bg-slate-500/15 dark:text-slate-300' }
   return s
 }
 
@@ -125,7 +125,7 @@ function CopyableField({ label, value }: { label: string; value: string }) {
       <button
         type="button"
         onClick={handleCopy}
-        className="flex-shrink-0 inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
+        className="flex-shrink-0 inline-flex items-center gap-1 text-xs text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
         aria-label={`Copiar ${label}`}
       >
         {copied ? (
@@ -219,7 +219,7 @@ export default function ClientesDashboardPage() {
     return (
       <Card className="max-w-md mx-auto">
         <CardContent className="p-6 md:p-8 space-y-4">
-          <div className="flex items-start gap-2 text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3">
+          <div className="flex items-start gap-2 text-sm text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded p-3">
             <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
             {error || 'No encontramos tu crédito.'}
           </div>
@@ -239,11 +239,11 @@ export default function ClientesDashboardPage() {
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium mb-3">
+          <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-800 dark:bg-blue-500/15 dark:text-blue-300 px-3 py-1 rounded-full text-sm font-medium mb-3">
             <ShieldCheck className="w-4 h-4" /> Portal de Clientes
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold">
-            Hola, <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">{credit.solicitante.primerNombre}</span>
+          <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+            Hola, <span className="bg-gradient-to-r from-blue-600 to-purple-500 dark:from-blue-400 dark:to-purple-300 bg-clip-text text-transparent">{credit.solicitante.primerNombre}</span>
           </h1>
           <p className="text-muted-foreground mt-1">Aquí está el estado de tu crédito Credion.</p>
         </div>
@@ -289,21 +289,21 @@ export default function ClientesDashboardPage() {
 
           {credit.fundingSummary && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
-              <div className="bg-blue-50 rounded-lg p-4">
-                <p className="text-xs text-blue-700 font-medium uppercase tracking-wide">Monto aprobado</p>
-                <p className="text-xl font-bold text-blue-900 mt-1">
+              <div className="bg-blue-50 dark:bg-blue-500/10 dark:border dark:border-blue-500/20 rounded-lg p-4">
+                <p className="text-xs text-blue-700 dark:text-blue-300 font-medium uppercase tracking-wide">Monto aprobado</p>
+                <p className="text-xl font-bold text-blue-900 dark:text-blue-100 mt-1">
                   {formatCop(credit.fundingSummary.approvedAmount)}
                 </p>
               </div>
-              <div className="bg-purple-50 rounded-lg p-4">
-                <p className="text-xs text-purple-700 font-medium uppercase tracking-wide">Plazo</p>
-                <p className="text-xl font-bold text-purple-900 mt-1">
+              <div className="bg-purple-50 dark:bg-purple-500/10 dark:border dark:border-purple-500/20 rounded-lg p-4">
+                <p className="text-xs text-purple-700 dark:text-purple-300 font-medium uppercase tracking-wide">Plazo</p>
+                <p className="text-xl font-bold text-purple-900 dark:text-purple-100 mt-1">
                   {credit.fundingSummary.loanTermMonths} meses
                 </p>
               </div>
-              <div className="bg-emerald-50 rounded-lg p-4">
-                <p className="text-xs text-emerald-700 font-medium uppercase tracking-wide">Desembolso</p>
-                <p className="text-xl font-bold text-emerald-900 mt-1">
+              <div className="bg-emerald-50 dark:bg-emerald-500/10 dark:border dark:border-emerald-500/20 rounded-lg p-4">
+                <p className="text-xs text-emerald-700 dark:text-emerald-300 font-medium uppercase tracking-wide">Desembolso</p>
+                <p className="text-xl font-bold text-emerald-900 dark:text-emerald-100 mt-1">
                   {formatCop(credit.fundingSummary.disbursementAmount)}
                 </p>
               </div>
@@ -316,8 +316,8 @@ export default function ClientesDashboardPage() {
       <Card>
         <CardContent className="p-6 md:p-8 space-y-5">
           <div>
-            <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2">
-              <Receipt className="w-5 h-5 text-blue-600" /> Cómo pagar tu cuota
+            <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2 text-foreground">
+              <Receipt className="w-5 h-5 text-blue-600 dark:text-blue-400" /> Cómo pagar tu cuota
             </h2>
             <p className="text-sm text-muted-foreground mt-1">
               Elegí el método que más te convenga. Recordá enviar el comprobante por WhatsApp.
@@ -325,12 +325,14 @@ export default function ClientesDashboardPage() {
           </div>
 
           {/* Tabs */}
-          <div className="inline-flex p-1 bg-slate-100 rounded-lg">
+          <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-lg">
             <button
               type="button"
               onClick={() => setTab('savings')}
               className={`px-4 py-2 rounded-md text-sm font-medium inline-flex items-center gap-2 transition ${
-                tab === 'savings' ? 'bg-white shadow-sm text-blue-700' : 'text-slate-600 hover:text-slate-900'
+                tab === 'savings'
+                  ? 'bg-white dark:bg-slate-900 shadow-sm text-blue-700 dark:text-blue-300'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <Landmark className="w-4 h-4" /> Cuenta de Ahorros
@@ -339,7 +341,9 @@ export default function ClientesDashboardPage() {
               type="button"
               onClick={() => setTab('credit')}
               className={`px-4 py-2 rounded-md text-sm font-medium inline-flex items-center gap-2 transition ${
-                tab === 'credit' ? 'bg-white shadow-sm text-blue-700' : 'text-slate-600 hover:text-slate-900'
+                tab === 'credit'
+                  ? 'bg-white dark:bg-slate-900 shadow-sm text-blue-700 dark:text-blue-300'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200'
               }`}
             >
               <CreditCard className="w-4 h-4" /> Tarjeta de Crédito
@@ -349,9 +353,9 @@ export default function ClientesDashboardPage() {
           {tab === 'savings' && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {SAVINGS_BANKS.map((b) => (
-                <div key={b.name} className="border rounded-lg p-4 bg-white">
+                <div key={b.name} className="border rounded-lg p-4 bg-white dark:bg-slate-900 dark:border-slate-700">
                   <div className="flex items-center gap-2 mb-3">
-                    <Landmark className="w-4 h-4 text-blue-600" />
+                    <Landmark className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     <h3 className="font-bold">{b.name}</h3>
                   </div>
                   <CopyableField label="Tipo" value={b.type} />
@@ -366,9 +370,9 @@ export default function ClientesDashboardPage() {
           {tab === 'credit' && (
             <div className="space-y-4">
               {CREDIT_CARDS.map((c) => (
-                <div key={c.name} className="border rounded-lg p-5 bg-white">
+                <div key={c.name} className="border rounded-lg p-5 bg-white dark:bg-slate-900 dark:border-slate-700">
                   <div className="flex items-center gap-2 mb-2">
-                    <CreditCard className="w-4 h-4 text-purple-600" />
+                    <CreditCard className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                     <h3 className="font-bold">{c.name}</h3>
                   </div>
                   <p className="text-sm text-muted-foreground mb-4">{c.note}</p>
@@ -389,7 +393,7 @@ export default function ClientesDashboardPage() {
 
           {/* CTA enviar comprobante */}
           <div className="border-t pt-5">
-            <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 md:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+            <div className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-500/10 dark:to-purple-500/10 dark:border dark:border-blue-500/20 rounded-lg p-4 md:p-5 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
               <div>
                 <p className="font-semibold">Ya pagaste? Enviá el comprobante</p>
                 <p className="text-sm text-muted-foreground">
