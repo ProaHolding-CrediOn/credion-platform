@@ -1,6 +1,6 @@
 services:
   forms:
-    image: ghcr.io/rankey1496/platform:latest
+    image: ghcr.io/proaholding-credion/platform:latest
     ports:
       - "3001"
     networks:
