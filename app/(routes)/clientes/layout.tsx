@@ -1,9 +1,7 @@
 import { ReactNode } from 'react'
 
+// El layout es solo un wrapper que respeta el chrome del platform.
+// Cada página (/clientes, /verificacion, /dashboard) maneja su propio fondo y estructura.
 export default function ClientesLayout({ children }: { children: ReactNode }) {
-  return (
-    <div className="min-h-[calc(100vh-200px)] bg-gradient-to-br from-blue-50 to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <div className="container mx-auto px-4 py-12 max-w-4xl">{children}</div>
-    </div>
-  )
+  return <div className="min-h-[calc(100vh-200px)] bg-white text-[#0D1117]">{children}</div>
 }

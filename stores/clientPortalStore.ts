@@ -17,8 +17,9 @@ export type ClientCredit = {
     identificacion: string
   }
   vehiculo: {
-    marca: string | null
-    modelo: string | null
+    // marca/modelo pueden venir como string o number según el tipo de campo del form
+    marca: string | number | null
+    modelo: string | number | null
     valorComercial: number | null
   }
   fundingSummary: {
