@@ -190,7 +190,7 @@ export default function ClientesDashboardPage() {
   return (
     <div className="min-h-[calc(100vh-200px)] text-[#0D1117]" style={{ background: 'linear-gradient(180deg,#F2FAFC 0%,#FFFFFF 280px)' }}>
       {/* Header */}
-      <header className="px-4 md:px-8 lg:px-14 py-5 flex justify-between items-center gap-3 flex-wrap">
+      <header className="px-5 md:px-10 lg:px-16 xl:px-20 py-5 flex justify-between items-center gap-3 flex-wrap">
         <div className="flex items-center gap-3.5">
           <Image src="/credion-mark.svg" alt="Credion" width={32} height={32} />
           <div>
@@ -232,7 +232,7 @@ export default function ClientesDashboardPage() {
       </header>
 
       {/* Hero region */}
-      <section className="px-4 md:px-8 lg:px-14 pt-2 pb-8 grid lg:grid-cols-[1fr_380px] gap-7">
+      <section className="px-5 md:px-10 lg:px-16 xl:px-20 pt-4 pb-14 grid lg:grid-cols-[1fr_400px] gap-8 lg:gap-10">
         <div>
           <Eyebrow color="#006984">Bienvenido de vuelta</Eyebrow>
           <h1 className="text-3xl md:text-4xl lg:text-[44px] font-semibold mt-2 mb-6 text-[#0D1117]" style={{ letterSpacing: '-0.025em' }}>
@@ -320,7 +320,7 @@ export default function ClientesDashboardPage() {
       </section>
 
       {/* Pagos */}
-      <div className="px-4 md:px-8 lg:px-14 pt-8 pb-6">
+      <div className="px-5 md:px-10 lg:px-16 xl:px-20 pt-10 pb-10">
         <PaymentMethods
           customId={credit.customId}
           preference={credit.paymentPreference || 'savings'}
@@ -328,7 +328,7 @@ export default function ClientesDashboardPage() {
       </div>
 
       {/* Vehicle + Comprobantes */}
-      <section className="px-4 md:px-8 lg:px-14 pt-6 pb-12 grid grid-cols-1 md:grid-cols-2 gap-5">
+      <section className="px-5 md:px-10 lg:px-16 xl:px-20 pt-6 pb-12 grid grid-cols-1 md:grid-cols-2 gap-5">
         <div className="bg-white border border-[#E9ECF1] rounded-2xl p-5 flex items-center gap-4">
           <div className="w-16 h-16 rounded-2xl bg-[#F5EBF6] text-[#531F57] flex items-center justify-center flex-shrink-0">
             <Car className="w-7 h-7" />
@@ -364,7 +364,7 @@ export default function ClientesDashboardPage() {
         </div>
       </section>
 
-      <footer className="px-4 md:px-8 lg:px-14 pt-2 pb-8 flex flex-col md:flex-row justify-between gap-2 text-[11px] text-[#525964]">
+      <footer className="px-5 md:px-10 lg:px-16 xl:px-20 pt-2 pb-8 flex flex-col md:flex-row justify-between gap-2 text-[11px] text-[#525964]">
         <span>Credion S.A.S. · NIT 901.831.706-1 · Vigilada Superintendencia Financiera de Colombia</span>
         <span className="font-mono">Sesión segura · token cifrado</span>
       </footer>
