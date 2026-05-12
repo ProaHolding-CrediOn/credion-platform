@@ -1,0 +1,71 @@
+import { create } from 'zustand'
+import { createJSONStorage, persist } from 'zustand/middleware'
+
+// ────────────────────────────────────────────────────────────────────
+// Tipos
+// ────────────────────────────────────────────────────────────────────
+
+export type ClientCredit = {
+  id: string
+  customId: string
+  status: string
+  createdAt: string
+  solicitante: {
+    primerNombre: string
+    primerApellido: string
+    email: string
+    identificacion: string
+  }
+  vehiculo: {
+    marca: string | null
+    modelo: string | null
+    valorComercial: number | null
+  }
+  fundingSummary: {
+    approvedAmount: number
+    loanTermMonths: number
+    disbursementAmount: number
+  } | null
+}
+
+type ClientPortalState = {
+  token: string | null
+  identificacion: string | null
+  credit: ClientCredit | null
+  hydrated: boolean
+
+  setToken: (token: string, identificacion: string) => void
+  setCredit: (credit: ClientCredit) => void
+  logout: () => void
+  isAuthenticated: () => boolean
+}
+
+// ────────────────────────────────────────────────────────────────────
+// Store con persist en sessionStorage (se borra al cerrar tab)
+// ────────────────────────────────────────────────────────────────────
+
+export const useClientPortal = create<ClientPortalState>()(
+  persist(
+    (set, get) => ({
+      token: null,
+      identificacion: null,
+      credit: null,
+      hydrated: false,
+
+      setToken: (token, identificacion) => set({ token, identificacion }),
+
+      setCredit: (credit) => set({ credit }),
+
+      logout: () => set({ token: null, identificacion: null, credit: null }),
+
+      isAuthenticated: () => !!get().token,
+    }),
+    {
+      name: 'client-portal-storage',
+      storage: createJSONStorage(() => sessionStorage),
+      onRehydrateStorage: () => (state) => {
+        if (state) state.hydrated = true
+      },
+    },
+  ),
+)
