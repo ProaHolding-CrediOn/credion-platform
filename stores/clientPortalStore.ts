@@ -27,6 +27,13 @@ export type ClientCredit = {
     loanTermMonths: number
     disbursementAmount: number
   } | null
+  /**
+   * Preferencia de pago del cliente (cuenta de ahorros vs tarjeta de crédito).
+   * El dashboard muestra primero el tab que corresponde. Backend opcional —
+   * cuando no viene, el frontend default a 'savings'. Llenado futuro vía
+   * sincronización con tags de AiSensy/WhatsApp.
+   */
+  paymentPreference?: 'savings' | 'credit'
 }
 
 type ClientPortalState = {

@@ -4,10 +4,7 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import {
-  ShieldCheck,
   ArrowRight,
-  Copy,
-  Check,
   LogOut,
   Car,
   Loader2,
@@ -16,56 +13,9 @@ import {
   Receipt,
 } from 'lucide-react'
 import { useClientPortal, ClientCredit } from '@/stores/clientPortalStore'
+import { PaymentMethods } from '../_components/PaymentMethods'
 
 const WHATSAPP = '573334310479'
-
-// ──────────────────────────────────────────────────────────────
-// Datos de bancos (de la GUÍA CLIENTES Credion)
-// ──────────────────────────────────────────────────────────────
-
-type Bank = {
-  name: string
-  short: string
-  bg: string
-  fg: string
-  type: string
-  number: string
-  holder: string
-  nit: string
-}
-
-const SAVINGS_BANKS: Bank[] = [
-  {
-    name: 'Bancolombia',
-    short: 'BC',
-    bg: '#FFE000',
-    fg: '#0D1117',
-    type: 'Cuenta de Ahorros',
-    number: '693-152169-93',
-    holder: 'CREDION SAS',
-    nit: '901.831.706-1',
-  },
-  {
-    name: 'Davivienda',
-    short: 'DV',
-    bg: '#E1111B',
-    fg: '#FFFFFF',
-    type: 'Cuenta de Ahorros',
-    number: '0660-7000-1432',
-    holder: 'CREDION SAS',
-    nit: '901.831.706-1',
-  },
-  {
-    name: 'BBVA',
-    short: 'BB',
-    bg: '#004481',
-    fg: '#FFFFFF',
-    type: 'Cuenta de Ahorros',
-    number: '477-001147-7',
-    holder: 'CREDION SAS',
-    nit: '901.831.706-1',
-  },
-]
 
 // ──────────────────────────────────────────────────────────────
 // Helpers
@@ -139,92 +89,6 @@ function StatusChip({ status, onLight = true }: { status: string; onLight?: bool
       <span className="w-[7px] h-[7px] rounded-full" style={{ background: '#86EFAC', boxShadow: '0 0 0 3px rgba(255,255,255,0.15)' }} />
       {s.label}
     </span>
-  )
-}
-
-function BankBadge({ bank }: { bank: Bank }) {
-  return (
-    <div
-      className="w-11 h-11 rounded-xl flex items-center justify-center font-bold text-sm flex-shrink-0"
-      style={{ background: bank.bg, color: bank.fg }}
-    >
-      {bank.short}
-    </div>
-  )
-}
-
-function CopyButton({ value, label }: { value: string; label?: string }) {
-  const [copied, setCopied] = useState(false)
-  const onCopy = async () => {
-    try {
-      await navigator.clipboard.writeText(value)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    } catch {
-      // noop
-    }
-  }
-  return (
-    <button
-      type="button"
-      onClick={onCopy}
-      className="bg-[#0096B8] hover:bg-[#006984] text-white text-xs font-semibold px-3 py-2 rounded-lg inline-flex items-center gap-1.5 transition flex-shrink-0"
-      aria-label={label || `Copiar ${value}`}
-    >
-      {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-      {copied ? 'Copiado' : 'Copiar'}
-    </button>
-  )
-}
-
-// ──────────────────────────────────────────────────────────────
-// Bank tile
-// ──────────────────────────────────────────────────────────────
-
-function BankTile({ bank, primary }: { bank: Bank; primary?: boolean }) {
-  return (
-    <div
-      className="relative bg-white border rounded-2xl p-5 flex flex-col gap-4"
-      style={{
-        borderColor: primary ? '#0096B8' : '#E9ECF1',
-        boxShadow: primary ? '0 12px 24px -12px rgba(0,150,184,0.18)' : 'none',
-      }}
-    >
-      {primary && (
-        <div className="absolute -top-2.5 left-5 bg-[#0096B8] text-white px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider">
-          Más usada
-        </div>
-      )}
-
-      <div className="flex items-center gap-3">
-        <BankBadge bank={bank} />
-        <div className="flex-1 min-w-0">
-          <div className="font-semibold text-[17px] text-[#0D1117] truncate" style={{ letterSpacing: '-0.01em' }}>{bank.name}</div>
-          <div className="text-xs text-[#525964]">{bank.type}</div>
-        </div>
-      </div>
-
-      <div className="bg-[#F6F7F9] rounded-xl p-3.5">
-        <Eyebrow>Número</Eyebrow>
-        <div className="flex items-center justify-between gap-3 mt-1.5">
-          <div className="font-mono text-[18px] sm:text-[20px] font-medium text-[#0D1117] truncate" style={{ letterSpacing: '-0.01em' }}>
-            {bank.number}
-          </div>
-          <CopyButton value={bank.number} />
-        </div>
-      </div>
-
-      <div className="grid grid-cols-2 gap-3 text-xs">
-        <div>
-          <Eyebrow>Titular</Eyebrow>
-          <div className="font-semibold text-[#0D1117] mt-1">{bank.holder}</div>
-        </div>
-        <div>
-          <Eyebrow>NIT</Eyebrow>
-          <div className="font-mono font-medium text-[#0D1117] mt-1">{bank.nit}</div>
-        </div>
-      </div>
-    </div>
   )
 }
 
@@ -456,66 +320,12 @@ export default function ClientesDashboardPage() {
       </section>
 
       {/* Pagos */}
-      <section id="pagos" className="px-4 md:px-8 lg:px-14 pt-8 pb-6">
-        <div className="flex justify-between items-end flex-wrap gap-3 mb-6">
-          <div>
-            <Eyebrow color="#531F57">Pagos</Eyebrow>
-            <h2 className="text-2xl md:text-[32px] font-semibold mt-1.5 mb-1" style={{ letterSpacing: '-0.02em' }}>
-              Cómo pagar tu cuota
-            </h2>
-            <p className="text-sm text-[#525964] m-0 max-w-xl">
-              Transfiere desde tu banco a una de las cuentas oficiales de Credion. Sólo aceptamos depósitos a nombre de{' '}
-              <strong className="text-[#0D1117]">CREDION SAS</strong>.
-            </p>
-          </div>
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#E6F4F8] text-[#006984] rounded-full text-xs font-semibold">
-            <ShieldCheck className="w-3.5 h-3.5" /> Cuentas verificadas
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {SAVINGS_BANKS.map((b, i) => (
-            <BankTile key={b.name} bank={b} primary={i === 0} />
-          ))}
-        </div>
-
-        {/* Comprobante CTA */}
-        <div
-          className="mt-7 p-6 md:p-7 rounded-3xl text-white flex flex-col md:flex-row md:items-center md:justify-between gap-6 relative overflow-hidden"
-          style={{ background: cardGradient }}
-        >
-          <div className="absolute inset-0 opacity-20 pointer-events-none">
-            <div className="absolute -top-32 right-44 w-72 h-72 rounded-full" style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.4), transparent 60%)' }} />
-          </div>
-          <div className="relative max-w-xl">
-            <Eyebrow color="rgba(255,255,255,0.7)">Último paso</Eyebrow>
-            <h3 className="text-xl md:text-2xl font-semibold mt-1.5 mb-1" style={{ letterSpacing: '-0.02em' }}>
-              ¿Ya transferiste? Mándanos el comprobante
-            </h3>
-            <p className="text-sm text-white/85 m-0">
-              Sube la foto o PDF por WhatsApp. Confirmamos tu pago en menos de 24h hábiles e impactamos tu saldo automáticamente.
-            </p>
-          </div>
-          <div className="relative flex flex-col gap-2.5 flex-shrink-0">
-            <a
-              href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(`Hola, te envío el comprobante de pago de mi crédito ${credit.customId}.`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-5 py-3.5 bg-white text-[#531F57] rounded-xl font-bold text-sm inline-flex items-center justify-center gap-2.5 whitespace-nowrap hover:bg-white/95 transition"
-            >
-              <MessageCircle className="w-4 h-4" /> Enviar por WhatsApp
-            </a>
-            <a
-              href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent('Hola, necesito hablar con un asesor sobre mi crédito.')}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-5 py-2.5 bg-transparent text-white border border-white/40 rounded-xl font-medium text-[13px] inline-flex items-center justify-center hover:bg-white/10 transition"
-            >
-              Hablar con un asesor
-            </a>
-          </div>
-        </div>
-      </section>
+      <div className="px-4 md:px-8 lg:px-14 pt-8 pb-6">
+        <PaymentMethods
+          customId={credit.customId}
+          preference={credit.paymentPreference || 'savings'}
+        />
+      </div>
 
       {/* Vehicle + Comprobantes */}
       <section className="px-4 md:px-8 lg:px-14 pt-6 pb-12 grid grid-cols-1 md:grid-cols-2 gap-5">
