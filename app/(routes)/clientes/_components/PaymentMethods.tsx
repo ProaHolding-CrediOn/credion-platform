@@ -27,11 +27,13 @@ import {
 const WHATSAPP = '573334310479'
 const WHATSAPP_DISPLAY = '+57 333 431 0479'
 
+const HOLDER_FULL_NAME = 'Juan David Pascual Chamorro'
+
 const SAVINGS_DESTINO = {
   bank: 'Bancolombia',
   type: 'Cuenta de Ahorros',
   number: '9350 5037 993',
-  holder: 'JUAN D. PASCUAL CH.',
+  holder: HOLDER_FULL_NAME,
 }
 
 const CREDIT_CARD_DESTINO = {
@@ -39,7 +41,7 @@ const CREDIT_CARD_DESTINO = {
   brand: 'Visa',
   number: '5491 5805 7507 2083',
   numberShort: '72083',
-  holder: 'Juan David Pascual Chamorro',
+  holder: HOLDER_FULL_NAME,
   cedula: '71229626',
 }
 
@@ -209,7 +211,7 @@ function Eyebrow({ children, color = '#525964' }: { children: React.ReactNode; c
   )
 }
 
-function CopyButton({ value, size = 'md' }: { value: string; size?: 'sm' | 'md' }) {
+function CopyButton({ value, size = 'md' }: { value: string; size?: 'sm' | 'md' | 'lg' }) {
   const [copied, setCopied] = useState(false)
   const onCopy = async () => {
     try {
@@ -219,6 +221,18 @@ function CopyButton({ value, size = 'md' }: { value: string; size?: 'sm' | 'md' 
     } catch {
       // noop
     }
+  }
+  if (size === 'lg') {
+    return (
+      <button
+        type="button"
+        onClick={onCopy}
+        className="bg-white text-[#0D1117] hover:bg-white/95 font-bold rounded-xl inline-flex items-center justify-center gap-2 transition flex-shrink-0 text-sm px-5 py-3 shadow-sm"
+      >
+        {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+        {copied ? 'Copiado' : 'Copiar número'}
+      </button>
+    )
   }
   const sm = size === 'sm'
   return (
@@ -247,40 +261,40 @@ function MethodAccordion({ method, isFirst }: { method: Method; isFirst?: boolea
   const Icon = method.icon
   const badge = BADGE_BG[method.badgeColor]
   return (
-    <div className="border border-[#E9ECF1] rounded-xl bg-white overflow-hidden">
+    <div className="border border-[#E9ECF1] rounded-2xl bg-white overflow-hidden">
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center gap-3 p-4 hover:bg-[#F9FAFB] transition text-left"
+        className="w-full flex items-center gap-4 p-5 hover:bg-[#F9FAFB] transition text-left"
         aria-expanded={open}
       >
         <div
-          className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
+          className="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
           style={{ background: badge.bg, color: badge.fg }}
         >
           <Icon className="w-5 h-5" />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="font-semibold text-[15px] text-[#0D1117]" style={{ letterSpacing: '-0.005em' }}>
+          <div className="font-semibold text-base text-[#0D1117]" style={{ letterSpacing: '-0.005em' }}>
             {method.title}
           </div>
-          <div className="text-xs text-[#525964]">{method.subtitle}</div>
+          <div className="text-[13px] text-[#525964] mt-0.5">{method.subtitle}</div>
         </div>
         <ChevronDown
           className={`w-5 h-5 text-[#8A919C] flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
         />
       </button>
       {open && (
-        <div className="px-4 pb-5 pt-1 border-t border-[#F1F3F6]">
-          <ol className="space-y-3 mt-3">
+        <div className="px-5 pb-6 pt-2 border-t border-[#F1F3F6]">
+          <ol className="space-y-4 mt-4">
             {method.steps.map((step, i) => {
               const text = typeof step === 'string' ? step : step.text
               return (
-                <li key={i} className="flex gap-3">
-                  <span className="flex-shrink-0 w-6 h-6 rounded-full bg-[#F6F7F9] text-[#525964] text-[12px] font-mono font-semibold flex items-center justify-center">
+                <li key={i} className="flex gap-3.5">
+                  <span className="flex-shrink-0 w-7 h-7 rounded-full bg-[#F6F7F9] text-[#525964] text-[13px] font-mono font-semibold flex items-center justify-center">
                     {i + 1}
                   </span>
-                  <span className="text-[13px] text-[#0D1117] leading-relaxed pt-0.5">{text}</span>
+                  <span className="text-[14px] text-[#0D1117] leading-relaxed pt-0.5">{text}</span>
                 </li>
               )
             })}
@@ -305,58 +319,78 @@ function AccountHero({ mode }: { mode: 'savings' | 'credit' }) {
 
   return (
     <div
-      className="relative overflow-hidden rounded-2xl p-5 md:p-6 text-white"
-      style={{ background: cardGrad, boxShadow: '0 12px 24px -10px rgba(13,17,23,0.15)' }}
+      className="relative overflow-hidden rounded-3xl p-8 md:p-10 text-white"
+      style={{ background: cardGrad, boxShadow: '0 20px 40px -16px rgba(13,17,23,0.25)' }}
     >
       <div className="absolute inset-0 pointer-events-none opacity-30">
         <div
-          className="absolute -top-20 -right-16 w-56 h-56 rounded-full"
+          className="absolute -top-32 -right-24 w-96 h-96 rounded-full"
           style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.4), transparent 60%)' }}
+        />
+        <div
+          className="absolute -bottom-32 -left-20 w-72 h-72 rounded-full"
+          style={{ background: 'radial-gradient(circle, rgba(255,255,255,0.15), transparent 60%)' }}
         />
       </div>
 
-      <div className="relative flex justify-between items-start gap-3 mb-5">
+      <div className="relative grid md:grid-cols-[1fr_auto] gap-8 items-center">
+        {/* Left: account info */}
         <div>
-          <Eyebrow color="rgba(255,255,255,0.7)">
-            {isSavings ? 'Cuenta destino · Ahorros' : 'Tarjeta destino · Crédito'}
-          </Eyebrow>
-          <div className="font-semibold text-lg mt-1 flex items-center gap-2">
-            {isSavings ? (
-              <Landmark className="w-4 h-4" />
-            ) : (
-              <CreditCard className="w-4 h-4" />
-            )}
-            {data.bank} {!isSavings && '· Visa'}
-          </div>
-        </div>
-        <span className="text-[10px] uppercase tracking-wider font-bold bg-white/15 border border-white/25 px-2.5 py-1 rounded-full">
-          Oficial
-        </span>
-      </div>
-
-      <div className="relative bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-4">
-        <Eyebrow color="rgba(255,255,255,0.7)">{isSavings ? 'Número de cuenta' : 'Número de tarjeta'}</Eyebrow>
-        <div className="flex items-center justify-between gap-3 mt-1.5">
-          <div className="font-mono text-xl md:text-2xl font-medium tracking-[0.05em] truncate">
-            {data.number}
-          </div>
-          <CopyButton value={data.number} />
-        </div>
-      </div>
-
-      <div className="relative grid grid-cols-2 gap-4 mt-4 text-xs">
-        <div>
-          <Eyebrow color="rgba(255,255,255,0.6)">Titular</Eyebrow>
-          <div className="font-semibold text-white mt-1">{data.holder}</div>
-        </div>
-        {!isSavings && (
-          <div className="text-right">
-            <Eyebrow color="rgba(255,255,255,0.6)">ID · Últimos 5</Eyebrow>
-            <div className="font-mono font-medium text-white mt-1">
-              {CREDIT_CARD_DESTINO.cedula} · {CREDIT_CARD_DESTINO.numberShort}
+          <div className="flex items-center gap-3 mb-6">
+            <span
+              className="w-10 h-10 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center flex-shrink-0"
+              aria-hidden
+            >
+              {isSavings ? <Landmark className="w-5 h-5" /> : <CreditCard className="w-5 h-5" />}
+            </span>
+            <div>
+              <Eyebrow color="rgba(255,255,255,0.7)">
+                {isSavings ? 'Cuenta destino · Ahorros' : 'Tarjeta destino · Crédito'}
+              </Eyebrow>
+              <div className="font-semibold text-lg md:text-xl mt-0.5">
+                {data.bank} {!isSavings && '· Visa'}
+              </div>
             </div>
           </div>
-        )}
+
+          <Eyebrow color="rgba(255,255,255,0.7)">
+            {isSavings ? 'Número de cuenta' : 'Número de tarjeta'}
+          </Eyebrow>
+          <div className="font-mono text-3xl md:text-4xl lg:text-[42px] font-medium tracking-[0.04em] mt-2 leading-none break-all">
+            {data.number}
+          </div>
+
+          <div className="mt-7 flex flex-wrap gap-x-10 gap-y-4">
+            <div>
+              <Eyebrow color="rgba(255,255,255,0.65)">Titular</Eyebrow>
+              <div className="font-semibold text-white mt-1 text-base md:text-lg">{data.holder}</div>
+            </div>
+            {!isSavings && (
+              <>
+                <div>
+                  <Eyebrow color="rgba(255,255,255,0.65)">Identificación</Eyebrow>
+                  <div className="font-mono font-medium text-white mt-1 text-base">
+                    {CREDIT_CARD_DESTINO.cedula}
+                  </div>
+                </div>
+                <div>
+                  <Eyebrow color="rgba(255,255,255,0.65)">Últimos 5</Eyebrow>
+                  <div className="font-mono font-medium text-white mt-1 text-base">
+                    {CREDIT_CARD_DESTINO.numberShort}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Right: copy button + verified pill */}
+        <div className="flex flex-col items-stretch gap-3 md:items-end md:min-w-[180px]">
+          <CopyButton value={data.number} size="lg" />
+          <div className="inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold uppercase tracking-wider bg-white/15 border border-white/25 px-3 py-1.5 rounded-full">
+            <ShieldCheck className="w-3.5 h-3.5" /> Cuenta verificada
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -389,7 +423,7 @@ export function PaymentMethods({
           </h2>
           <p className="text-sm text-[#525964] m-0 max-w-xl">
             Paga directamente a Bancolombia. Sólo aceptamos depósitos a nombre de{' '}
-            <strong className="text-[#0D1117]">CREDION SAS / JUAN D. PASCUAL CH.</strong>.
+            <strong className="text-[#0D1117]">Juan David Pascual Chamorro</strong>.
           </p>
         </div>
         <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-[#E6F4F8] text-[#006984] rounded-full text-xs font-semibold">
@@ -429,47 +463,65 @@ export function PaymentMethods({
         </button>
       </div>
 
-      {/* Account hero + methods grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-5">
-        <div className="space-y-4">
-          <AccountHero mode={tab} />
+      {/* Account hero full-width */}
+      <AccountHero mode={tab} />
 
-          {/* Tips */}
-          <div className="bg-[#F9FAFB] border border-[#E9ECF1] rounded-xl p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <ShieldCheck className="w-4 h-4 text-[#006984]" />
-              <span className="font-semibold text-sm">Antes de pagar</span>
-            </div>
-            <ul className="text-[12px] text-[#525964] space-y-1.5 list-disc list-inside marker:text-[#0096B8]">
-              <li>Verifica el número {isSavings ? 'de cuenta' : 'de tarjeta'} dígito por dígito.</li>
-              <li>Confirma que el monto coincida con tu cuota.</li>
-              <li>Realiza la operación en lugares seguros y privados.</li>
-              <li>Guarda siempre el comprobante (foto, PDF o impreso).</li>
-            </ul>
-          </div>
-        </div>
-
-        {/* Methods */}
-        <div className="space-y-3">
-          <h3 className="text-sm font-semibold text-[#0D1117] mb-2">
+      {/* Methods header */}
+      <div className="mt-10 mb-5 flex items-end justify-between flex-wrap gap-3">
+        <div>
+          <Eyebrow color="#525964">Métodos disponibles</Eyebrow>
+          <h3 className="text-xl md:text-2xl font-semibold mt-1 text-[#0D1117]" style={{ letterSpacing: '-0.015em' }}>
             {isSavings ? 'Cuatro formas de transferir' : 'Cuatro formas de pagar tu tarjeta'}
           </h3>
-          {(isSavings ? SAVINGS_METHODS : CREDIT_METHODS).map((m, i) => (
-            <MethodAccordion key={m.id} method={m} isFirst={i === 0} />
-          ))}
+        </div>
+        <p className="text-[13px] text-[#525964] max-w-sm">
+          Elegí el que más te convenga. Cada uno tiene los pasos detallados.
+        </p>
+      </div>
 
-          {/* Warning for credit tab — medios que NO funcionan */}
-          {!isSavings && (
-            <div className="flex items-start gap-3 p-4 bg-[#FFF7ED] border border-[#FED7AA] rounded-xl">
-              <AlertTriangle className="w-5 h-5 text-[#9A3412] flex-shrink-0 mt-0.5" />
-              <div>
-                <div className="font-semibold text-sm text-[#9A3412]">No funcionan para esta tarjeta</div>
-                <div className="text-[12px] text-[#9A3412]/80 mt-0.5">
-                  Efecty, Baloto, Gana, SuperGiros, D1, Moviired, SuRed.
-                </div>
-              </div>
+      {/* Methods grid 2-cols on desktop */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {(isSavings ? SAVINGS_METHODS : CREDIT_METHODS).map((m, i) => (
+          <MethodAccordion key={m.id} method={m} isFirst={i === 0} />
+        ))}
+      </div>
+
+      {/* Warning for credit tab — medios que NO funcionan */}
+      {!isSavings && (
+        <div className="mt-5 flex items-start gap-3 p-5 bg-[#FFF7ED] border border-[#FED7AA] rounded-2xl">
+          <AlertTriangle className="w-5 h-5 text-[#9A3412] flex-shrink-0 mt-0.5" />
+          <div>
+            <div className="font-semibold text-sm text-[#9A3412]">No funcionan para esta tarjeta</div>
+            <div className="text-[13px] text-[#9A3412]/80 mt-1">
+              Efecty, Baloto, Gana, SuperGiros, D1, Moviired, SuRed.
             </div>
-          )}
+          </div>
+        </div>
+      )}
+
+      {/* Tips row */}
+      <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="bg-[#F9FAFB] border border-[#E9ECF1] rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <ShieldCheck className="w-4 h-4 text-[#006984]" />
+            <span className="font-semibold text-sm">Antes de pagar</span>
+          </div>
+          <ul className="text-[13px] text-[#525964] space-y-2 list-disc list-inside marker:text-[#0096B8]">
+            <li>Verificá el número {isSavings ? 'de cuenta' : 'de tarjeta'} dígito por dígito.</li>
+            <li>Confirmá que el monto coincida con tu cuota.</li>
+            <li>Realizá la operación en lugares seguros.</li>
+          </ul>
+        </div>
+        <div className="bg-[#F9FAFB] border border-[#E9ECF1] rounded-2xl p-5">
+          <div className="flex items-center gap-2 mb-3">
+            <Check className="w-4 h-4 text-[#15803D]" />
+            <span className="font-semibold text-sm">Después de pagar</span>
+          </div>
+          <ul className="text-[13px] text-[#525964] space-y-2 list-disc list-inside marker:text-[#15803D]">
+            <li>Guardá siempre el comprobante (foto, PDF o impreso).</li>
+            <li>Envíalo por WhatsApp para registrar tu pago.</li>
+            <li>Conservá el soporte hasta confirmar la acreditación.</li>
+          </ul>
         </div>
       </div>
 
