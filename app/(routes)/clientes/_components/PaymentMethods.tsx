@@ -38,7 +38,7 @@ const SAVINGS_DESTINO = {
 
 const CREDIT_CARD_DESTINO = {
   bank: 'Bancolombia',
-  brand: 'Visa',
+  brand: 'MasterCard',
   number: '5491 5805 7507 2083',
   numberShort: '72083',
   holder: HOLDER_FULL_NAME,
@@ -348,7 +348,7 @@ function AccountHero({ mode }: { mode: 'savings' | 'credit' }) {
                 {isSavings ? 'Cuenta destino · Ahorros' : 'Tarjeta destino · Crédito'}
               </Eyebrow>
               <div className="font-semibold text-lg md:text-xl mt-0.5">
-                {data.bank} {!isSavings && '· Visa'}
+                {data.bank} {!isSavings && `· ${CREDIT_CARD_DESTINO.brand}`}
               </div>
             </div>
           </div>
