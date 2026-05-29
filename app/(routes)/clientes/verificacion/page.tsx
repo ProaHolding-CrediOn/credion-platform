@@ -76,7 +76,9 @@ export default function ClientesVerificacionPage() {
         return
       }
       setToken(data.token, identificacion)
-      router.push('/clientes/dashboard')
+      // Si tiene mas de 1 credito, vamos al selector. Si tiene 1, al dashboard.
+      const count = typeof data.creditsCount === 'number' ? data.creditsCount : 1
+      router.push(count > 1 ? '/clientes/seleccionar' : '/clientes/dashboard')
     } catch {
       setError('Error de conexión. Intenta de nuevo.')
     } finally {

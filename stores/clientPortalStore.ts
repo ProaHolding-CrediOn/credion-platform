@@ -39,11 +39,17 @@ export type ClientCredit = {
 type ClientPortalState = {
   token: string | null
   identificacion: string | null
-  credit: ClientCredit | null
+  /** Lista completa de créditos del cliente (puede haber varios por la misma cédula). */
+  credits: ClientCredit[] | null
+  /** ID del crédito activo (el que muestra el dashboard ahora). */
+  activeCreditId: string | null
   hydrated: boolean
 
   setToken: (token: string, identificacion: string) => void
-  setCredit: (credit: ClientCredit) => void
+  setCredits: (credits: ClientCredit[]) => void
+  setActiveCreditId: (id: string) => void
+  /** Devuelve el crédito activo (o null si no hay). */
+  getActiveCredit: () => ClientCredit | null
   logout: () => void
   isAuthenticated: () => boolean
 }
@@ -57,19 +63,46 @@ export const useClientPortal = create<ClientPortalState>()(
     (set, get) => ({
       token: null,
       identificacion: null,
-      credit: null,
+      credits: null,
+      activeCreditId: null,
       hydrated: false,
 
       setToken: (token, identificacion) => set({ token, identificacion }),
 
-      setCredit: (credit) => set({ credit }),
+      setCredits: (credits) => {
+        // Si no hay activo o el activo ya no existe en la lista, seteamos al primero
+        const state = get()
+        const stillValid = state.activeCreditId && credits.some((c) => c.id === state.activeCreditId)
+        set({
+          credits,
+          activeCreditId: stillValid ? state.activeCreditId : credits[0]?.id ?? null,
+        })
+      },
 
-      logout: () => set({ token: null, identificacion: null, credit: null }),
+      setActiveCreditId: (id) => {
+        const state = get()
+        if (!state.credits?.some((c) => c.id === id)) return
+        set({ activeCreditId: id })
+      },
+
+      getActiveCredit: () => {
+        const state = get()
+        if (!state.credits || !state.activeCreditId) return null
+        return state.credits.find((c) => c.id === state.activeCreditId) ?? null
+      },
+
+      logout: () =>
+        set({
+          token: null,
+          identificacion: null,
+          credits: null,
+          activeCreditId: null,
+        }),
 
       isAuthenticated: () => !!get().token,
     }),
     {
-      name: 'client-portal-storage',
+      name: 'client-portal-storage-v2',
       storage: createJSONStorage(() => sessionStorage),
       onRehydrateStorage: () => (state) => {
         if (state) state.hydrated = true
