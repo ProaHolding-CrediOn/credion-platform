@@ -17,8 +17,11 @@ export type ClientCredit = {
     identificacion: string
   }
   vehiculo: {
-    // marca/modelo pueden venir como string o number según el tipo de campo del form
+    // marca/linea/modelo pueden venir como string o number según el tipo de campo del form
     marca: string | number | null
+    /** En el form se llama "lineaDelVehiculo" — ej. "GRAND I10". Es el modelo del auto. */
+    linea: string | number | null
+    /** En el form se llama "modeloDelVehiculo" — es el AÑO del auto (ej. 2015). */
     modelo: string | number | null
     valorComercial: number | null
   }

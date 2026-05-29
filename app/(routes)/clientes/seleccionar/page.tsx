@@ -205,7 +205,14 @@ export default function ClientesSeleccionarPage() {
       <section className="px-5 md:px-10 lg:px-16 xl:px-20 pt-6 pb-12 grid grid-cols-1 md:grid-cols-2 gap-5">
         {credits.map((c, i) => {
           const status = statusInfo(c.status)
-          const vehicleStr = [c.vehiculo.marca, c.vehiculo.modelo].filter(Boolean).join(' ').trim() || 'Vehículo'
+          const vehicleStr =
+            [c.vehiculo.marca, c.vehiculo.linea].filter(Boolean).join(' ').trim() || 'Vehículo'
+          const vehicleMeta = [
+            c.vehiculo.modelo ? `Modelo ${c.vehiculo.modelo}` : null,
+            c.vehiculo.valorComercial != null ? formatCop(c.vehiculo.valorComercial) : null,
+          ]
+            .filter(Boolean)
+            .join(' · ')
           const customIdDisplay = c.customId ? c.customId.replace(/-/g, ' · ') : '—'
           return (
             <button
@@ -239,8 +246,8 @@ export default function ClientesSeleccionarPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="font-semibold text-[#0D1117] truncate">{vehicleStr}</div>
-                    {c.vehiculo.valorComercial != null && (
-                      <div className="text-xs text-[#525964]">{formatCop(c.vehiculo.valorComercial)}</div>
+                    {vehicleMeta && (
+                      <div className="text-xs text-[#525964] truncate">{vehicleMeta}</div>
                     )}
                   </div>
                 </div>
