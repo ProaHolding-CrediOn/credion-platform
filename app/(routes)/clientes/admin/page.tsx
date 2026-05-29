@@ -81,7 +81,8 @@ export default function ClientesAdminPreviewPage() {
         return
       }
       setToken(data.token, id)
-      router.push('/clientes/dashboard')
+      const count = typeof data.creditsCount === 'number' ? data.creditsCount : 1
+      router.push(count > 1 ? '/clientes/seleccionar' : '/clientes/dashboard')
     } catch {
       setError('Error de conexión. Intentá de nuevo.')
     } finally {

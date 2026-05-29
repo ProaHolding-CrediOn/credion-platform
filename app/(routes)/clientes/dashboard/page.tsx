@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import {
@@ -11,6 +11,8 @@ import {
   AlertCircle,
   MessageCircle,
   Receipt,
+  ChevronsUpDown,
+  Check,
 } from 'lucide-react'
 import { useClientPortal, ClientCredit } from '@/stores/clientPortalStore'
 import { PaymentMethods } from '../_components/PaymentMethods'
@@ -100,12 +102,18 @@ export default function ClientesDashboardPage() {
   const router = useRouter()
   const token = useClientPortal((s) => s.token)
   const hydrated = useClientPortal((s) => s.hydrated)
-  const storeCredit = useClientPortal((s) => s.credit)
-  const setStoreCredit = useClientPortal((s) => s.setCredit)
+  const storeCredits = useClientPortal((s) => s.credits)
+  const storeActiveId = useClientPortal((s) => s.activeCreditId)
+  const setStoreCredits = useClientPortal((s) => s.setCredits)
+  const setActiveCreditId = useClientPortal((s) => s.setActiveCreditId)
   const logout = useClientPortal((s) => s.logout)
 
-  const [credit, setCredit] = useState<ClientCredit | null>(storeCredit)
-  const [loading, setLoading] = useState(!storeCredit)
+  // Crédito activo derivado del store (con fallback al primero de la lista).
+  const credit: ClientCredit | null =
+    storeCredits?.find((c) => c.id === storeActiveId) ?? storeCredits?.[0] ?? null
+  const credits: ClientCredit[] = storeCredits ?? []
+
+  const [loading, setLoading] = useState(!storeCredits)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
@@ -117,9 +125,9 @@ export default function ClientesDashboardPage() {
 
     let cancelled = false
 
-    const fetchCredit = async () => {
+    const fetchCredits = async () => {
       try {
-        const res = await fetch('/api/client-portal/credit', {
+        const res = await fetch('/api/client-portal/credits', {
           headers: { Authorization: `Bearer ${token}` },
         })
         if (cancelled) return
@@ -133,9 +141,12 @@ export default function ClientesDashboardPage() {
           setError(data.error || 'No pudimos cargar tu crédito.')
           return
         }
-        const c = data.credit as ClientCredit
-        setCredit(c)
-        setStoreCredit(c)
+        const list = (data.credits as ClientCredit[]) || []
+        if (list.length === 0) {
+          setError('No encontramos créditos asociados a tu cédula.')
+          return
+        }
+        setStoreCredits(list)
       } catch {
         if (!cancelled) setError('Error de conexión. Intenta recargar la página.')
       } finally {
@@ -143,11 +154,11 @@ export default function ClientesDashboardPage() {
       }
     }
 
-    fetchCredit()
+    fetchCredits()
     return () => {
       cancelled = true
     }
-  }, [hydrated, token, router, setStoreCredit, logout])
+  }, [hydrated, token, router, setStoreCredits, logout])
 
   const handleLogout = () => {
     logout()
@@ -199,7 +210,14 @@ export default function ClientesDashboardPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-center gap-2.5 flex-wrap">
+          {credits.length > 1 && (
+            <CreditSwitcher
+              credits={credits}
+              activeId={credit.id}
+              onPick={(id) => setActiveCreditId(id)}
+            />
+          )}
           <a
             href={`https://wa.me/${WHATSAPP}?text=${encodeURIComponent('Hola, necesito soporte con mi crédito.')}`}
             target="_blank"
@@ -380,6 +398,111 @@ function SummaryRow({ label, value, mono, last }: { label: string; value: string
     >
       <span className="text-[#525964]">{label}</span>
       <span className={`font-semibold text-[#0D1117] ${mono ? 'font-mono' : ''}`}>{value}</span>
+    </div>
+  )
+}
+
+// ──────────────────────────────────────────────────────────────
+// Credit switcher (header, solo si credits.length > 1)
+// ──────────────────────────────────────────────────────────────
+
+function CreditSwitcher({
+  credits,
+  activeId,
+  onPick,
+}: {
+  credits: ClientCredit[]
+  activeId: string
+  onPick: (id: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    const onClickOutside = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onClickOutside)
+    return () => document.removeEventListener('mousedown', onClickOutside)
+  }, [open])
+
+  const activeIndex = credits.findIndex((c) => c.id === activeId)
+  const active = credits[activeIndex] || credits[0]
+  const activeCustomIdDisplay = active.customId ? active.customId.replace(/-/g, ' · ') : '—'
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="px-3.5 py-2 bg-white border border-[#E9ECF1] rounded-xl text-[13px] font-medium text-[#0D1117] inline-flex items-center gap-2.5 hover:border-[#0096B8] transition"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span className="font-mono text-[10px] uppercase tracking-wider text-[#525964]">
+          Crédito {activeIndex + 1}/{credits.length}
+        </span>
+        <span className="font-mono text-[12px] text-[#0D1117]">{activeCustomIdDisplay}</span>
+        <ChevronsUpDown className="w-3.5 h-3.5 text-[#8A919C]" />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full mt-2 w-80 bg-white border border-[#E9ECF1] rounded-2xl shadow-lg z-30 overflow-hidden">
+          <div className="px-4 py-3 border-b border-[#F1F3F6]">
+            <div className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-[#525964]">
+              Tus créditos
+            </div>
+            <div className="text-[12px] text-[#525964] mt-0.5">Elegí cuál querés ver</div>
+          </div>
+          <ul role="listbox" className="max-h-80 overflow-y-auto">
+            {credits.map((c, i) => {
+              const isActive = c.id === activeId
+              const status = statusInfo(c.status)
+              const customIdDisplay = c.customId ? c.customId.replace(/-/g, ' · ') : '—'
+              const vehicle = [c.vehiculo.marca, c.vehiculo.modelo].filter(Boolean).join(' ').trim()
+              return (
+                <li key={c.id}>
+                  <button
+                    type="button"
+                    role="option"
+                    aria-selected={isActive}
+                    onClick={() => {
+                      onPick(c.id)
+                      setOpen(false)
+                    }}
+                    className={`w-full text-left px-4 py-3 hover:bg-[#F9FAFB] transition flex items-start gap-3 ${
+                      isActive ? 'bg-[#F2FAFC]' : ''
+                    }`}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-mono text-[10px] uppercase tracking-wider text-[#8A919C]">
+                          Crédito {i + 1}
+                        </span>
+                        <span
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider"
+                          style={{ background: status.chipBg, color: status.chipFg }}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full" style={{ background: status.dotBg }} />
+                          {status.label}
+                        </span>
+                      </div>
+                      <div className="font-mono text-[13px] text-[#0D1117] font-medium">
+                        {customIdDisplay}
+                      </div>
+                      {vehicle && (
+                        <div className="text-[12px] text-[#525964] mt-0.5 truncate">{vehicle}</div>
+                      )}
+                    </div>
+                    {isActive && <Check className="w-4 h-4 text-[#0096B8] flex-shrink-0 mt-1" />}
+                  </button>
+                </li>
+              )
+            })}
+          </ul>
+        </div>
+      )}
     </div>
   )
 }
