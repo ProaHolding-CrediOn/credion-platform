@@ -354,10 +354,17 @@ export default function ClientesDashboardPage() {
           <div className="flex-1 min-w-0">
             <Eyebrow>Garantía del crédito</Eyebrow>
             <div className="text-lg font-semibold mt-1 truncate" style={{ letterSpacing: '-0.01em' }}>
-              {credit.vehiculo.marca || '—'} {credit.vehiculo.modelo || ''}
+              {[credit.vehiculo.marca, credit.vehiculo.linea].filter(Boolean).join(' ') || 'Vehículo'}
             </div>
             <div className="text-[13px] text-[#525964]">
-              {credit.vehiculo.valorComercial != null ? `Valor comercial · ${formatCop(credit.vehiculo.valorComercial)}` : 'Datos del vehículo'}
+              {[
+                credit.vehiculo.modelo ? `Modelo ${credit.vehiculo.modelo}` : null,
+                credit.vehiculo.valorComercial != null
+                  ? `Valor ${formatCop(credit.vehiculo.valorComercial)}`
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(' · ') || 'Datos del vehículo'}
             </div>
           </div>
         </div>
