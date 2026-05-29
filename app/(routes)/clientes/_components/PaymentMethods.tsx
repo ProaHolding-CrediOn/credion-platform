@@ -256,8 +256,8 @@ const BADGE_BG: Record<Method['badgeColor'], { bg: string; fg: string }> = {
   orange: { bg: '#FFF7ED', fg: '#9A3412' },
 }
 
-function MethodAccordion({ method, isFirst }: { method: Method; isFirst?: boolean }) {
-  const [open, setOpen] = useState(!!isFirst)
+function MethodAccordion({ method }: { method: Method }) {
+  const [open, setOpen] = useState(false)
   const Icon = method.icon
   const badge = BADGE_BG[method.badgeColor]
   return (
@@ -482,7 +482,7 @@ export function PaymentMethods({
       {/* Methods grid 2-cols on desktop */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {(isSavings ? SAVINGS_METHODS : CREDIT_METHODS).map((m, i) => (
-          <MethodAccordion key={m.id} method={m} isFirst={i === 0} />
+          <MethodAccordion key={m.id} method={m} />
         ))}
       </div>
 
