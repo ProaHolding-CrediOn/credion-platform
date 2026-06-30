@@ -69,7 +69,7 @@ export default memo(function FileUploadField({
   const uploadFile = (
     file: File,
     onProgress: (percent: number) => void
-  ): Promise<{ id: string } | null> => {
+  ): Promise<{ id?: string; error?: string }> => {
     return new Promise((resolve) => {
       const token = localStorage.getItem("token");
 
@@ -91,14 +91,27 @@ export default memo(function FileUploadField({
             const response = JSON.parse(xhr.responseText);
             resolve({ id: response?.doc?.id });
           } catch {
-            resolve(null);
+            resolve({ error: "No se pudo procesar la respuesta del servidor" });
           }
         } else {
-          resolve(null);
+          // 401 = sesion expirada (lo marca el route /api/media). Mensaje claro
+          // para que el cliente recargue en vez de reintentar a ciegas.
+          let message = "Error al subir el archivo";
+          try {
+            const parsed = JSON.parse(xhr.responseText);
+            if (parsed?.error) message = parsed.error;
+          } catch {
+            /* respuesta sin JSON: dejamos el mensaje por defecto */
+          }
+          if (xhr.status === 401) {
+            message =
+              "Tu sesión expiró. Recarga la página e ingresa de nuevo para continuar.";
+          }
+          resolve({ error: message });
         }
       };
 
-      xhr.onerror = () => resolve(null);
+      xhr.onerror = () => resolve({ error: "Error de conexión al subir el archivo" });
 
       xhr.open("POST", "/api/media");
       if (token) {
@@ -142,7 +155,9 @@ export default memo(function FileUploadField({
         const isValid = validate(uploadedNow);
         onValidationChange?.(name, isValid, uploadedNow);
       } else {
-        // Subida fallida: mostrar error temporal
+        // Subida fallida: mostrar el motivo (sesion expirada, etc.) y un
+        // error temporal en la barra de progreso del archivo.
+        setError(result?.error ?? "Error al subir el archivo");
         setUploadingFiles((prev) =>
           prev.map((f) =>
             f.id === tempId ? { ...f, error: true, progress: 100 } : f
