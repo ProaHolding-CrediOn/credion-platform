@@ -71,7 +71,10 @@ export default memo(function FileUploadField({
     onProgress: (percent: number) => void
   ): Promise<{ id?: string; error?: string }> => {
     return new Promise((resolve) => {
-      const token = localStorage.getItem("token");
+      // 'token' lo setean los flujos con signedUrl (desembolso/vehiculo/
+      // complementario); 'auth_token' el flujo abierto verificado por OTP.
+      // Se prioriza 'token' para no romper los formularios por signedUrl.
+      const token = localStorage.getItem("token") ?? localStorage.getItem("auth_token");
 
       const formData = new FormData();
       formData.append("file", file);
