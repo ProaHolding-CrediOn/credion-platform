@@ -37,10 +37,16 @@ export default function TelefonoPage() {
     }
   };
 
+  // Propaga el destino post-verificación (?next=) a la página de OTP
+  const getNextParam = () => {
+    const next = new URLSearchParams(window.location.search).get('next');
+    return next ? `?next=${encodeURIComponent(next)}` : '';
+  };
+
   const handleSubmit = async () => {
     const result = await sendPhone(phone);
     if (result.success) {
-      router.push('/verificacion/otp')
+      router.push(`/verificacion/otp${getNextParam()}`)
     }
   };
 
