@@ -1,5 +1,6 @@
 "use client";
 
+import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { mapPayloadFormToSteps } from "@/utils/mapPayloadFormToSteps";
 import {
@@ -21,6 +22,7 @@ import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 
 export default function RegistroCompraventaClient() {
+  const { isAuthenticated, loading } = useAuth();
   const { setFormData, setBlockStates, setFieldStates, setFormVersion, getFormVersion } = useFormCompraventa();
   const [steps, setSteps] = useState<any[]>([]);
   const [showDialog, setShowDialog] = useState(false);
@@ -32,7 +34,12 @@ export default function RegistroCompraventaClient() {
   const submitted = useFormCompraventa((state) => state.submitted);
 
   useEffect(() => {
-    // Formulario PÚBLICO sin verificación: se carga directo, sin OTP.
+    // Verificación por OTP (WhatsApp + SMS): si no está verificado, va a
+    // verificar el teléfono y regresa a /compraventas.
+    if (!loading && !isAuthenticated) {
+      window.location.href = "/verificacion/telefono?next=%2Fcompraventas";
+    }
+
     const fetchForm = async () => {
       try {
         // El GET no exige auth (requests.read es abierto).
@@ -59,7 +66,7 @@ export default function RegistroCompraventaClient() {
     };
 
     fetchForm();
-  }, []);
+  }, [isAuthenticated, loading]);
 
   useEffect(() => {
     const state = useFormCompraventa.getState();
@@ -136,7 +143,10 @@ export default function RegistroCompraventaClient() {
     try {
       const response = await fetch('/api/forms/compraventa', {
         method: "POST",
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+        },
         body: JSON.stringify({ formCompraventa: formData, version: getFormVersion() }),
       })
 
@@ -189,7 +199,7 @@ export default function RegistroCompraventaClient() {
     );
   }
 
-  if (!steps.length) {
+  if (loading || !steps.length) {
     return (
       <div className="flex flex-col bg-background text-foreground">
         <main className="flex-1 w-full">
@@ -217,7 +227,7 @@ export default function RegistroCompraventaClient() {
     <div className="flex flex-col bg-background text-foreground min-h-screen">
       <main className="flex w-full flex-1 items-start justify-center px-4 py-8 sm:px-6 md:px-8">
         <div className="w-full max-w-2xl space-y-6">
-          {!showForm ? (
+          {!showForm && !loading ? (
             <div className="bg-card sm:bg-card sm:rounded-lg sm:shadow-md p-4 md:p-6 w-full space-y-4">
                 <div className="flex flex-col items-center mb-6">
                     <Image

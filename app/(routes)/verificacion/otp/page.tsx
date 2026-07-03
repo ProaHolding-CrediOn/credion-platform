@@ -26,33 +26,11 @@ export default function OtpPage() {
     }
   }, [timeLeft])
 
-  // Destino post-verificación (?next=): solo se acepta un path interno del
-  // mismo origen. Resolvemos el valor contra el origen real y lo aceptamos solo
-  // si el origen no cambia; así se bloquean open-redirects vía '//', '/\',
-  // tabs/saltos de línea ('/%09/evil.com') o URLs absolutas. Devolvemos un path
-  // limpio (nunca el string crudo).
-  const getSafeNext = () => {
-    const raw = new URLSearchParams(window.location.search).get('next');
-    if (!raw) return '/solicitud/formulario';
-    try {
-      const url = new URL(raw, window.location.origin);
-      if (url.origin === window.location.origin) {
-        return url.pathname + url.search + url.hash;
-      }
-    } catch {
-      // next malformado -> destino por defecto
-    }
-    return '/solicitud/formulario';
-  };
-
   useEffect(() => {
     const phoneNumber = JSON.parse(localStorage.getItem("phoneNumber") as string);
 
     if (!phoneNumber) {
-      const next = new URLSearchParams(window.location.search).get('next');
-      window.location.href = next
-        ? `/verificacion/telefono?next=${encodeURIComponent(next)}`
-        : "/verificacion/telefono";
+      window.location.href = "/verificacion/telefono";
     } else {
       setPhone(phoneNumber);
     }
@@ -72,9 +50,6 @@ export default function OtpPage() {
       if (data.token) {
         localStorage.setItem('auth_token', data.token)
         localStorage.removeItem('phoneNumber')
-        // Limpia un 'token' residual de un flujo signedUrl abandonado: la subida
-        // de adjuntos debe usar el auth_token fresco de esta verificación.
-        localStorage.removeItem('token')
         return { success: true, token: data.token }
       }
       return { success: false }
@@ -114,7 +89,7 @@ export default function OtpPage() {
   const handleSubmit = async () => {
     const result = await verifyOtp(phone, code);
     if (result.success) {
-      window.location.href = getSafeNext();
+      window.location.href = "/solicitud/formulario";
     }
   };
 
