@@ -1,6 +1,5 @@
 "use client";
 
-import { useAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { mapPayloadFormToSteps } from "@/utils/mapPayloadFormToSteps";
 import {
@@ -22,7 +21,6 @@ import Link from "next/link";
 import { ArrowRightIcon } from "lucide-react";
 
 export default function RegistroCompraventaClient() {
-  const { isAuthenticated, loading } = useAuth();
   const { setFormData, setBlockStates, setFieldStates, setFormVersion, getFormVersion } = useFormCompraventa();
   const [steps, setSteps] = useState<any[]>([]);
   const [showDialog, setShowDialog] = useState(false);
@@ -34,18 +32,12 @@ export default function RegistroCompraventaClient() {
   const submitted = useFormCompraventa((state) => state.submitted);
 
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      window.location.href = "/verificacion/telefono?next=%2Fcompraventas";
-    }
-
+    // Formulario PÚBLICO sin verificación: se carga directo, sin OTP.
     const fetchForm = async () => {
       try {
-        // El GET no exige auth (requests.read es abierto), pero pasamos el
-        // token si existe para mantener el mismo patrón de los otros forms.
-        const token = localStorage.getItem('auth_token');
+        // El GET no exige auth (requests.read es abierto).
         const response = await fetch('/api/forms/compraventa', {
           method: "GET",
-          headers: token ? { 'Authorization': `Bearer ${token}` } : undefined
         });
 
         if (!response.ok) {
@@ -67,7 +59,7 @@ export default function RegistroCompraventaClient() {
     };
 
     fetchForm();
-  }, [isAuthenticated, loading]);
+  }, []);
 
   useEffect(() => {
     const state = useFormCompraventa.getState();
@@ -144,9 +136,7 @@ export default function RegistroCompraventaClient() {
     try {
       const response = await fetch('/api/forms/compraventa', {
         method: "POST",
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ formCompraventa: formData, version: getFormVersion() }),
       })
 
@@ -199,7 +189,7 @@ export default function RegistroCompraventaClient() {
     );
   }
 
-  if (loading || !steps.length) {
+  if (!steps.length) {
     return (
       <div className="flex flex-col bg-background text-foreground">
         <main className="flex-1 w-full">
@@ -227,7 +217,7 @@ export default function RegistroCompraventaClient() {
     <div className="flex flex-col bg-background text-foreground min-h-screen">
       <main className="flex w-full flex-1 items-start justify-center px-4 py-8 sm:px-6 md:px-8">
         <div className="w-full max-w-2xl space-y-6">
-          {!showForm && !loading ? (
+          {!showForm ? (
             <div className="bg-card sm:bg-card sm:rounded-lg sm:shadow-md p-4 md:p-6 w-full space-y-4">
                 <div className="flex flex-col items-center mb-6">
                     <Image
