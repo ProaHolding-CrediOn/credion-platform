@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth, removeAuth } from "@/hooks/useAuth";
 import { useEffect, useState } from "react";
 import { mapPayloadFormToSteps } from "@/utils/mapPayloadFormToSteps";
 import {
@@ -151,8 +151,17 @@ export default function RegistroCompraventaClient() {
       })
 
       if (!response.ok) {
+        // Token OTP vencido/ausente al enviar (el core responde 401): en vez del
+        // callejón "No autorizado", limpiamos el token muerto y mandamos a
+        // re-verificar. Los datos del formulario quedan en el store persistido,
+        // así que al volver a /compraventas siguen ahí para reenviar.
+        if (response.status === 401) {
+          removeAuth()
+          window.location.href = '/verificacion/telefono?next=%2Fcompraventas'
+          return false
+        }
         // El proxy propaga el error del core; mostramos su mensaje si viene
-        // (p.ej. datos inválidos o sesión OTP vencida) en vez del genérico.
+        // (p.ej. datos inválidos) en vez del genérico.
         const data = await response.json().catch(() => null)
         const msg = data?.error ? String(data.error) : 'Error al enviar el formulario'
         const err = new Error(msg) as Error & { userMessage?: string }
