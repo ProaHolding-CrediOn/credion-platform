@@ -5,6 +5,39 @@ import { NextRequest, NextResponse } from 'next/server'
 // definición del formulario de Solicitud del solicitante (mismo Request en Payload).
 const SOLICITUD_REQUEST_ID = '6843a81c9c595f644861a92e'
 
+// El codeudor NO compra el vehículo, así que el Paso 3 "Prefactibilidad de Tipo
+// de Vehículo" no debe ser obligatorio para él. Como el Request es compartido con
+// el formulario del solicitante principal (que SÍ requiere esos datos), relajamos
+// `required` acá, en el proxy del codeudor, para NO afectar al solicitante.
+const PASO_VEHICULO_TITULO = /Prefactibilidad de Tipo de Veh/i
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function deepUnrequire(node: any): void {
+  if (Array.isArray(node)) {
+    node.forEach(deepUnrequire)
+    return
+  }
+  if (!node || typeof node !== 'object') return
+  if (Object.prototype.hasOwnProperty.call(node, 'required')) node.required = false
+  for (const k of Object.keys(node)) deepUnrequire(node[k])
+}
+
+// Busca el/los form(s) del paso de vehículo (por su `title`) y hace opcionales
+// todos sus campos. Defensivo: si la estructura cambia, no rompe (deja el form igual).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function relajarRequeridosVehiculo(node: any): void {
+  if (Array.isArray(node)) {
+    node.forEach(relajarRequeridosVehiculo)
+    return
+  }
+  if (!node || typeof node !== 'object') return
+  if (typeof node.title === 'string' && PASO_VEHICULO_TITULO.test(node.title)) {
+    deepUnrequire(node)
+    return
+  }
+  for (const k of Object.keys(node)) relajarRequeridosVehiculo(node[k])
+}
+
 export async function GET(req: NextRequest) {
   try {
     const token = req.headers.get('Authorization') as string
@@ -24,6 +57,13 @@ export async function GET(req: NextRequest) {
     }
 
     const data = await response.json()
+
+    // Paso 3 (vehículo) opcional SOLO para el codeudor.
+    try {
+      relajarRequeridosVehiculo(data)
+    } catch {
+      /* si la estructura cambió, devolvemos el formulario tal cual */
+    }
 
     return NextResponse.json(data)
   } catch (error) {
