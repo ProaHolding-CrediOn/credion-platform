@@ -33,8 +33,18 @@ import { getJwtExpiryDate } from '@/lib/tokenExpiryTime'
 type Props = {
   signedUrlId: string
   store: ReturnType<typeof createFormStore>
-  apiBase: 'codeudor-solicitud' | 'codeudor-complementario'
-  submitKey: 'formSolicitudCodeudor' | 'formComplementarioCodeudor'
+  // El socio usa este mismo componente: su flujo es idéntico al del codeudor
+  // (mismos formularios, link firmado y validación), solo cambian las rutas.
+  apiBase:
+    | 'codeudor-solicitud'
+    | 'codeudor-complementario'
+    | 'socio-solicitud'
+    | 'socio-complementario'
+  submitKey:
+    | 'formSolicitudCodeudor'
+    | 'formComplementarioCodeudor'
+    | 'formSolicitudSocio'
+    | 'formComplementarioSocio'
   title: string
 }
 
