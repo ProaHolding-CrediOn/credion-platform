@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CheckCircle2, Loader2, Upload, XCircle } from 'lucide-react'
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -27,15 +27,17 @@ function Seccion({
   onListo: (tipo: string, listo: boolean) => void
 }) {
   const [items, setItems] = useState<Item[]>([])
+  // Nombres ya enviados (o en curso) en esta sección. Va en un ref y no en el
+  // estado porque la comprobación tiene que ser SÍNCRONA: leerla desde el
+  // updater de setItems deja pasar el duplicado (el updater no corre al
+  // instante) y el archivo terminaba subido dos veces.
+  const enviadosRef = useRef<Set<string>>(new Set())
 
   async function subir(file: File) {
     // Evita que el mismo archivo se suba dos veces: la gente reintenta al no ver
     // un botón de "enviar", y terminaba duplicado en la ficha.
-    let repetido = false
-    setItems((p) => {
-      repetido = p.some((s) => s.name === file.name && (s.estado === 'ok' || s.estado === 'subiendo'))
-      if (!repetido) return p
-      return [
+    if (enviadosRef.current.has(file.name)) {
+      setItems((p) => [
         ...p,
         {
           id: `dup-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -43,9 +45,10 @@ function Seccion({
           estado: 'duplicado',
           msg: 'Ya lo habías enviado',
         },
-      ]
-    })
-    if (repetido) return
+      ])
+      return
+    }
+    enviadosRef.current.add(file.name)
 
     const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`
     setItems((p) => [...p, { id, name: file.name, estado: 'subiendo' }])
@@ -63,7 +66,10 @@ function Seccion({
         ),
       )
       if (ok) onListo(tipo, true)
+      // Si falló, liberamos el nombre para que puedan reintentar ese archivo.
+      else enviadosRef.current.delete(file.name)
     } catch {
+      enviadosRef.current.delete(file.name)
       setItems((p) =>
         p.map((s) => (s.id === id ? { ...s, estado: 'error', msg: 'Error de conexión' } : s)),
       )
