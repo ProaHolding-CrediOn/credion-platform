@@ -11,22 +11,21 @@ const SOLICITUD_REQUEST_ID = '6843a81c9c595f644861a92e'
 // acá en el proxy y no en la definición del formulario.
 const PASO_VEHICULO_TITULO = /Prefactibilidad de Tipo de Veh/i
 
+// Estructura real del formulario: `layouts[]` son los PASOS, y el título vive
+// dos niveles más adentro, en `layouts[i].layout[j].form.title`. Por eso se
+// busca ahí y se elimina el paso completo del arreglo `layouts`.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function quitarPasoVehiculo(node: any): void {
-  if (Array.isArray(node)) {
-    // Se elimina del array el paso completo del vehículo.
-    for (let i = node.length - 1; i >= 0; i--) {
-      const hijo = node[i]
-      if (hijo && typeof hijo === 'object' && typeof hijo.title === 'string' && PASO_VEHICULO_TITULO.test(hijo.title)) {
-        node.splice(i, 1)
-      } else {
-        quitarPasoVehiculo(hijo)
-      }
-    }
-    return
+function quitarPasoVehiculo(data: any): void {
+  const layouts = data?.layouts
+  if (!Array.isArray(layouts)) return
+  for (let i = layouts.length - 1; i >= 0; i--) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const bloques: any[] = Array.isArray(layouts[i]?.layout) ? layouts[i].layout : []
+    const esPasoVehiculo = bloques.some(
+      (b) => typeof b?.form?.title === 'string' && PASO_VEHICULO_TITULO.test(b.form.title),
+    )
+    if (esPasoVehiculo) layouts.splice(i, 1)
   }
-  if (!node || typeof node !== 'object') return
-  for (const k of Object.keys(node)) quitarPasoVehiculo(node[k])
 }
 
 export async function GET(req: NextRequest) {
