@@ -6,36 +6,27 @@ import { NextRequest, NextResponse } from 'next/server'
 const SOLICITUD_REQUEST_ID = '6843a81c9c595f644861a92e'
 
 // El codeudor NO compra el vehículo, así que el Paso 3 "Prefactibilidad de Tipo
-// de Vehículo" no debe ser obligatorio para él. Como el Request es compartido con
-// el formulario del solicitante principal (que SÍ requiere esos datos), relajamos
-// `required` acá, en el proxy del codeudor, para NO afectar al solicitante.
+// de Vehículo" se ELIMINA de su formulario. El Request es compartido con el del
+// solicitante principal (que sí necesita esos datos), por eso el paso se quita
+// acá en el proxy y no en la definición del formulario.
 const PASO_VEHICULO_TITULO = /Prefactibilidad de Tipo de Veh/i
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function deepUnrequire(node: any): void {
+function quitarPasoVehiculo(node: any): void {
   if (Array.isArray(node)) {
-    node.forEach(deepUnrequire)
+    // Se elimina del array el paso completo del vehículo.
+    for (let i = node.length - 1; i >= 0; i--) {
+      const hijo = node[i]
+      if (hijo && typeof hijo === 'object' && typeof hijo.title === 'string' && PASO_VEHICULO_TITULO.test(hijo.title)) {
+        node.splice(i, 1)
+      } else {
+        quitarPasoVehiculo(hijo)
+      }
+    }
     return
   }
   if (!node || typeof node !== 'object') return
-  if (Object.prototype.hasOwnProperty.call(node, 'required')) node.required = false
-  for (const k of Object.keys(node)) deepUnrequire(node[k])
-}
-
-// Busca el/los form(s) del paso de vehículo (por su `title`) y hace opcionales
-// todos sus campos. Defensivo: si la estructura cambia, no rompe (deja el form igual).
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function relajarRequeridosVehiculo(node: any): void {
-  if (Array.isArray(node)) {
-    node.forEach(relajarRequeridosVehiculo)
-    return
-  }
-  if (!node || typeof node !== 'object') return
-  if (typeof node.title === 'string' && PASO_VEHICULO_TITULO.test(node.title)) {
-    deepUnrequire(node)
-    return
-  }
-  for (const k of Object.keys(node)) relajarRequeridosVehiculo(node[k])
+  for (const k of Object.keys(node)) quitarPasoVehiculo(node[k])
 }
 
 export async function GET(req: NextRequest) {
@@ -58,9 +49,9 @@ export async function GET(req: NextRequest) {
 
     const data = await response.json()
 
-    // Paso 3 (vehículo) opcional SOLO para el codeudor.
+    // El codeudor NO compra el vehículo: el Paso 3 se elimina del formulario.
     try {
-      relajarRequeridosVehiculo(data)
+      quitarPasoVehiculo(data)
     } catch {
       /* si la estructura cambió, devolvemos el formulario tal cual */
     }
