@@ -35,16 +35,25 @@ type Props = {
   store: ReturnType<typeof createFormStore>
   // El socio usa este mismo componente: su flujo es idéntico al del codeudor
   // (mismos formularios, link firmado y validación), solo cambian las rutas.
+  //
+  // Los créditos SIN prenda (nómina, libre inversión) también: el mecanismo del
+  // enlace firmado es el mismo, y lo único distinto es la definición del
+  // formulario, que llega del core. Por eso aquí solo se amplían los tipos en
+  // vez de duplicar las 455 líneas del componente.
   apiBase:
     | 'codeudor-solicitud'
     | 'codeudor-complementario'
     | 'socio-solicitud'
     | 'socio-complementario'
+    | 'nomina-solicitud'
+    | 'libre-inversion-solicitud'
   submitKey:
     | 'formSolicitudCodeudor'
     | 'formComplementarioCodeudor'
     | 'formSolicitudSocio'
     | 'formComplementarioSocio'
+    | 'formSolicitudNomina'
+    | 'formSolicitudLibreInversion'
   title: string
 }
 
