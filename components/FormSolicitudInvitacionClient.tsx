@@ -62,6 +62,33 @@ type Props = {
   title: string
 }
 
+/**
+ * El marco de la página. Vive FUERA del componente A PROPÓSITO.
+ *
+ * Definido dentro del cuerpo, cada render creaba una función nueva; React la veía
+ * como un componente DISTINTO y desmontaba y volvía a montar todo el subárbol
+ * —el formulario entero— en cada cambio de estado.
+ *
+ * El daño no era el parpadeo: al desmontarse, los campos cancelaban en su
+ * limpieza la validación con retardo de 500 ms que acababan de programar. Esa
+ * validación no llegaba a correr nunca, `fieldStates` se quedaba en false y
+ * «Siguiente» no se encendía por mucho que el cliente rellenara todo. El valor
+ * sí se guardaba —vive en el store, no en el componente—, así que el formulario
+ * parecía funcionar y no dejaba avanzar.
+ *
+ * El campo de radio se salvaba porque reporta su validez de forma síncrona, antes
+ * de que llegue el desmontaje.
+ */
+function Envoltorio({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <main className="flex w-full flex-1 items-start justify-center px-4 py-8 sm:px-6 md:px-8">
+        <div className="w-full max-w-2xl space-y-6">{children}</div>
+      </main>
+    </div>
+  )
+}
+
 export default function FormSolicitudInvitacionClient({ uuid, apiBase, store, title }: Props) {
   const { isAuthenticated, loading } = useAuth()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -215,14 +242,6 @@ export default function FormSolicitudInvitacionClient({ uuid, apiBase, store, ti
   const cerrarDialogo = () => {
     setShowDialog(false)
   }
-
-  const Envoltorio = ({ children }: { children: React.ReactNode }) => (
-    <div className="flex min-h-screen flex-col bg-background text-foreground">
-      <main className="flex w-full flex-1 items-start justify-center px-4 py-8 sm:px-6 md:px-8">
-        <div className="w-full max-w-2xl space-y-6">{children}</div>
-      </main>
-    </div>
-  )
 
   if (invitacionOk === false) {
     return (
