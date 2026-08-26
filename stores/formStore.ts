@@ -52,6 +52,22 @@ export const createFormStore = (storeKey: string) => {
         submitted: false,
         version: 0,
         setFormData: (data) => set({ formData: data }),
+        /**
+         * El esqueleto lo siembra la pantalla al cargar el formulario (ver
+         * `construirEstadoInicial`), y de ahí salen la etiqueta, el tipo y las
+         * validaciones de cada campo.
+         *
+         * Aun así se navega con `?.`: antes esto accedía en firme a
+         * `state.formData[layoutId][blockName][name]`, y en un formulario sin
+         * sembrar la PRIMERA tecla lanzaba `Cannot read properties of undefined`
+         * dentro del `set`. Lo que escribía el cliente se perdía y el campo se
+         * quedaba en blanco, sin nada en pantalla que lo explicara. Pasó con los
+         * formularios de nómina y libre inversión.
+         *
+         * Perder una pulsación es peor que guardarla sin metadatos: así el dato
+         * entra igual, y si falta el esqueleto se nota por la validación, no por
+         * un campo muerto.
+         */
         updateField: (layout, blockName, name, value) =>
           set((state) => {
             const layoutId = `Paso ${layout}`;
@@ -61,9 +77,9 @@ export const createFormStore = (storeKey: string) => {
                 [layoutId]: {
                   ...state.formData[layoutId],
                   [blockName]: {
-                    ...state.formData[layoutId][blockName],
+                    ...state.formData[layoutId]?.[blockName],
                     [name]: {
-                      ...state.formData[layoutId][blockName][name],
+                      ...state.formData[layoutId]?.[blockName]?.[name],
                       value,
                     },
                   },
