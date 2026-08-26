@@ -20,6 +20,7 @@ import { ArrowRightIcon } from 'lucide-react'
 
 import { useAuth } from '@/hooks/useAuth'
 import { mapPayloadFormToSteps } from '@/utils/mapPayloadFormToSteps'
+import { construirEstadoInicial } from '@/utils/estadoInicialDelFormulario'
 import FormRenderer from '@/components/FormRenderer/FormRenderer'
 import TextViewer from '@/components/TextViewer/TextViewer'
 import { Button } from '@/components/ui/button'
@@ -44,6 +45,8 @@ type Store = {
   getState: () => {
     rehydrated: boolean
     submitted: boolean
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    formData: Record<string, any>
     resetForm: () => Promise<void> | void
     setSubmitted: (v: boolean) => Promise<void> | void
     getFormVersion: () => unknown
@@ -135,8 +138,30 @@ export default function FormSolicitudInvitacionClient({ uuid, apiBase, store, ti
           await store.getState().resetForm()
           setFormVersion(data?.version)
         }
-        setSteps(mapPayloadFormToSteps(data))
+        const pasos = mapPayloadFormToSteps(data)
+        setSteps(pasos)
         setContext(data?.context || '')
+
+        /**
+         * Sembrar el esqueleto ANTES de que el cliente pueda escribir.
+         *
+         * `updateField` no crea el camino al vuelo: escribe en
+         * `formData['Paso N'][bloque][campo]` dando por hecho que ya existe. Sin
+         * esto, la primera tecla lanzaba dentro del `set` de Zustand, el valor
+         * no llegaba al estado y el campo se quedaba en blanco —el formulario se
+         * veía bien y no respondía—. Además `blockStates` es lo que mira
+         * `canGoToNextStep`, así que sin sembrarlo «Siguiente» no se enciende.
+         *
+         * Solo si no hay nada guardado: si el cliente vuelve a un borrador, lo
+         * suyo manda y esto lo pisaría.
+         */
+        const guardado = store.getState().formData
+        if (!guardado || Object.keys(guardado).length === 0) {
+          const inicial = construirEstadoInicial(pasos)
+          setFormData(inicial.formData)
+          setBlockStates(inicial.blockStates)
+          setFieldStates(inicial.fieldStates)
+        }
       } catch {
         setDialogMessage('No pudimos cargar el formulario. Inténtalo de nuevo en unos minutos.')
         setShowDialog(true)
