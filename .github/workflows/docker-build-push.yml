@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - master
+  # Disparador a mano. GitHub a veces no lanza el build al mergear —pasó con el
+  # PR #19: master quedó actualizado y el commit se quedó con cero check-runs—,
+  # y sin esto la única salida era un commit vacío para forzarlo.
+  workflow_dispatch:
 
 jobs:
   build-and-push:
