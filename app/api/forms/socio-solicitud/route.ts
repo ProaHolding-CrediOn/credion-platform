@@ -1,32 +1,10 @@
 import { logError } from '@/lib/errorResponse'
+import { quitarPasoVehiculoConAviso } from '@/utils/quitarPasoVehiculo'
 import { NextRequest, NextResponse } from 'next/server'
 
 // Definición del formulario del SOCIO-Solicitud: se reutiliza la MISMA
 // definición del formulario de Solicitud del solicitante (mismo Request en Payload).
 const SOLICITUD_REQUEST_ID = '6843a81c9c595f644861a92e'
-
-// El socio NO compra el vehículo, así que el Paso 3 "Prefactibilidad de Tipo de
-// Vehículo" se ELIMINA de su formulario. El Request es compartido con el del
-// solicitante principal (que sí necesita esos datos), por eso el paso se quita
-// acá en el proxy y no en la definición del formulario.
-const PASO_VEHICULO_TITULO = /Prefactibilidad de Tipo de Veh/i
-
-// Estructura real del formulario: `layouts[]` son los PASOS, y el título vive
-// dos niveles más adentro, en `layouts[i].layout[j].form.title`. Por eso se
-// busca ahí y se elimina el paso completo del arreglo `layouts`.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function quitarPasoVehiculo(data: any): void {
-  const layouts = data?.layouts
-  if (!Array.isArray(layouts)) return
-  for (let i = layouts.length - 1; i >= 0; i--) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const bloques: any[] = Array.isArray(layouts[i]?.layout) ? layouts[i].layout : []
-    const esPasoVehiculo = bloques.some(
-      (b) => typeof b?.form?.title === 'string' && PASO_VEHICULO_TITULO.test(b.form.title),
-    )
-    if (esPasoVehiculo) layouts.splice(i, 1)
-  }
-}
 
 export async function GET(req: NextRequest) {
   try {
@@ -48,12 +26,8 @@ export async function GET(req: NextRequest) {
 
     const data = await response.json()
 
-    // El socio NO compra el vehículo: el Paso 3 se elimina del formulario.
-    try {
-      quitarPasoVehiculo(data)
-    } catch {
-      /* si la estructura cambió, devolvemos el formulario tal cual */
-    }
+    // El socio NO compra el vehículo: ese paso se elimina del formulario.
+    quitarPasoVehiculoConAviso(data, 'socio-solicitud')
 
     return NextResponse.json(data)
   } catch (error) {
