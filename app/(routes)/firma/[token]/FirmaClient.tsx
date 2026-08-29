@@ -244,8 +244,9 @@ export default function FirmaClient({ token }: { token: string }) {
             onChange={(e) => setAceptaBiometria(e.target.checked)}
           />
           <span>
-            <strong>Opcional:</strong> autorizo la verificación de mi identidad con reconocimiento facial (dato
-            biométrico).{' '}
+            <strong>Requisito para firmar electrónicamente:</strong> autorizo la verificación de mi identidad con
+            reconocimiento facial (dato biométrico). Si prefieres no autorizarla, puedes firmar los documentos en
+            físico con tu asesor.{' '}
             <details className="mt-1">
               <summary className="cursor-pointer text-muted-foreground">Ver autorización completa</summary>
               <span className="mt-2 block max-h-40 overflow-y-auto whitespace-pre-wrap text-xs text-muted-foreground">
@@ -255,7 +256,7 @@ export default function FirmaClient({ token }: { token: string }) {
           </span>
         </label>
         {error ? <p className="text-sm text-red-600">{error}</p> : null}
-        <Button onClick={aceptarAcuerdo} disabled={enviando} className="w-full sm:w-auto">
+        <Button onClick={aceptarAcuerdo} disabled={enviando || !aceptaBiometria} className="w-full sm:w-auto">
           Acepto el acuerdo y quiero continuar
         </Button>
       </div>,
@@ -309,13 +310,18 @@ export default function FirmaClient({ token }: { token: string }) {
           {firmados + 1} de {total}
         </span>
       </div>
-      <div className="h-[52vh] overflow-hidden rounded-lg border">
+      <div className="h-[75vh] overflow-hidden rounded-lg border">
         {pdfUrl ? (
-          <iframe title="Documento" src={pdfUrl} className="h-full w-full" />
+          <iframe title="Documento" src={`${pdfUrl}#navpanes=0&view=FitH&zoom=page-width`} className="h-full w-full" />
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground">Cargando documento…</div>
         )}
       </div>
+      {pdfUrl ? (
+        <a href={pdfUrl} target="_blank" rel="noreferrer" className="self-start text-sm text-muted-foreground underline">
+          Abrir el documento en una pestaña completa
+        </a>
+      ) : null}
       {!trazoGuardado ? (
         <div className="flex flex-col gap-2">
           <Label>Dibuja tu firma aquí (se usará en todos los documentos)</Label>
