@@ -33,6 +33,10 @@ export default function FirmaClient({ token }: { token: string }) {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [aceptaBiometria, setAceptaBiometria] = useState(false)
+  // DE MOMENTO (fase de pruebas, pedido del owner): cada carga de la pagina
+  // arranca desde el acuerdo, aunque el servidor ya lo tenga aceptado. El
+  // avance real (documentos firmados) si se conserva en el servidor.
+  const [acuerdoLocal, setAcuerdoLocal] = useState(false)
   const [otpPedido, setOtpPedido] = useState(false)
   const [codigo, setCodigo] = useState('')
   const [sesion, setSesion] = useState('')
@@ -88,8 +92,10 @@ export default function FirmaClient({ token }: { token: string }) {
       body: JSON.stringify({ aceptaBiometria }),
     })
     setEnviando(false)
-    if (r.ok) cargar()
-    else setError('No se pudo registrar el acuerdo. Intenta de nuevo.')
+    if (r.ok) {
+      setAcuerdoLocal(true)
+      cargar()
+    } else setError('No se pudo registrar el acuerdo. Intenta de nuevo.')
   }
 
   const pedirOtp = async () => {
@@ -219,7 +225,7 @@ export default function FirmaClient({ token }: { token: string }) {
     )
 
   // Paso 1 — acuerdo
-  if (!sobre.acuerdoAceptado)
+  if (!acuerdoLocal)
     return marco(
       <div className="flex flex-col gap-4">
         <h1 className="text-xl font-semibold">Hola, {sobre.firmante.nombre.split(' ')[0]}</h1>
@@ -256,7 +262,7 @@ export default function FirmaClient({ token }: { token: string }) {
     )
 
   // Paso 2 — OTP
-  if (!sobre.otpVerificado || !sesion)
+  if (!sesion)
     return marco(
       <div className="flex flex-col gap-4">
         <h1 className="text-xl font-semibold">Verifica que eres tú</h1>
