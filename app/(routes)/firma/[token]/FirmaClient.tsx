@@ -190,7 +190,7 @@ export default function FirmaClient({ token }: { token: string }) {
   if (cargando) return <div className="p-8 text-center">Cargando tu sobre de firma…</div>
 
   const marco = (contenido: React.ReactNode) => (
-    <div className="mx-auto flex min-h-screen w-full max-w-3xl flex-col gap-6 p-4 sm:p-8">
+    <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-6 p-4 sm:p-8">
       <div className="flex items-center justify-between">
         <Image src="/logo.png" alt="Credion" width={130} height={40} />
         <span className="text-sm text-muted-foreground">Firma electrónica{sobre?.credito ? ` · ${sobre.credito}` : ''}</span>
@@ -227,7 +227,7 @@ export default function FirmaClient({ token }: { token: string }) {
   // Paso 1 — acuerdo
   if (!acuerdoLocal)
     return marco(
-      <div className="flex flex-col gap-4">
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
         <h1 className="text-xl font-semibold">Hola, {sobre.firmante.nombre.split(' ')[0]}</h1>
         <p>
           Vas a firmar electrónicamente <strong>{total} documento{total === 1 ? '' : 's'}</strong> de tu crédito. Antes,
@@ -265,7 +265,7 @@ export default function FirmaClient({ token }: { token: string }) {
   // Paso 2 — OTP
   if (!sesion)
     return marco(
-      <div className="flex flex-col gap-4">
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
         <h1 className="text-xl font-semibold">Verifica que eres tú</h1>
         {!otpPedido ? (
           <>
@@ -310,7 +310,7 @@ export default function FirmaClient({ token }: { token: string }) {
           {firmados + 1} de {total}
         </span>
       </div>
-      <div className="h-[75vh] overflow-hidden rounded-lg border">
+      <div className="h-[78vh] overflow-hidden rounded-lg border">
         {pdfUrl ? (
           <iframe title="Documento" src={`${pdfUrl}#navpanes=0&view=FitH&zoom=page-width`} className="h-full w-full" />
         ) : (
