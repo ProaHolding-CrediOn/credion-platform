@@ -13,6 +13,7 @@ import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import PasoIdentidad from './PasoIdentidad'
 
 type EstadoSobre = {
   estado: 'enviado' | 'en_curso' | 'firmado' | 'vencido' | 'anulado'
@@ -20,6 +21,7 @@ type EstadoSobre = {
   credito?: string
   firmante: { nombre: string; identificacion: string }
   acuerdoAceptado: boolean
+  identidadVerificada: boolean
   otpVerificado: boolean
   documentos: { nombre: string; firmado: boolean }[]
   textos: {
@@ -218,8 +220,7 @@ export default function FirmaClient({ token }: { token: string }) {
       <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
         <p className="text-lg font-semibold text-green-800">¡Listo, {sobre.firmante.nombre.split(' ')[0]}!</p>
         <p className="mt-2 text-green-800">
-          Firmaste los {total} documentos de tu crédito. Credion conserva el expediente electrónico de tu firma y tu
-          asesor te compartirá copia de los documentos firmados.
+          Firmaste los {total} documentos de tu crédito. Credion conserva el expediente electrónico de tu firma.
         </p>
       </div>,
     )
@@ -300,7 +301,12 @@ export default function FirmaClient({ token }: { token: string }) {
       </div>,
     )
 
-  // Paso 3 — firmar documento a documento
+  // Paso 3 — verificación de identidad con la cámara (Etapa B). El servidor
+  // recuerda una identidad ya aprobada; el refresco no la repite.
+  if (!sobre.identidadVerificada)
+    return marco(<PasoIdentidad token={token} sesion={sesion} onAprobada={cargar} />)
+
+  // Paso 4 — firmar documento a documento
   const doc = sobre.documentos[docActual]
   return marco(
     <div className="flex flex-col gap-4">
