@@ -39,8 +39,39 @@ export default function DetectorDeVida({ sessionId, region, identityPoolId, onCo
 
   if (!listo) return <p className="p-4 text-center">Preparando la prueba de vida…</p>
 
+  /* Los letreros del detector vienen enormes y en negro plano; se afinan a la
+     identidad de Credion sin tocar la mecánica del componente. */
+  const estilos = `
+    .detector-credion .amplify-liveness-hint,
+    .detector-credion .amplify-liveness-toast {
+      font-size: 15px !important;
+      font-weight: 600;
+      line-height: 1.35;
+      padding: 8px 14px !important;
+      border-radius: 10px !important;
+      background: rgba(14, 23, 33, 0.82) !important;
+      backdrop-filter: blur(2px);
+      max-width: 88%;
+    }
+    .detector-credion .amplify-liveness-toast__message { font-size: 15px !important; }
+    .detector-credion .amplify-alert {
+      border-radius: 10px !important;
+      font-size: 14px !important;
+    }
+    .detector-credion .amplify-button--primary {
+      background: #0E7269 !important;
+      border-radius: 10px !important;
+      font-weight: 600;
+      padding: 12px 18px;
+    }
+    .detector-credion .amplify-button--primary:hover { background: #0a5b54 !important; }
+    .detector-credion .amplify-liveness-camera-module { border-radius: 14px; overflow: hidden; }
+  `
+
   return (
-    <FaceLivenessDetector
+    <div className="detector-credion">
+      <style>{estilos}</style>
+      <FaceLivenessDetector
       sessionId={sessionId}
       region={region}
       onAnalysisComplete={async () => onCompleta()}
@@ -70,6 +101,7 @@ export default function DetectorDeVida({ sessionId, region, identityPoolId, onCo
         retryCameraPermissionsText: 'Reintentar',
         waitingCameraPermissionText: 'Esperando el permiso de la cámara…',
       }}
-    />
+      />
+    </div>
   )
 }
