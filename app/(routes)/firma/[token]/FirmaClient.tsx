@@ -22,6 +22,7 @@ type EstadoSobre = {
   firmante: { nombre: string; identificacion: string }
   acuerdoAceptado: boolean
   identidadVerificada: boolean
+  liveness?: { disponible: boolean; region?: string; identityPoolId?: string }
   otpVerificado: boolean
   documentos: { nombre: string; firmado: boolean }[]
   textos: {
@@ -304,7 +305,7 @@ export default function FirmaClient({ token }: { token: string }) {
   // Paso 3 — verificación de identidad con la cámara (Etapa B). El servidor
   // recuerda una identidad ya aprobada; el refresco no la repite.
   if (!sobre.identidadVerificada)
-    return marco(<PasoIdentidad token={token} sesion={sesion} onAprobada={cargar} />)
+    return marco(<PasoIdentidad token={token} sesion={sesion} onAprobada={cargar} liveness={sobre.liveness} />)
 
   // Paso 4 — firmar documento a documento
   const doc = sobre.documentos[docActual]
