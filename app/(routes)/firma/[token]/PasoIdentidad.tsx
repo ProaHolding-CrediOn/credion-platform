@@ -9,17 +9,26 @@
  * canal se cierra y la firma pasa a presencial.
  */
 import { useCallback, useEffect, useRef, useState } from 'react'
+import dynamic from 'next/dynamic'
 import { Button } from '@/components/ui/button'
+
+// El SDK de Amplify solo vive en el navegador.
+const DetectorDeVida = dynamic(() => import('./DetectorDeVida'), {
+  ssr: false,
+  loading: () => <p className="p-4 text-center">Cargando la prueba de vida…</p>,
+})
 
 type Props = {
   token: string
   sesion: string
   onAprobada: () => void
+  /** Config del core: si viene, la selfie se reemplaza por la prueba de vida. */
+  liveness?: { disponible: boolean; region?: string; identityPoolId?: string }
 }
 
-type Fase = 'cedula' | 'selfie' | 'revisar' | 'enviando'
+type Fase = 'cedula' | 'selfie' | 'revisar' | 'enviando' | 'vida'
 
-export default function PasoIdentidad({ token, sesion, onAprobada }: Props) {
+export default function PasoIdentidad({ token, sesion, onAprobada, liveness }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const [fase, setFase] = useState<Fase>('cedula')
@@ -27,6 +36,8 @@ export default function PasoIdentidad({ token, sesion, onAprobada }: Props) {
   const [selfie, setSelfie] = useState('')
   const [error, setError] = useState('')
   const [sinCamara, setSinCamara] = useState(false)
+  const conVida = Boolean(liveness?.disponible && liveness.identityPoolId)
+  const [sessionId, setSessionId] = useState('')
 
   const abrirCamara = useCallback(async (frontal: boolean) => {
     try {
@@ -62,7 +73,12 @@ export default function PasoIdentidad({ token, sesion, onAprobada }: Props) {
     const dataUrl = canvas.toDataURL('image/jpeg', 0.85)
     if (fase === 'cedula') {
       setCedula(dataUrl)
-      setFase('selfie')
+      if (conVida) {
+        streamRef.current?.getTracks().forEach((t) => t.stop())
+        iniciarVida()
+      } else {
+        setFase('selfie')
+      }
     } else {
       setSelfie(dataUrl)
       setFase('revisar')
@@ -89,6 +105,61 @@ export default function PasoIdentidad({ token, sesion, onAprobada }: Props) {
     setFase(r.status === 429 ? 'revisar' : 'cedula')
     if (r.status === 429) streamRef.current?.getTracks().forEach((t) => t.stop())
   }
+
+  const iniciarVida = async () => {
+    setError('')
+    const r = await fetch(`/api/firma/${token}/liveness/sesion`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sesion }),
+    })
+    const j = await r.json().catch(() => ({}))
+    if (!r.ok || !j?.sessionId) {
+      setError(j?.error || 'No se pudo iniciar la prueba de vida.')
+      setFase('cedula')
+      return
+    }
+    setSessionId(j.sessionId)
+    setFase('vida')
+  }
+
+  const terminarVida = async () => {
+    setFase('enviando')
+    setError('')
+    const r = await fetch(`/api/firma/${token}/liveness/resultado`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sesion, sessionId, cedula }),
+    })
+    const j = await r.json().catch(() => ({}))
+    if (r.ok && j?.decision === 'aprobada') {
+      onAprobada()
+      return
+    }
+    setError(j?.error || 'No se pudo verificar tu identidad. Intenta de nuevo.')
+    setCedula('')
+    setSessionId('')
+    setFase(r.status === 429 ? 'revisar' : 'cedula')
+  }
+
+  if (fase === 'vida' && sessionId)
+    return (
+      <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
+        <h1 className="text-xl font-semibold">Prueba de vida</h1>
+        <DetectorDeVida
+          sessionId={sessionId}
+          region={liveness?.region || 'us-east-1'}
+          identityPoolId={liveness?.identityPoolId || ''}
+          onCompleta={terminarVida}
+          onError={(m) => {
+            setError(m)
+            setSessionId('')
+            setFase('cedula')
+          }}
+        />
+        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      </div>
+    )
 
   if (sinCamara)
     return (
