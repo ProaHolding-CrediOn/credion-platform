@@ -186,6 +186,18 @@ export default function FirmaClient({ token }: { token: string }) {
     }
     if (trazo && !trazoGuardado) setTrazoGuardado(trazo)
     setPdfUrl('')
+    if (j?.completo) {
+      // Con el sobre cerrado el servidor deja de mandar nombre y documentos —
+      // el token ya no abre la ficha. Recargar aquí le dejaría a quien acaba de
+      // firmar su propia confirmación en blanco, así que se cierra en local con
+      // lo que ya tenía en pantalla.
+      setSobre({
+        ...sobre,
+        estado: 'firmado',
+        documentos: sobre.documentos.map((d) => ({ ...d, firmado: true })),
+      })
+      return
+    }
     await cargar()
   }
 
