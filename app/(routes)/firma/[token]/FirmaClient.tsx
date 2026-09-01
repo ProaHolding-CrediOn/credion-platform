@@ -216,15 +216,22 @@ export default function FirmaClient({ token }: { token: string }) {
   const total = sobre.documentos.length
   const firmados = sobre.documentos.filter((d) => d.firmado).length
 
-  if (sobre.estado === 'firmado' || (total > 0 && firmados === total))
+  // Al volver a abrir un enlace ya firmado el servidor no manda nombre ni
+  // documentos: el token deja de abrir la ficha en cuanto termina la ceremonia.
+  // Quien acaba de firmar sí los tiene en pantalla, y se le saluda por su nombre.
+  if (sobre.estado === 'firmado' || (total > 0 && firmados === total)) {
+    const nombre = sobre.firmante.nombre.split(' ')[0]
     return marco(
       <div className="rounded-lg border border-green-200 bg-green-50 p-6 text-center">
-        <p className="text-lg font-semibold text-green-800">¡Listo, {sobre.firmante.nombre.split(' ')[0]}!</p>
+        <p className="text-lg font-semibold text-green-800">{nombre ? `¡Listo, ${nombre}!` : '¡Listo! Ya firmaste'}</p>
         <p className="mt-2 text-green-800">
-          Firmaste los {total} documentos de tu crédito. Credion conserva el expediente electrónico de tu firma.
+          {total > 0
+            ? `Firmaste los ${total} documentos de tu crédito. Credion conserva el expediente electrónico de tu firma.`
+            : 'Credion conserva el expediente electrónico de tu firma. Si necesitas una copia, pídesela a tu asesor.'}
         </p>
       </div>,
     )
+  }
 
   // Paso 1 — acuerdo
   if (!acuerdoLocal)
