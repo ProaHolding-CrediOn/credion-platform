@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { cabecerasDeOrigen } from '@/utils/origenDelCliente'
 
 export async function POST(req: NextRequest, ctx: { params: Promise<{ token: string }> }) {
   const p = await ctx.params
@@ -7,7 +8,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ token: str
     `${process.env.CORE_SERVICE_API_URL}/firma/${encodeURIComponent(p.token)}/otp`,
     {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...cabecerasDeOrigen(req) },
       body: body || '{}',
       cache: 'no-store',
     },
