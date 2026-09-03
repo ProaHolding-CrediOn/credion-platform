@@ -22,13 +22,24 @@ type Props = {
   token: string
   sesion: string
   onAprobada: () => void
+  /**
+   * El servidor rechazo el testigo de la sesion (401). Aqui no se puede hacer
+   * nada util con eso: lo resuelve la pantalla de arriba pidiendo otro codigo.
+   */
+  onSesionCaducada: () => void
   /** Config del core: si viene, la selfie se reemplaza por la prueba de vida. */
   liveness?: { disponible: boolean; region?: string; identityPoolId?: string }
 }
 
 type Fase = 'cedula' | 'selfie' | 'revisar' | 'enviando' | 'vida'
 
-export default function PasoIdentidad({ token, sesion, onAprobada, liveness }: Props) {
+export default function PasoIdentidad({
+  token,
+  sesion,
+  onAprobada,
+  onSesionCaducada,
+  liveness,
+}: Props) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const [fase, setFase] = useState<Fase>('cedula')
@@ -99,6 +110,10 @@ export default function PasoIdentidad({ token, sesion, onAprobada, liveness }: P
       onAprobada()
       return
     }
+    if (r.status === 401) {
+      onSesionCaducada()
+      return
+    }
     setError(j?.error || 'No se pudo verificar tu identidad. Intenta de nuevo.')
     setCedula('')
     setSelfie('')
@@ -115,6 +130,10 @@ export default function PasoIdentidad({ token, sesion, onAprobada, liveness }: P
     })
     const j = await r.json().catch(() => ({}))
     if (!r.ok || !j?.sessionId) {
+      if (r.status === 401) {
+        onSesionCaducada()
+        return
+      }
       setError(j?.error || 'No se pudo iniciar la prueba de vida.')
       setFase('cedula')
       return
@@ -134,6 +153,10 @@ export default function PasoIdentidad({ token, sesion, onAprobada, liveness }: P
     const j = await r.json().catch(() => ({}))
     if (r.ok && j?.decision === 'aprobada') {
       onAprobada()
+      return
+    }
+    if (r.status === 401) {
+      onSesionCaducada()
       return
     }
     setError(j?.error || 'No se pudo verificar tu identidad. Intenta de nuevo.')
