@@ -46,6 +46,12 @@ export default function FirmaClient({ token }: { token: string }) {
   // Si el fallo es nuestro, el cliente merece un boton para reintentar en vez
   // de una pagina muerta.
   const [puedeReintentar, setPuedeReintentar] = useState(false)
+  // `cargando` es SOLO la primera carga, la que ocupa la pantalla entera.
+  // `recargando` es cada vez que se vuelve a preguntar por el sobre —al firmar
+  // un documento, al reintentar—: ahi la pantalla ya tiene contenido y taparla
+  // seria un parpadeo entre documento y documento.
+  const [recargando, setRecargando] = useState(false)
+  const yaCargoAlgunaVez = useRef(false)
   const [aceptaBiometria, setAceptaBiometria] = useState(false)
   const [otpPedido, setOtpPedido] = useState(false)
   const [codigo, setCodigo] = useState('')
@@ -64,8 +70,10 @@ export default function FirmaClient({ token }: { token: string }) {
   const [trazoHecho, setTrazoHecho] = useState(false)
   const [trazoGuardado, setTrazoGuardado] = useState('') // dataURL de la primera firma
 
-  const cargar = useCallback(async () => {
-    setCargando(true)
+  /** Devuelve si se pudo traer el estado: quien llama decide que hacer si no. */
+  const cargar = useCallback(async (): Promise<boolean> => {
+    if (yaCargoAlgunaVez.current) setRecargando(true)
+    else setCargando(true)
     try {
       const r = await fetch(`/api/firma/${token}`, { cache: 'no-store' })
       if (!r.ok) {
@@ -75,14 +83,20 @@ export default function FirmaClient({ token }: { token: string }) {
         const aviso = await avisoDeRespuesta(r)
         setError(aviso.texto)
         setPuedeReintentar(aviso.sePuedeReintentar)
-        setCargando(false)
-        return
+        return false
       }
-      const data = (await r.json()) as EstadoSobre
+      // Un 200 cuyo cuerpo no es JSON no es un problema de red: es nuestro.
+      const data = (await r.json().catch(() => null)) as EstadoSobre | null
+      if (!data) {
+        setError(avisoPorEstado(500).texto)
+        setPuedeReintentar(true)
+        return false
+      }
       setSobre(data)
       setDocActual(data.documentos.findIndex((d) => !d.firmado))
       setError('')
       setPuedeReintentar(false)
+      return true
     } catch {
       // El `fetch` ni llego a responder: cobertura perdida a mitad de peticion,
       // que en un movil pasa constantemente. Sin este catch la promesa quedaba
@@ -90,8 +104,12 @@ export default function FirmaClient({ token }: { token: string }) {
       // para siempre, sin una sola salida.
       setError(SIN_CONEXION.texto)
       setPuedeReintentar(true)
+      return false
+    } finally {
+      yaCargoAlgunaVez.current = true
+      setCargando(false)
+      setRecargando(false)
     }
-    setCargando(false)
   }, [token])
 
   useEffect(() => {
@@ -305,8 +323,8 @@ export default function FirmaClient({ token }: { token: string }) {
       return
     }
     if (trazo && !trazoGuardado) setTrazoGuardado(trazo)
-    setPdfUrl('')
     if (j?.completo) {
+      setPdfUrl('')
       olvidarSesion(token)
       // Con el sobre cerrado el servidor deja de mandar nombre y documentos —
       // el token ya no abre la ficha. Recargar aquí le dejaría a quien acaba de
@@ -319,13 +337,16 @@ export default function FirmaClient({ token }: { token: string }) {
       })
       return
     }
-    // La firma YA quedo registrada. Si la recarga falla aqui, el cliente no
-    // puede pensar que perdio nada: sin este catch se quedaba viendo el
-    // documento que acababa de firmar, con el visor vacio y el boton muerto.
-    try {
-      await cargar()
-    } catch {
-      setError('Tu firma quedó registrada. No pudimos cargar el siguiente documento: vuelve a abrir el enlace para continuar.')
+    // La firma YA quedo registrada. Si la recarga falla, el cliente no puede
+    // quedarse pensando que perdio algo: se le dice que su firma esta a salvo y
+    // se le deja el visor con su boton de reintentar.
+    const bien = await cargar()
+    setPdfUrl('')
+    if (!bien) {
+      // El visor pinta su propio fallo con el boton que reintenta las dos
+      // cosas; aqui solo hay que dejar claro que la firma NO se perdio.
+      setError('')
+      setFalloDelPdf('Tu firma quedó registrada. No pudimos cargar el siguiente documento.')
     }
   }
 
@@ -350,8 +371,8 @@ export default function FirmaClient({ token }: { token: string }) {
       <div className="mx-auto flex w-full max-w-2xl flex-col items-start gap-4">
         <p className="w-full rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">{error}</p>
         {puedeReintentar ? (
-          <Button onClick={cargar} disabled={cargando}>
-            {cargando ? 'Reintentando…' : 'Volver a intentarlo'}
+          <Button onClick={() => cargar()} disabled={recargando}>
+            {recargando ? 'Reintentando…' : 'Volver a intentarlo'}
           </Button>
         ) : null}
       </div>,
@@ -492,8 +513,15 @@ export default function FirmaClient({ token }: { token: string }) {
             <p className="max-w-md text-sm text-muted-foreground">
               Tu avance está guardado; no perdiste nada de lo que ya firmaste.
             </p>
-            <Button variant="outline" onClick={() => setIntentoPdf((n) => n + 1)}>
-              Volver a cargar el documento
+            <Button
+              variant="outline"
+              disabled={recargando}
+              onClick={() => {
+                setIntentoPdf((n) => n + 1)
+                cargar()
+              }}
+            >
+              {recargando ? 'Cargando…' : 'Volver a cargar el documento'}
             </Button>
           </div>
         ) : (
