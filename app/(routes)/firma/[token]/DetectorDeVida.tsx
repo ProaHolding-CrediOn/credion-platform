@@ -10,6 +10,7 @@
  * Amplify no sobrevive el render en servidor.
  */
 import { useEffect, useState } from 'react'
+import { avisoDePruebaDeVida } from '@/utils/firma/avisoDeCamara'
 import { Amplify } from 'aws-amplify'
 import { FaceLivenessDetector } from '@aws-amplify/ui-react-liveness'
 import '@aws-amplify/ui-react/styles.css'
@@ -75,7 +76,10 @@ export default function DetectorDeVida({ sessionId, region, identityPoolId, onCo
       sessionId={sessionId}
       region={region}
       onAnalysisComplete={async () => onCompleta()}
-      onError={(e) => onError(e?.error?.message || 'La prueba de vida se interrumpió. Intenta de nuevo.')}
+      // El SDK habla en ingles y con nombres internos de AWS
+      // («SessionNotFoundException», «AccessDeniedException»). Eso en pantalla
+      // no le dice nada al cliente y le hace creer que hizo algo mal.
+      onError={(e) => onError(avisoDePruebaDeVida(e?.error?.name))}
       displayText={{
         startScreenBeginCheckText: 'Comenzar la prueba',
         photosensitivityWarningHeadingText: 'Advertencia de fotosensibilidad',
