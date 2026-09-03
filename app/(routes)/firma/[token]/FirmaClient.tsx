@@ -14,6 +14,13 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import PasoIdentidad from './PasoIdentidad'
+import {
+  anotarOtpPedido,
+  guardarSesion,
+  leerSesion,
+  olvidarSesion,
+  otpYaPedido,
+} from '@/utils/firma/sesionDeCeremonia'
 
 type EstadoSobre = {
   estado: 'enviado' | 'en_curso' | 'firmado' | 'vencido' | 'anulado'
@@ -36,10 +43,6 @@ export default function FirmaClient({ token }: { token: string }) {
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [aceptaBiometria, setAceptaBiometria] = useState(false)
-  // DE MOMENTO (fase de pruebas, pedido del owner): cada carga de la pagina
-  // arranca desde el acuerdo, aunque el servidor ya lo tenga aceptado. El
-  // avance real (documentos firmados) si se conserva en el servidor.
-  const [acuerdoLocal, setAcuerdoLocal] = useState(false)
   const [otpPedido, setOtpPedido] = useState(false)
   const [codigo, setCodigo] = useState('')
   const [sesion, setSesion] = useState('')
@@ -67,6 +70,23 @@ export default function FirmaClient({ token }: { token: string }) {
     cargar()
   }, [cargar])
 
+  // Lo guardado se recupera DESPUES del primer pintado: `sessionStorage` no
+  // existe en el render del servidor y leerlo durante el render descuadraria la
+  // hidratacion.
+  useEffect(() => {
+    setSesion(leerSesion(token))
+    setOtpPedido(otpYaPedido(token))
+  }, [token])
+
+  /** El servidor no reconoce el testigo: se tira y se vuelve a pedir codigo. */
+  const caducarSesion = useCallback(() => {
+    olvidarSesion(token)
+    setSesion('')
+    setOtpPedido(false)
+    setPdfUrl('')
+    setError('Por seguridad tenemos que verificarte de nuevo. Pide otro código.')
+  }, [token])
+
   // El PDF del documento en curso se trae con el testigo y se muestra como blob.
   useEffect(() => {
     let url = ''
@@ -76,6 +96,12 @@ export default function FirmaClient({ token }: { token: string }) {
         headers: { 'x-sesion-firma': sesion },
         cache: 'no-store',
       })
+      // Sin esto, un testigo que el servidor ya no acepta deja la pantalla en
+      // «Cargando documento...» para siempre.
+      if (r.status === 401) {
+        caducarSesion()
+        return
+      }
       if (!r.ok) return
       const blob = await r.blob()
       url = URL.createObjectURL(blob)
@@ -85,7 +111,7 @@ export default function FirmaClient({ token }: { token: string }) {
     return () => {
       if (url) URL.revokeObjectURL(url)
     }
-  }, [token, sesion, sobre, docActual])
+  }, [token, sesion, sobre, docActual, caducarSesion])
 
   const aceptarAcuerdo = async () => {
     setEnviando(true)
@@ -95,18 +121,20 @@ export default function FirmaClient({ token }: { token: string }) {
       body: JSON.stringify({ aceptaBiometria }),
     })
     setEnviando(false)
-    if (r.ok) {
-      setAcuerdoLocal(true)
-      cargar()
-    } else setError('No se pudo registrar el acuerdo. Intenta de nuevo.')
+    // El acuerdo aceptado queda en el sobre; al recargar, `cargar()` lo trae y
+    // el cliente sigue por donde iba.
+    if (r.ok) cargar()
+    else setError('No se pudo registrar el acuerdo. Intenta de nuevo.')
   }
 
   const pedirOtp = async () => {
     setEnviando(true)
     const r = await fetch(`/api/firma/${token}/otp`, { method: 'POST' })
     setEnviando(false)
-    if (r.ok) setOtpPedido(true)
-    else {
+    if (r.ok) {
+      setOtpPedido(true)
+      anotarOtpPedido(token)
+    } else {
       const j = await r.json().catch(() => ({}))
       setError(j?.error || 'No se pudo enviar el código.')
     }
@@ -124,6 +152,7 @@ export default function FirmaClient({ token }: { token: string }) {
     const j = await r.json().catch(() => ({}))
     if (r.ok && j?.sesion) {
       setSesion(j.sesion)
+      guardarSesion(token, j.sesion)
       cargar()
     } else {
       setError(j?.error || 'Código incorrecto.')
@@ -181,12 +210,14 @@ export default function FirmaClient({ token }: { token: string }) {
     setEnviando(false)
     const j = await r.json().catch(() => ({}))
     if (!r.ok) {
-      setError(j?.error || 'No se pudo firmar. Intenta de nuevo.')
+      if (r.status === 401) caducarSesion()
+      else setError(j?.error || 'No se pudo firmar. Intenta de nuevo.')
       return
     }
     if (trazo && !trazoGuardado) setTrazoGuardado(trazo)
     setPdfUrl('')
     if (j?.completo) {
+      olvidarSesion(token)
       // Con el sobre cerrado el servidor deja de mandar nombre y documentos —
       // el token ya no abre la ficha. Recargar aquí le dejaría a quien acaba de
       // firmar su propia confirmación en blanco, así que se cierra en local con
@@ -245,8 +276,9 @@ export default function FirmaClient({ token }: { token: string }) {
     )
   }
 
-  // Paso 1 — acuerdo
-  if (!acuerdoLocal)
+  // Paso 1 — acuerdo. La condicion es la del SERVIDOR: quien ya lo acepto no
+  // vuelve a verlo aunque recargue.
+  if (!sobre.acuerdoAceptado)
     return marco(
       <div className="mx-auto flex w-full max-w-2xl flex-col gap-4">
         <h1 className="text-xl font-semibold">Hola, {sobre.firmante.nombre.split(' ')[0]}</h1>
@@ -324,7 +356,15 @@ export default function FirmaClient({ token }: { token: string }) {
   // Paso 3 — verificación de identidad con la cámara (Etapa B). El servidor
   // recuerda una identidad ya aprobada; el refresco no la repite.
   if (!sobre.identidadVerificada)
-    return marco(<PasoIdentidad token={token} sesion={sesion} onAprobada={cargar} liveness={sobre.liveness} />)
+    return marco(
+      <PasoIdentidad
+        token={token}
+        sesion={sesion}
+        onAprobada={cargar}
+        onSesionCaducada={caducarSesion}
+        liveness={sobre.liveness}
+      />,
+    )
 
   // Paso 4 — firmar documento a documento
   const doc = sobre.documentos[docActual]
