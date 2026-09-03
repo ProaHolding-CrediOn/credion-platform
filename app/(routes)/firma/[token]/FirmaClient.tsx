@@ -21,6 +21,7 @@ import {
   olvidarSesion,
   otpYaPedido,
 } from '@/utils/firma/sesionDeCeremonia'
+import { avisoDeRespuesta, avisoPorEstado, SIN_CONEXION } from '@/utils/firma/avisoDeFallo'
 
 type EstadoSobre = {
   estado: 'enviado' | 'en_curso' | 'firmado' | 'vencido' | 'anulado'
@@ -42,27 +43,54 @@ export default function FirmaClient({ token }: { token: string }) {
   const [sobre, setSobre] = useState<EstadoSobre | null>(null)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
+  // Si el fallo es nuestro, el cliente merece un boton para reintentar en vez
+  // de una pagina muerta.
+  const [puedeReintentar, setPuedeReintentar] = useState(false)
   const [aceptaBiometria, setAceptaBiometria] = useState(false)
   const [otpPedido, setOtpPedido] = useState(false)
   const [codigo, setCodigo] = useState('')
   const [sesion, setSesion] = useState('')
   const [docActual, setDocActual] = useState(0)
   const [pdfUrl, setPdfUrl] = useState('')
+  // El visor tenia UN solo estado visible («Cargando documento...») para tres
+  // situaciones distintas: cargando, cargado y ROTO. Un 500, un 502 o un corte
+  // de red se descartaban en silencio con un `return`, y el cliente se quedaba
+  // mirando ese texto con el boton de firmar en gris, sin una sola pista de
+  // que habia pasado ni nada que tocar.
+  const [falloDelPdf, setFalloDelPdf] = useState('')
+  const [intentoPdf, setIntentoPdf] = useState(0)
   const [enviando, setEnviando] = useState(false)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [trazoHecho, setTrazoHecho] = useState(false)
   const [trazoGuardado, setTrazoGuardado] = useState('') // dataURL de la primera firma
 
   const cargar = useCallback(async () => {
-    const r = await fetch(`/api/firma/${token}`, { cache: 'no-store' })
-    if (!r.ok) {
-      setError('Este enlace no es válido. Pídele a tu asesor que te lo reenvíe.')
-      setCargando(false)
-      return
+    setCargando(true)
+    try {
+      const r = await fetch(`/api/firma/${token}`, { cache: 'no-store' })
+      if (!r.ok) {
+        // Un 404 si es «tu enlace no vale». Un 500, un 502 o el core caido son
+        // problema nuestro, y decirle que pida otro enlace es mentirle: el
+        // siguiente fallaria igual.
+        const aviso = await avisoDeRespuesta(r)
+        setError(aviso.texto)
+        setPuedeReintentar(aviso.sePuedeReintentar)
+        setCargando(false)
+        return
+      }
+      const data = (await r.json()) as EstadoSobre
+      setSobre(data)
+      setDocActual(data.documentos.findIndex((d) => !d.firmado))
+      setError('')
+      setPuedeReintentar(false)
+    } catch {
+      // El `fetch` ni llego a responder: cobertura perdida a mitad de peticion,
+      // que en un movil pasa constantemente. Sin este catch la promesa quedaba
+      // rechazada y la pantalla se quedaba en «Cargando tu sobre de firma...»
+      // para siempre, sin una sola salida.
+      setError(SIN_CONEXION.texto)
+      setPuedeReintentar(true)
     }
-    const data = (await r.json()) as EstadoSobre
-    setSobre(data)
-    setDocActual(data.documentos.findIndex((d) => !d.firmado))
     setCargando(false)
   }, [token])
 
@@ -92,70 +120,106 @@ export default function FirmaClient({ token }: { token: string }) {
     let url = ''
     const traer = async () => {
       if (!sesion || !sobre || docActual < 0) return
-      const r = await fetch(`/api/firma/${token}/documento/${docActual}`, {
-        headers: { 'x-sesion-firma': sesion },
-        cache: 'no-store',
-      })
-      // Sin esto, un testigo que el servidor ya no acepta deja la pantalla en
-      // «Cargando documento...» para siempre.
-      if (r.status === 401) {
-        caducarSesion()
-        return
+      setFalloDelPdf('')
+      try {
+        const r = await fetch(`/api/firma/${token}/documento/${docActual}`, {
+          headers: { 'x-sesion-firma': sesion },
+          cache: 'no-store',
+        })
+        // Sin esto, un testigo que el servidor ya no acepta deja la pantalla en
+        // «Cargando documento...» para siempre.
+        if (r.status === 401) {
+          caducarSesion()
+          return
+        }
+        if (!r.ok) {
+          setFalloDelPdf(await avisoDeRespuesta(r).then((a) => a.texto))
+          return
+        }
+        const blob = await r.blob()
+        url = URL.createObjectURL(blob)
+        setPdfUrl(url)
+      } catch {
+        setFalloDelPdf(SIN_CONEXION.texto)
       }
-      if (!r.ok) return
-      const blob = await r.blob()
-      url = URL.createObjectURL(blob)
-      setPdfUrl(url)
     }
     traer()
     return () => {
       if (url) URL.revokeObjectURL(url)
     }
-  }, [token, sesion, sobre, docActual, caducarSesion])
+  }, [token, sesion, sobre, docActual, caducarSesion, intentoPdf])
 
   const aceptarAcuerdo = async () => {
     setEnviando(true)
-    const r = await fetch(`/api/firma/${token}/acuerdo`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ aceptaBiometria }),
-    })
-    setEnviando(false)
-    // El acuerdo aceptado queda en el sobre; al recargar, `cargar()` lo trae y
-    // el cliente sigue por donde iba.
-    if (r.ok) cargar()
-    else setError('No se pudo registrar el acuerdo. Intenta de nuevo.')
+    setError('')
+    try {
+      const r = await fetch(`/api/firma/${token}/acuerdo`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ aceptaBiometria }),
+      })
+      // El acuerdo aceptado queda en el sobre; al recargar, `cargar()` lo trae
+      // y el cliente sigue por donde iba.
+      if (r.ok) await cargar()
+      else setError((await avisoDeRespuesta(r)).texto)
+    } catch {
+      setError(SIN_CONEXION.texto)
+    } finally {
+      // En `finally` y no despues del fetch: si la peticion lanza, sin esto el
+      // boton se queda deshabilitado y el cliente no tiene forma de reintentar.
+      setEnviando(false)
+    }
   }
 
   const pedirOtp = async () => {
     setEnviando(true)
-    const r = await fetch(`/api/firma/${token}/otp`, { method: 'POST' })
-    setEnviando(false)
-    if (r.ok) {
+    setError('')
+    try {
+      const r = await fetch(`/api/firma/${token}/otp`, { method: 'POST' })
+      if (r.ok) {
+        setOtpPedido(true)
+        anotarOtpPedido(token)
+      } else {
+        // Aqui el core sabe el motivo exacto (demasiados envios, sobre vencido)
+        // y su mensaje es mejor que cualquiera nuestro; el aviso solo se hace
+        // cargo de lo que el core NO explica, que es cuando el fallo es nuestro.
+        setError((await avisoDeRespuesta(r)).texto)
+      }
+    } catch {
+      // El core encola el WhatsApp y DESPUES responde: si la respuesta se
+      // pierde, el codigo ya salio aunque el navegador no se entere. Decirle
+      // «no se pudo enviar» le hace pedir otro, que invalida el que tiene.
       setOtpPedido(true)
       anotarOtpPedido(token)
-    } else {
-      const j = await r.json().catch(() => ({}))
-      setError(j?.error || 'No se pudo enviar el código.')
+      setError('Puede que el código ya te haya llegado: revisa tu WhatsApp antes de pedir otro.')
+    } finally {
+      setEnviando(false)
     }
   }
 
   const verificarOtp = async () => {
     setEnviando(true)
     setError('')
-    const r = await fetch(`/api/firma/${token}/otp/verificar`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ codigo }),
-    })
-    setEnviando(false)
-    const j = await r.json().catch(() => ({}))
-    if (r.ok && j?.sesion) {
-      setSesion(j.sesion)
-      guardarSesion(token, j.sesion)
-      cargar()
-    } else {
-      setError(j?.error || 'Código incorrecto.')
+    try {
+      const r = await fetch(`/api/firma/${token}/otp/verificar`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ codigo }),
+      })
+      const j = await r.json().catch(() => ({}))
+      if (r.ok && j?.sesion) {
+        setSesion(j.sesion)
+        guardarSesion(token, j.sesion)
+        await cargar()
+        return
+      }
+      // «Código incorrecto» se le decia tambien cuando el servidor fallaba, y
+      // ahi el cliente se queda mirando un codigo correcto que no le aceptan.
+      setError(r.ok ? 'Código incorrecto.' : (await avisoDeRespuesta(r)).texto)
+    } catch {
+      setError(SIN_CONEXION.texto)
+    } finally {
+      setEnviando(false)
     }
   }
 
@@ -202,16 +266,42 @@ export default function FirmaClient({ token }: { token: string }) {
     if (!trazo && trazoHecho && canvasRef.current) {
       trazo = canvasRef.current.toDataURL('image/png')
     }
-    const r = await fetch(`/api/firma/${token}/firmar/${docActual}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sesion, trazo }),
-    })
+    let r: Response
+    let j: { completo?: boolean; error?: string } = {}
+    try {
+      r = await fetch(`/api/firma/${token}/firmar/${docActual}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sesion, trazo }),
+      })
+      j = await r.json().catch(() => ({}))
+    } catch {
+      // Se corto la red justo al firmar. El documento puede haberse firmado o
+      // no; `cargar()` lo dira, asi que se le invita a reintentar en vez de
+      // dejarle el boton muerto.
+      setEnviando(false)
+      setError(SIN_CONEXION.texto)
+      return
+    }
     setEnviando(false)
-    const j = await r.json().catch(() => ({}))
     if (!r.ok) {
-      if (r.status === 401) caducarSesion()
-      else setError(j?.error || 'No se pudo firmar. Intenta de nuevo.')
+      if (r.status === 401) {
+        caducarSesion()
+        return
+      }
+      // 409 «ya está firmado» y 410 «el sobre ya no está en curso» NO son
+      // fallos: son la respuesta a un segundo toque cuando el primero SI llego
+      // al servidor pero su respuesta no volvio. Pasaba justo al firmar el
+      // ultimo documento, porque el cierre del sobre (sello, espejo y subida a
+      // Dropbox) corre dentro de esa misma peticion y puede agotar el tiempo de
+      // nginx. Decirle «este enlace ya no está activo» a quien acaba de firmar
+      // bien es lo peor que puede leer. Se le vuelve a preguntar al servidor y
+      // la pantalla se recoloca sola: siguiente documento, o «¡Listo!».
+      if (r.status === 409 || r.status === 410) {
+        await cargar()
+        return
+      }
+      setError(avisoPorEstado(r.status, j?.error).texto)
       return
     }
     if (trazo && !trazoGuardado) setTrazoGuardado(trazo)
@@ -229,7 +319,14 @@ export default function FirmaClient({ token }: { token: string }) {
       })
       return
     }
-    await cargar()
+    // La firma YA quedo registrada. Si la recarga falla aqui, el cliente no
+    // puede pensar que perdio nada: sin este catch se quedaba viendo el
+    // documento que acababa de firmar, con el visor vacio y el boton muerto.
+    try {
+      await cargar()
+    } catch {
+      setError('Tu firma quedó registrada. No pudimos cargar el siguiente documento: vuelve a abrir el enlace para continuar.')
+    }
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────
@@ -248,7 +345,17 @@ export default function FirmaClient({ token }: { token: string }) {
     </div>
   )
 
-  if (error && !sobre) return marco(<p className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">{error}</p>)
+  if (error && !sobre)
+    return marco(
+      <div className="mx-auto flex w-full max-w-2xl flex-col items-start gap-4">
+        <p className="w-full rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">{error}</p>
+        {puedeReintentar ? (
+          <Button onClick={cargar} disabled={cargando}>
+            {cargando ? 'Reintentando…' : 'Volver a intentarlo'}
+          </Button>
+        ) : null}
+      </div>,
+    )
   if (!sobre) return null
 
   if (sobre.estado === 'vencido')
@@ -379,6 +486,16 @@ export default function FirmaClient({ token }: { token: string }) {
       <div className="h-[78vh] overflow-hidden rounded-lg border">
         {pdfUrl ? (
           <iframe title="Documento" src={`${pdfUrl}#navpanes=0&view=FitH&zoom=page-width`} className="h-full w-full" />
+        ) : falloDelPdf ? (
+          <div className="flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
+            <p className="max-w-md text-red-700">{falloDelPdf}</p>
+            <p className="max-w-md text-sm text-muted-foreground">
+              Tu avance está guardado; no perdiste nada de lo que ya firmaste.
+            </p>
+            <Button variant="outline" onClick={() => setIntentoPdf((n) => n + 1)}>
+              Volver a cargar el documento
+            </Button>
+          </div>
         ) : (
           <div className="flex h-full items-center justify-center text-muted-foreground">Cargando documento…</div>
         )}
