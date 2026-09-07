@@ -1,4 +1,3 @@
-import { logError } from '@/lib/errorResponse'
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
@@ -11,14 +10,23 @@ import { NextRequest, NextResponse } from 'next/server'
  * deja al cliente mirando una pantalla rota y al asesor sin saber que paso.
  */
 async function reenviarElMotivo(response: Response) {
-  logError(response)
+  // 🔴 El cuerpo de una Response se lee UNA sola vez. `logError` hace
+  // `response.text()`, asi que llamarlo antes dejaba el cuerpo consumido y el
+  // `json()` de aqui fallaba en silencio: el motivo real se perdia y salia
+  // siempre el generico. Se lee una vez y se registra con lo leido.
+  const crudo = await response.text().catch(() => '')
   let motivo = 'No se pudo cargar el formulario'
   try {
-    const j = await response.json()
+    const j = JSON.parse(crudo)
     if (j?.error) motivo = String(j.error)
   } catch {
     // El core no siempre responde JSON (un 502 del proxy, por ejemplo).
   }
+  console.error('Error response from backend', {
+    status: response.status,
+    url: response.url,
+    body: crudo.slice(0, 500),
+  })
   return NextResponse.json({ error: motivo }, { status: response.status })
 }
 
