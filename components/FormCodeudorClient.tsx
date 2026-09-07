@@ -66,6 +66,16 @@ export default function FormCodeudorClient({ signedUrlId, store, apiBase, submit
   const { setFormData, setBlockStates, setFieldStates, setFormVersion, getFormVersion } = store()
   const [loading, setLoading] = useState(true)
   const [isValid, setIsValid] = useState(true)
+  /**
+   * Por que el enlace no sirve, en las palabras del servidor.
+   *
+   * Antes cualquier fallo se pintaba como «no es valido o ha expirado», y eso
+   * es falso en los dos casos que mas ocurren: un formulario que YA se
+   * diligencio y un credito que ya no esta activo. El cliente llamaba al asesor
+   * por un enlace que en realidad habia funcionado, y el asesor no tenia como
+   * saberlo. Sin motivo (null) si toca el texto generico.
+   */
+  const [motivoNoValido, setMotivoNoValido] = useState<string | null>(null)
   const [validating, setValidating] = useState(true)
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [steps, setSteps] = useState<any[]>([])
@@ -204,7 +214,12 @@ export default function FormCodeudorClient({ signedUrlId, store, apiBase, submit
         })
 
         if (!response.ok) {
-          throw new Error('Error al validar el formulario')
+          const motivo = await response
+            .json()
+            .then((j) => (j?.error ? String(j.error) : null))
+            .catch(() => null)
+          setMotivoNoValido(motivo)
+          throw new Error(motivo ?? 'Error al validar el formulario')
         }
 
         const data = await response.json()
@@ -306,10 +321,13 @@ export default function FormCodeudorClient({ signedUrlId, store, apiBase, submit
         <main className="flex-1 w-full flex items-center justify-center p-4 sm:p-6 md:p-8">
           <div className="max-w-md w-full bg-white rounded-xl shadow-lg border border-gray-200 text-center p-6 sm:p-8">
             <Image src="/logo.svg" alt="Logo" width={100} height={100} className="mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-foreground mb-2">Enlace no válido</h2>
+            <h2 className="text-xl font-semibold text-foreground mb-2">
+              {motivoNoValido ?? 'Enlace no válido'}
+            </h2>
             <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
-              El enlace que intentas acceder no es válido o ha expirado. Por favor, contacta a tu
-              asesor para obtener más información.
+              {motivoNoValido
+                ? 'Si crees que es un error, contacta a tu asesor.'
+                : 'El enlace que intentas acceder no es válido o ha expirado. Por favor, contacta a tu asesor para obtener más información.'}
             </p>
             <Button onClick={handleGoHome} className="w-full">
               Volver al inicio
