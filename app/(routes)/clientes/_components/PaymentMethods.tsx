@@ -475,7 +475,7 @@ export function PaymentMethods({
           </h3>
         </div>
         <p className="text-[13px] text-[#525964] max-w-sm">
-          Elegí el que más te convenga. Cada uno tiene los pasos detallados.
+          Elige el que más te convenga. Cada uno tiene los pasos detallados.
         </p>
       </div>
 
@@ -507,8 +507,8 @@ export function PaymentMethods({
             <span className="font-semibold text-sm">Antes de pagar</span>
           </div>
           <ul className="text-[13px] text-[#525964] space-y-2 list-disc list-inside marker:text-[#0096B8]">
-            <li>Verificá el número {isSavings ? 'de cuenta' : 'de tarjeta'} dígito por dígito.</li>
-            <li>Confirmá que el monto coincida con tu cuota.</li>
+            <li>Verifica el número {isSavings ? 'de cuenta' : 'de tarjeta'} dígito por dígito.</li>
+            <li>Confirma que el monto coincida con tu cuota.</li>
             <li>Realizá la operación en lugares seguros.</li>
           </ul>
         </div>
@@ -518,7 +518,7 @@ export function PaymentMethods({
             <span className="font-semibold text-sm">Después de pagar</span>
           </div>
           <ul className="text-[13px] text-[#525964] space-y-2 list-disc list-inside marker:text-[#15803D]">
-            <li>Guardá siempre el comprobante (foto, PDF o impreso).</li>
+            <li>Guarda siempre el comprobante (foto, PDF o impreso).</li>
             <li>Envíalo por WhatsApp para registrar tu pago.</li>
             <li>Conservá el soporte hasta confirmar la acreditación.</li>
           </ul>
