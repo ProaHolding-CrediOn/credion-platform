@@ -196,7 +196,7 @@ export default function ClientesSeleccionarPage() {
           Hola, {first.solicitante.primerNombre || 'cliente'}.
         </h1>
         <p className="text-base text-[#525964] mb-2">
-          Tenés <strong className="text-[#0D1117]">{credits.length} créditos</strong> con nosotros. Elegí cuál querés ver.
+          Tienes <strong className="text-[#0D1117]">{credits.length} créditos</strong> con nosotros. Elige cuál quieres ver.
         </p>
         <p className="text-[13px] text-[#8A919C]">{fullName}</p>
       </div>

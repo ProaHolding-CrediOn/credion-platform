@@ -460,7 +460,7 @@ function CreditSwitcher({
             <div className="font-mono text-[10px] font-medium uppercase tracking-[0.1em] text-[#525964]">
               Tus créditos
             </div>
-            <div className="text-[12px] text-[#525964] mt-0.5">Elegí cuál querés ver</div>
+            <div className="text-[12px] text-[#525964] mt-0.5">Elige cuál quieres ver</div>
           </div>
           <ul role="listbox" className="max-h-80 overflow-y-auto">
             {credits.map((c, i) => {

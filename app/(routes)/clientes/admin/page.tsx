@@ -49,7 +49,7 @@ export default function ClientesAdminPreviewPage() {
 
     const id = identificacion.trim().replace(/\D/g, '')
     if (!id || id.length < 5) {
-      setError('Ingresá una cédula válida.')
+      setError('Escribe una cédula válida.')
       return
     }
 
@@ -157,7 +157,7 @@ export default function ClientesAdminPreviewPage() {
               </button>
             </div>
             <p className="text-xs text-[#525964] mt-1.5">
-              Se guarda en sessionStorage del navegador. Borrá al terminar.
+              Se guarda en sessionStorage del navegador. Bórralo al terminar.
             </p>
           </div>
 
@@ -210,9 +210,9 @@ export default function ClientesAdminPreviewPage() {
         <details className="mt-6 text-[12px] text-[#525964]">
           <summary className="cursor-pointer hover:text-[#0D1117]">¿Cómo saco el JWT?</summary>
           <ol className="list-decimal list-inside mt-2 space-y-1 pl-2">
-            <li>Abrí <code className="font-mono bg-[#F6F7F9] px-1 rounded">https://api.credion.com.co/admin</code> y logueate.</li>
+            <li>Abre <code className="font-mono bg-[#F6F7F9] px-1 rounded">https://api.credion.com.co/admin</code> y logueate.</li>
             <li>F12 → tab <strong>Aplicación</strong> → <strong>Cookies</strong> → <code className="font-mono bg-[#F6F7F9] px-1 rounded">https://api.credion.com.co</code>.</li>
-            <li>Buscá la fila <code className="font-mono bg-[#F6F7F9] px-1 rounded">payload-token</code>.</li>
+            <li>Busca la fila <code className="font-mono bg-[#F6F7F9] px-1 rounded">payload-token</code>.</li>
             <li>Doble click en el value → Ctrl+C → pegalo arriba.</li>
             <li>Dura ~6h. Si expira, generá otro.</li>
           </ol>
