@@ -47,6 +47,10 @@ type Props = {
     | 'socio-complementario'
     | 'nomina-solicitud'
     | 'libre-inversion-solicitud'
+    // El F-AC-02 de un crédito que YA existe. Mismo formulario que el público,
+    // otro flujo: aquí se rellena el crédito que el asesor ya armó, no se crea
+    // uno nuevo.
+    | 'solicitud-existente'
   submitKey:
     | 'formSolicitudCodeudor'
     | 'formComplementarioCodeudor'
@@ -54,6 +58,7 @@ type Props = {
     | 'formComplementarioSocio'
     | 'formSolicitudNomina'
     | 'formSolicitudLibreInversion'
+    | 'formSolicitud'
   title: string
 }
 
