@@ -57,7 +57,17 @@ export default function FirmaClient({ token }: { token: string }) {
   const [codigo, setCodigo] = useState('')
   const [sesion, setSesion] = useState('')
   const [docActual, setDocActual] = useState(0)
-  const [pdfUrl, setPdfUrl] = useState('')
+  /**
+   * Las paginas del documento, ya como imagenes.
+   *
+   * Antes esto era un blob del PDF metido en un <iframe>, y Chrome en Android
+   * no trae visor para PDF incrustados: el firmante veia un marco vacio con un
+   * boton «Abrir» que tampoco hacia nada, porque ese enlace apuntaba al mismo
+   * blob (9-sep-2026). Una imagen si la pinta cualquier navegador, tambien
+   * desde un blob, asi que el testigo sigue viajando en la cabecera y no hubo
+   * que tocar nada de la sesion.
+   */
+  const [paginas, setPaginas] = useState<string[]>([])
   // El visor tenia UN solo estado visible («Cargando documento...») para tres
   // situaciones distintas: cargando, cargado y ROTO. Un 500, un 502 o un corte
   // de red se descartaban en silencio con un `return`, y el cliente se quedaba
@@ -129,41 +139,62 @@ export default function FirmaClient({ token }: { token: string }) {
     olvidarSesion(token)
     setSesion('')
     setOtpPedido(false)
-    setPdfUrl('')
+    setPaginas([])
     setError('Por seguridad tenemos que verificarte de nuevo. Pide otro código.')
   }, [token])
 
-  // El PDF del documento en curso se trae con el testigo y se muestra como blob.
+  // Las paginas del documento en curso, con el testigo, como imagenes.
   useEffect(() => {
-    let url = ''
+    let urls: string[] = []
+    let vivo = true
     const traer = async () => {
       if (!sesion || !sobre || docActual < 0) return
       setFalloDelPdf('')
+      const pedir = (ruta: string) =>
+        fetch(ruta, { headers: { 'x-sesion-firma': sesion }, cache: 'no-store' })
       try {
-        const r = await fetch(`/api/firma/${token}/documento/${docActual}`, {
-          headers: { 'x-sesion-firma': sesion },
-          cache: 'no-store',
-        })
+        const rn = await pedir(`/api/firma/${token}/documento/${docActual}/paginas`)
         // Sin esto, un testigo que el servidor ya no acepta deja la pantalla en
         // «Cargando documento...» para siempre.
-        if (r.status === 401) {
+        if (rn.status === 401) {
           caducarSesion()
           return
         }
-        if (!r.ok) {
-          setFalloDelPdf(await avisoDeRespuesta(r).then((a) => a.texto))
+        if (!rn.ok) {
+          setFalloDelPdf(await avisoDeRespuesta(rn).then((a) => a.texto))
           return
         }
-        const blob = await r.blob()
-        url = URL.createObjectURL(blob)
-        setPdfUrl(url)
+        const total = Number((await rn.json())?.paginas ?? 0)
+        if (!total) {
+          setFalloDelPdf('No pudimos abrir el documento. Vuelve a intentarlo.')
+          return
+        }
+        // Se piden en orden y se van pintando: en un celular con datos, ver la
+        // primera pagina enseguida vale mas que esperar a que lleguen todas.
+        for (let n = 1; n <= total; n++) {
+          const rp = await pedir(`/api/firma/${token}/documento/${docActual}/pagina/${n}`)
+          if (!vivo) return
+          if (rp.status === 401) {
+            caducarSesion()
+            return
+          }
+          if (!rp.ok) {
+            setFalloDelPdf(await avisoDeRespuesta(rp).then((a) => a.texto))
+            return
+          }
+          const url = URL.createObjectURL(await rp.blob())
+          urls.push(url)
+          setPaginas([...urls])
+        }
       } catch {
-        setFalloDelPdf(SIN_CONEXION.texto)
+        if (vivo) setFalloDelPdf(SIN_CONEXION.texto)
       }
     }
     traer()
     return () => {
-      if (url) URL.revokeObjectURL(url)
+      vivo = false
+      for (const u of urls) URL.revokeObjectURL(u)
+      urls = []
     }
   }, [token, sesion, sobre, docActual, caducarSesion, intentoPdf])
 
@@ -324,7 +355,7 @@ export default function FirmaClient({ token }: { token: string }) {
     }
     if (trazo && !trazoGuardado) setTrazoGuardado(trazo)
     if (j?.completo) {
-      setPdfUrl('')
+      setPaginas([])
       olvidarSesion(token)
       // Con el sobre cerrado el servidor deja de mandar nombre y documentos —
       // el token ya no abre la ficha. Recargar aquí le dejaría a quien acaba de
@@ -341,7 +372,7 @@ export default function FirmaClient({ token }: { token: string }) {
     // quedarse pensando que perdio algo: se le dice que su firma esta a salvo y
     // se le deja el visor con su boton de reintentar.
     const bien = await cargar()
-    setPdfUrl('')
+    setPaginas([])
     if (!bien) {
       // El visor pinta su propio fallo con el boton que reintenta las dos
       // cosas; aqui solo hay que dejar claro que la firma NO se perdio.
@@ -504,9 +535,19 @@ export default function FirmaClient({ token }: { token: string }) {
           {firmados + 1} de {total}
         </span>
       </div>
-      <div className="h-[78vh] overflow-hidden rounded-lg border">
-        {pdfUrl ? (
-          <iframe title="Documento" src={`${pdfUrl}#navpanes=0&view=FitH&zoom=page-width`} className="h-full w-full" />
+      <div className="h-[78vh] overflow-y-auto rounded-lg border bg-muted/30">
+        {paginas.length > 0 ? (
+          <div className="flex flex-col items-center gap-3 p-2">
+            {paginas.map((url, i) => (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                key={url}
+                src={url}
+                alt={`Página ${i + 1} de ${doc?.nombre ?? 'el documento'}`}
+                className="w-full max-w-3xl rounded border bg-white shadow-sm"
+              />
+            ))}
+          </div>
         ) : falloDelPdf ? (
           <div className="flex h-full flex-col items-center justify-center gap-4 p-6 text-center">
             <p className="max-w-md text-red-700">{falloDelPdf}</p>
@@ -528,11 +569,9 @@ export default function FirmaClient({ token }: { token: string }) {
           <div className="flex h-full items-center justify-center text-muted-foreground">Cargando documento…</div>
         )}
       </div>
-      {pdfUrl ? (
-        <a href={pdfUrl} target="_blank" rel="noreferrer" className="self-start text-sm text-muted-foreground underline">
-          Abrir el documento en una pestaña completa
-        </a>
-      ) : null}
+      {/* El enlace de «abrir en una pestaña completa» se quito: apuntaba al blob
+          del PDF y en el celular no abria nada. Ahora el documento se ve aqui
+          mismo, pagina por pagina, y se puede ampliar con los dedos. */}
       {!trazoGuardado ? (
         <div className="flex flex-col gap-2">
           <Label>Dibuja tu firma aquí (se usará en todos los documentos)</Label>
@@ -554,7 +593,7 @@ export default function FirmaClient({ token }: { token: string }) {
         <p className="text-sm text-muted-foreground">Se usará la firma que dibujaste en el primer documento.</p>
       )}
       {error ? <p className="text-sm text-red-600">{error}</p> : null}
-      <Button onClick={firmar} disabled={enviando || (!trazoGuardado && !trazoHecho) || !pdfUrl} className="w-full sm:w-auto">
+      <Button onClick={firmar} disabled={enviando || (!trazoGuardado && !trazoHecho) || paginas.length === 0} className="w-full sm:w-auto">
         {enviando ? 'Firmando…' : `Firmar «${doc?.nombre}»`}
       </Button>
     </div>,
