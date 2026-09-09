@@ -1,6 +1,36 @@
 import { FieldValidation } from '@/types/FormField';
 import { create } from 'zustand';
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
+
+/**
+ * El borrador se guarda POR ENLACE, no por tipo de formulario.
+ *
+ * Antes la clave era `form-complementario` a secas, la misma para todos los
+ * créditos y todos los clientes. Dos consecuencias, las dos vistas en
+ * producción el 9-sep-2026:
+ *
+ *  1. Quien abría un enlace en un navegador donde alguien ya había empezado
+ *     otro formulario del mismo tipo se encontraba el formulario RELLENO con
+ *     las respuestas del anterior —vivienda, estrato, SISBÉN, referencias— y
+ *     podía enviarlas como propias.
+ *  2. Peor: al enviar con éxito queda `submitted: true` guardado, así que el
+ *     siguiente cliente que abría SU enlace en ese navegador veía la pantalla
+ *     de «Gracias por su información» y no podía llenar nada. Sin error, sin
+ *     explicación y sin salida, porque `submitted` solo se limpia si cambia la
+ *     versión del formulario.
+ *
+ * El sufijo es el último tramo de la ruta, que en las páginas por enlace es el
+ * id del enlace firmado (`/complementario/<uuid>`) y en las públicas una
+ * palabra fija (`/solicitud/formulario`), así que esas siguen compartiendo
+ * borrador entre visitas, que es lo que se quiere. Se lee en cada acceso, no al
+ * cargar el módulo, para que siga siendo correcto si se navega entre dos
+ * enlaces sin recargar.
+ */
+const conElEnlace = (clave: string): string => {
+  if (typeof window === 'undefined') return clave
+  const ultimoTramo = window.location.pathname.split('/').filter(Boolean).pop()
+  return ultimoTramo ? `${clave}-${ultimoTramo}` : clave
+}
 
 export type FormFieldValue = string | number | object | undefined | null;
 export type FormFieldState = {
@@ -158,7 +188,7 @@ export const createFormStore = (storeKey: string) => {
             version: 0
           }),
         clearPersistedStore: () => {
-          const storageKey = `form-${storeKey}`
+          const storageKey = conElEnlace(`form-${storeKey}`)
           try {
             localStorage.removeItem(storageKey)
             console.log(`[Zustand] Persistencia eliminada para ${storageKey}`)
@@ -170,6 +200,17 @@ export const createFormStore = (storeKey: string) => {
       }),
       {
         name: `form-${storeKey}`,
+        /**
+         * `name` se queda como el nombre del store (zustand lo usa para
+         * identificarlo); la clave real del navegador la pone este almacén, que
+         * le añade el enlace. Se construye perezosamente porque el módulo
+         * también se evalúa en el servidor, donde no hay `localStorage`.
+         */
+        storage: createJSONStorage(() => ({
+          getItem: (name) => localStorage.getItem(conElEnlace(name)),
+          setItem: (name, value) => localStorage.setItem(conElEnlace(name), value),
+          removeItem: (name) => localStorage.removeItem(conElEnlace(name)),
+        })),
         onRehydrateStorage: () => (state) => {
           console.log('Rehidratando formulario', storeKey)
           if (state) {
