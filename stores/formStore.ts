@@ -19,17 +19,22 @@ import { createJSONStorage, persist } from "zustand/middleware";
  *     explicación y sin salida, porque `submitted` solo se limpia si cambia la
  *     versión del formulario.
  *
- * El sufijo es el último tramo de la ruta, que en las páginas por enlace es el
- * id del enlace firmado (`/complementario/<uuid>`) y en las públicas una
- * palabra fija (`/solicitud/formulario`), así que esas siguen compartiendo
- * borrador entre visitas, que es lo que se quiere. Se lee en cada acceso, no al
- * cargar el módulo, para que siga siendo correcto si se navega entre dos
- * enlaces sin recargar.
+ * El sufijo es el id del enlace firmado, y SOLO cuando el último tramo de la
+ * ruta tiene forma de uuid (`/complementario/<uuid>`). Las páginas públicas se
+ * quedan sin sufijo a propósito: comparten borrador entre visitas —que es lo
+ * que se quiere— y además `/solicitud/formulario` se desvía por
+ * `/verificacion/telefono` a mitad del flujo, así que atar la clave al nombre
+ * del tramo partiría el borrador en dos gavetas según el momento en que se
+ * guardara. Se lee en cada acceso, no al cargar el módulo, para que siga siendo
+ * correcto si se navega entre dos enlaces sin recargar.
  */
+const ES_ENLACE_FIRMADO =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
 const conElEnlace = (clave: string): string => {
   if (typeof window === 'undefined') return clave
-  const ultimoTramo = window.location.pathname.split('/').filter(Boolean).pop()
-  return ultimoTramo ? `${clave}-${ultimoTramo}` : clave
+  const ultimoTramo = window.location.pathname.split('/').filter(Boolean).pop() ?? ''
+  return ES_ENLACE_FIRMADO.test(ultimoTramo) ? `${clave}-${ultimoTramo}` : clave
 }
 
 export type FormFieldValue = string | number | object | undefined | null;
