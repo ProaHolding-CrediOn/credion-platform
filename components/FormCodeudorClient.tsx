@@ -420,9 +420,21 @@ export default function FormCodeudorClient({ signedUrlId, store, apiBase, submit
               <div className="flex flex-col items-center mb-6">
                 <Image src="/logo_text.svg" alt="Logo Credion" width={200} height={100} />
               </div>
+              {/*
+                Sin nombre se saluda sin nombre. Este mismo componente sirve el
+                formulario del codeudor, el del socio, el de nomina, el de libre
+                inversion y el de solicitud: llamar «Codeudor» a quien llena su
+                propia solicitud era, ademas de raro, sencillamente falso.
+              */}
               <h1 className="text-lg md:text-xl text-center font-light text-foreground">
-                Hola <span className="font-semibold">{user?.name || 'Codeudor'}</span>, que bueno que
-                te encuentres aqui.
+                {user?.name ? (
+                  <>
+                    Hola <span className="font-semibold">{user.name}</span>, qué bueno que te
+                    encuentres aquí.
+                  </>
+                ) : (
+                  <>Hola, qué bueno que te encuentres aquí.</>
+                )}
               </h1>
               {context && (
                 <Label className="text-sm text-foreground font-light">
