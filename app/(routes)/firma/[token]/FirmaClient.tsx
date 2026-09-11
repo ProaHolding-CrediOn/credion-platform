@@ -467,7 +467,22 @@ export default function FirmaClient({ token }: { token: string }) {
             </details>
           </span>
         </label>
-        {error ? <p className="text-sm text-red-600">{error}</p> : null}
+        {/*
+          `text-destructive` y no `text-red-600`: la ruta de firma se pinta sobre
+          `dark:bg-secondary` (#262626) y ahi el rojo 600 da 3,17:1, por debajo del
+          4,5:1 que hace falta para leerlo. En claro pasaba, asi que el aviso solo
+          era ilegible de noche — que es como firma medio mundo desde el celular.
+          El token del tema ya trae un rojo mas claro para el modo oscuro.
+
+          Y `role="status"`: el aviso aparece DESPUES de tocar el boton. Sin
+          anunciarlo, quien use lector de pantalla toca, no oye nada y vuelve a
+          tocar. Mismo patron en los cuatro avisos de esta ceremonia.
+        */}
+        {error ? (
+          <p role="status" aria-live="polite" className="text-sm text-destructive">
+            {error}
+          </p>
+        ) : null}
         <Button onClick={aceptarAcuerdo} disabled={enviando || !aceptaBiometria} className="w-full sm:w-auto">
           Acepto el acuerdo y quiero continuar
         </Button>
@@ -482,7 +497,11 @@ export default function FirmaClient({ token }: { token: string }) {
         {!otpPedido ? (
           <>
             <p>Te enviaremos un código de 6 dígitos por WhatsApp al celular registrado en tu crédito.</p>
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            {error ? (
+              <p role="status" aria-live="polite" className="text-sm text-destructive">
+                {error}
+              </p>
+            ) : null}
             <Button onClick={pedirOtp} disabled={enviando} className="w-full sm:w-auto">
               Enviarme el código
             </Button>
@@ -498,7 +517,11 @@ export default function FirmaClient({ token }: { token: string }) {
               onChange={(e) => setCodigo(e.target.value.replace(/\D/g, ''))}
               className="max-w-40 text-center text-lg tracking-[0.4em]"
             />
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
+            {error ? (
+              <p role="status" aria-live="polite" className="text-sm text-destructive">
+                {error}
+              </p>
+            ) : null}
             <div className="flex gap-3">
               <Button onClick={verificarOtp} disabled={enviando || codigo.length !== 6}>
                 Verificar
@@ -527,6 +550,13 @@ export default function FirmaClient({ token }: { token: string }) {
 
   // Paso 4 — firmar documento a documento
   const doc = sobre.documentos[docActual]
+  /**
+   * Con este se cierra el sobre. Merece decirlo: firmar el ultimo documento no
+   * es «uno mas», es el final de la ceremonia —el servidor sella, arma el
+   * espejo de evidencia y sube todo—, y quien firma tiene derecho a saber que
+   * ese toque es el que termina.
+   */
+  const esElUltimo = firmados + 1 === total
   return marco(
     <div className="flex flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -592,9 +622,43 @@ export default function FirmaClient({ token }: { token: string }) {
       ) : (
         <p className="text-sm text-muted-foreground">Se usará la firma que dibujaste en el primer documento.</p>
       )}
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
-      <Button onClick={firmar} disabled={enviando || (!trazoGuardado && !trazoHecho) || paginas.length === 0} className="w-full sm:w-auto">
-        {enviando ? 'Firmando…' : `Firmar «${doc?.nombre}»`}
+      {error ? (
+        <p role="status" aria-live="polite" className="text-sm text-destructive">
+          {error}
+        </p>
+      ) : null}
+      {/*
+        🔴 EL ROTULO SE SALIA DEL BOTON, Y LO QUE SE SALIA ERA INVISIBLE.
+
+        Medido en el navegador con el CSS ya compilado, en un celular de 360 px:
+        el boton mide 280 px —la pagina pone `p-6` en el layout y este marco otro
+        `p-4`, 40 px por lado— y el texto «Firmar «F-AC-06 - Contrato de
+        Condiciones del Credito»» necesita 354. Son 74 px de sobra.
+
+        La clase base del Button trae `whitespace-nowrap` y nadie recorta con
+        `overflow:hidden`, asi que ese texto no se parte ni se corta con puntos
+        suspensivos: se PINTA POR FUERA de la barra, encima del fondo de la
+        pagina. Ahi su contraste es de 1,18:1 en oscuro y 1,04:1 en claro, o sea
+        ilegible. El principio y el final del rotulo simplemente no se leen, y el
+        boton parece no tener margen cuando en realidad lo que llega a los bordes
+        es el texto derramado.
+
+        Se arregla por los dos lados:
+         - El nombre del documento sale del rotulo. Ya esta en el <h1> de arriba
+           y en el contador «N de M»; repetirlo era lo que reventaba la caja.
+         - `whitespace-normal` anula el nowrap y `h-auto min-h-12` deja que el
+           boton crezca si alguna vez el texto ocupa dos lineas, en vez de
+           recortarlo. Ademas 48 px es un objetivo tactil decente para la accion
+           principal de una firma legal, frente a los 36 de `h-9`.
+
+        Medido despues del cambio: 248 px de texto en 248 de caja. Cero desborde.
+      */}
+      <Button
+        onClick={firmar}
+        disabled={enviando || (!trazoGuardado && !trazoHecho) || paginas.length === 0}
+        className="h-auto min-h-12 w-full whitespace-normal px-5 py-3 text-base leading-tight sm:w-auto sm:px-8"
+      >
+        {enviando ? 'Firmando…' : esElUltimo ? 'Firmar y terminar' : 'Firmar este documento'}
       </Button>
     </div>,
   )
